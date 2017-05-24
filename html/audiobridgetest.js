@@ -55,7 +55,7 @@ var opaqueId = "audiobridgetest-"+Janus.randomString(12);
 var started = false;
 var spinner = null;
 
-var myroom = 1234;	// Demo room
+var myroom = null;	// Demo room
 var myusername = null;
 var myid = null;
 var webrtcUp = false;
@@ -66,7 +66,7 @@ $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
 	Janus.init({debug: "all", callback: function() {
 		// Use a button to start the demo
-		$('#start').click(function() {
+		$('#register').click(function() {
 			if(started)
 				return;
 			started = true;
@@ -93,9 +93,12 @@ $(document).ready(function() {
 									// Prepare the username registration
 									$('#audiojoin').removeClass('hide').show();
 									$('#registernow').removeClass('hide').show();
-									$('#register').click(registerUsername);
+
+									registerUsername();
+									
+									// $('#register').click(registerUsername);
 									$('#username').focus();
-									$('#start').removeAttr('disabled').html("Stop")
+									$('#hangup').removeClass('hide').html("Hangup")
 										.click(function() {
 											$(this).attr('disabled', true);
 											janus.destroy();
@@ -314,6 +317,7 @@ function registerUsername() {
 		// Try a registration
 		$('#username').attr('disabled', true);
 		$('#register').attr('disabled', true).unbind('click');
+		var meetingroom = parseInt($('#meetingroom').val());
 		var username = $('#username').val();
 		if(username === "") {
 			$('#you')
@@ -331,8 +335,9 @@ function registerUsername() {
 			$('#register').removeAttr('disabled').click(registerUsername);
 			return;
 		}
-		var register = { "request": "join", "room": myroom, "display": username };
+		var register = { "request": "join", "room": meetingroom, "display": username };
 		myusername = username;
+		myroom = meetingroom;
 		mixertest.send({"message": register});
 	}
 }
