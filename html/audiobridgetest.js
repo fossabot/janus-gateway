@@ -44,9 +44,9 @@
 //
 var server = null;
 if(window.location.protocol === 'http:')
-	server = "http://" + window.location.hostname + ":8088/janus";
+	server = "http://" + window.location.hostname + "/janus-meet/janus";
 else
-	server = "https://" + window.location.hostname + ":8089/janus";
+	server = "https://" + window.location.hostname + "/janus-meet/janus";
 
 var janus = null;
 var mixertest = null;
@@ -301,11 +301,23 @@ $(document).ready(function() {
 function checkEnter(field, event) {
 	var theCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
 	if(theCode == 13) {
-		registerUsername();
+		// registerUsername();
 		return false;
 	} else {
 		return true;
 	}
+}
+
+function getRoomNoFromQueryParams(searchKey) {
+	var query = window.location.search.substring(1);
+	var params = query.split('&');
+	for (var i = 0; i < params.length; i++){
+		var pos = params[i].indexOf('=');
+		if(pos > 0 && searchKey == params[i].substring(0, pos)) {
+			return params[i].substring(pos+1);
+		}
+	}
+	return "";
 }
 
 function registerUsername() {
@@ -317,7 +329,7 @@ function registerUsername() {
 		// Try a registration
 		$('#username').attr('disabled', true);
 		$('#register').attr('disabled', true).unbind('click');
-		var meetingroom = parseInt($('#meetingroom').val());
+		var meetingroom = parseInt(getRoomNoFromQueryParams('room'));
 		var username = $('#username').val();
 		if(username === "") {
 			$('#you')
