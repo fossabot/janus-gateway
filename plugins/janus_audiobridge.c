@@ -1537,10 +1537,12 @@ struct janus_plugin_result *janus_audiobridge_handle_message(janus_plugin_sessio
 				goto plugin_response;
 		}
 		audiobridge->record = FALSE;
+
+		// It is assumed the recfile is just a prefix from the application adding room-id to it, to make it uniqure
 		if(record && json_is_true(record))
 			audiobridge->record = TRUE;
 		if(recfile)
-			audiobridge->record_file = g_strdup(json_string_value(recfile));
+			audiobridge->record_file = g_strdup_printf("%s-%ld.wav", json_string_value(recfile), audiobridge->room_id);
 		audiobridge->recording = NULL;
 		audiobridge->destroy = 0;
 		audiobridge->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
