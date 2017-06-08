@@ -3103,7 +3103,15 @@ void janus_plugin_notify_event(janus_plugin *plugin, janus_plugin_session *plugi
 	if(!plugin || !event || !json_is_object(event))
 		return;
 	guint64 session_id = 0, handle_id = 0;
-	if(plugin_session != NULL) {
+	int check_session = 1;
+
+	json_t *event_type = json_object_get(event, "event");
+	if(event_type != NULL){
+		const char *event_text = json_string_value(event_type);
+		check_session = strcmp(event_text, "left");
+	}
+
+	if(plugin_session != NULL && (check_session != 0)) {
 		if((plugin_session < (janus_plugin_session *)0x1000) || !janus_plugin_session_is_alive(plugin_session) || plugin_session->stopped) {
 			json_decref(event);
 			return;
