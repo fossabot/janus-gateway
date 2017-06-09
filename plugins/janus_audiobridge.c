@@ -2438,6 +2438,7 @@ void janus_audiobridge_hangup_media(janus_plugin_session *handle) {
 			json_object_set_new(info, "room", json_integer(audiobridge->room_id));
 			json_object_set_new(info, "id", json_integer(participant->user_id));
 			json_object_set_new(info, "display", json_string(participant->display));
+			json_object_set_new(info, "num_participant", json_integer(g_hash_table_size(audiobridge->participants)));
 			gateway->notify_event(&janus_audiobridge_plugin, session->handle, info);
 		}
 	}
