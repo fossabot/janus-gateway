@@ -737,6 +737,8 @@ typedef struct janus_audiobridge_room {
 	gboolean record;			/* Whether this room has to be recorded or not */
 	gchar *record_file;			/* Path of the recording file */
 	FILE *recording;			/* File to record the room into */
+	gint64 record_starttime;    /* Time when recording started in mili second */
+	uint32_t record_duration;   /* Recording duration in mili second */ 
 	gint64 record_lastupdate;	/* Time when we last updated the wav header */
 	gboolean destroy;			/* Value to flag the room for destruction */
 	GHashTable *participants;	/* Map of participants */
@@ -1729,6 +1731,9 @@ struct janus_plugin_result *janus_audiobridge_handle_message(janus_plugin_sessio
 		janus_mutex_unlock(&audiobridge->mutex);
 		janus_mutex_unlock(&rooms_mutex);
 		g_thread_join(audiobridge->thread);
+		/* Populate the recording information */
+		json_object_set_new(response, "recording_starttime", json_integer(audiobridge->record_starttime));
+		json_object_set_new(response, "recording_duration", json_integer(audiobridge->record_duration));
 		/* Done */
 		JANUS_LOG(LOG_VERB, "Audiobridge room destroyed\n");
 		goto plugin_response;
@@ -3632,6 +3637,11 @@ static void *janus_audiobridge_mixer_thread(void *data) {
 				/* FIXME Smoothen/Normalize instead of truncating? */
 				outBuffer[i] = buffer[i];
 			}
+			/* If the recording startTime is not initialized then do it for one time */
+			if(0 == audiobridge->record_starttime) {
+				audiobridge->record_starttime = janus_get_real_time() / 1000;
+			}
+			
 			fwrite(outBuffer, sizeof(opus_int16), samples, audiobridge->recording);
 			/* Every 5 seconds we update the wav header */
 			gint64 now = janus_get_monotonic_time();
@@ -3757,6 +3767,8 @@ static void *janus_audiobridge_mixer_thread(void *data) {
 			size += 8;
 			fseek(audiobridge->recording, 40, SEEK_SET);
 			fwrite(&size, sizeof(uint32_t), 1, audiobridge->recording);
+			/* Audio file duration in mili second is is size / (num_channels * sampling_rate * sample_size) */
+			audiobridge->record_duration = (1000 * size) / (1 * audiobridge->sampling_rate * 2);
 			fflush(audiobridge->recording);
 			fclose(audiobridge->recording);
 		}
