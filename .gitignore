@@ -8,6 +8,7 @@ docs/html/
 /plugins/*.so
 /transports/*.so
 /events/*.so
+/html/recordings
 
 Makefile
 Makefile.in
@@ -52,3 +53,5 @@ Makefile.in
 
 .deps
 .dirstamp
+.wav
+.vscode/

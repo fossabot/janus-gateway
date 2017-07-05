@@ -237,6 +237,8 @@ static struct janus_json_parameter create_parameters[] = {
 	{"playoutdelay_ext", JANUS_JSON_BOOL, 0},
 	{"record", JANUS_JSON_BOOL, 0},
 	{"rec_dir", JSON_STRING, 0},
+	{"recordmix", JANUS_JSON_BOOL, 0},
+	{"recordmix_file", JSON_STRING, 0},
 	{"permanent", JANUS_JSON_BOOL, 0}
 };
 static struct janus_json_parameter room_parameters[] = {
@@ -324,6 +326,7 @@ static GThread *watchdog;
 static void *janus_videoroom_handler(void *data);
 static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data);
 static void janus_videoroom_relay_data_packet(gpointer data, gpointer user_data);
+static void *janus_videoroom_mixer_thread(void *data);
 
 typedef enum janus_videoroom_p_type {
 	janus_videoroom_p_type_none = 0,
@@ -468,6 +471,10 @@ typedef struct janus_videoroom {
 	gboolean playoutdelay_ext;	/* Whether the playout-delay extension must be negotiated or not for new publishers */
 	gboolean record;			/* Whether the feeds from publishers in this room should be recorded */
 	char *rec_dir;				/* Where to save the recordings of this room, if enabled */
+	gboolean recordmix;			/* Whether this room has to be mixed and recorded or not */
+	gchar *recordmix_file;      /* Path of the recording mix file */
+	FILE *recordingmix;			/* File to record the mix room into */
+	GThread *thread;			/* Mixer thread for this room */
 	gint64 destroyed;			/* Value to flag the room for destruction, done lazily */
 	GHashTable *participants;	/* Map of potential publishers (we get listeners from them) */
 	GHashTable *private_ids;	/* Map of existing private IDs */
@@ -568,6 +575,22 @@ typedef struct janus_videoroom_rtp_relay_packet {
 	uint16_t seq_number;
 } janus_videoroom_rtp_relay_packet;
 
+/* Helper struct to generate and parse WAVE headers */
+typedef struct wav_header {
+	char riff[4];
+	uint32_t len;
+	char wave[4];
+	char fmt[4];
+	uint32_t formatsize;
+	uint16_t format;
+	uint16_t channels;
+	uint32_t samplerate;
+	uint32_t avgbyterate;
+	uint16_t samplebytes;
+	uint16_t channelbits;
+	char data[4];
+	uint32_t blocksize;
+} wav_header;
 
 /* Error codes */
 #define JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR		499
@@ -791,6 +814,9 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			janus_config_item *playoutdelay_ext = janus_config_get_item(cat, "playoutdelay_ext");
 			janus_config_item *record = janus_config_get_item(cat, "record");
 			janus_config_item *rec_dir = janus_config_get_item(cat, "rec_dir");
+			janus_config_item *recordmix = janus_config_get_item(cat, "recordmix");
+			janus_config_item *recmixfile = janus_config_get_item(cat, "recordmix_file");
+			
 			/* Create the video room */
 			janus_videoroom *videoroom = g_malloc0(sizeof(janus_videoroom));
 			videoroom->room_id = g_ascii_strtoull(cat->name, NULL, 0);
@@ -889,15 +915,20 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			if(rec_dir && rec_dir->value) {
 				videoroom->rec_dir = g_strdup(rec_dir->value);
 			}
+
+			videoroom->recordmix = FALSE;
+			if(recordmix && recordmix->value && janus_is_true(recordmix->value))
+				videoroom->recordmix = TRUE;
+			if(recmixfile && recmixfile->value)
+				videoroom->recordmix_file = g_strdup(recmixfile->value);
+			videoroom->recordingmix = NULL;
+
 			videoroom->destroyed = 0;
 			janus_mutex_init(&videoroom->participants_mutex);
 			videoroom->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
 			videoroom->private_ids = g_hash_table_new(NULL, NULL);
 			videoroom->check_tokens = FALSE;	/* Static rooms can't have an "allowed" list yet, no hooks to the configuration file */
 			videoroom->allowed = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
-			janus_mutex_lock(&rooms_mutex);
-			g_hash_table_insert(rooms, janus_uint64_dup(videoroom->room_id), videoroom);
-			janus_mutex_unlock(&rooms_mutex);
 			JANUS_LOG(LOG_VERB, "Created videoroom: %"SCNu64" (%s, %s, %s/%s codecs, secret: %s, pin: %s, pvtid: %s)\n",
 				videoroom->room_id, videoroom->room_name,
 				videoroom->is_private ? "private" : "public",
@@ -906,6 +937,21 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 				videoroom->room_secret ? videoroom->room_secret : "no secret",
 				videoroom->room_pin ? videoroom->room_pin : "no pin",
 				videoroom->require_pvtid ? "required" : "optional");
+
+			/* We need a thread for the mix */
+			GError *error = NULL;
+			char tname[16];
+			g_snprintf(tname, sizeof(tname), "mixer %"SCNu64, videoroom->room_id);
+			videoroom->thread = g_thread_try_new(tname, &janus_videoroom_mixer_thread, videoroom, &error);
+			if(error != NULL) {
+				/* FIXME We should clear some resources... */
+				JANUS_LOG(LOG_ERR, "Got error %d (%s) trying to launch the mixer thread...\n", error->code, error->message ? error->message : "??");
+			} else {
+				janus_mutex_lock(&rooms_mutex);
+				g_hash_table_insert(rooms, janus_uint64_dup(videoroom->room_id), videoroom);
+				janus_mutex_unlock(&rooms_mutex);
+			}
+
 			if(videoroom->record) {
 				JANUS_LOG(LOG_VERB, "  -- Room is going to be recorded in %s\n", videoroom->rec_dir ? videoroom->rec_dir : "the current folder");
 			}
@@ -1332,6 +1378,9 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		json_t *record = json_object_get(root, "record");
 		json_t *rec_dir = json_object_get(root, "rec_dir");
 		json_t *permanent = json_object_get(root, "permanent");
+		json_t *recordmix = json_object_get(root, "recordmix");
+		json_t *recmixfile = json_object_get(root, "recordmix_file");
+
 		if(allowed) {
 			/* Make sure the "allowed" array only contains strings */
 			gboolean ok = TRUE;
@@ -1478,6 +1527,13 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		if(rec_dir) {
 			videoroom->rec_dir = g_strdup(json_string_value(rec_dir));
 		}
+
+		if(recordmix && json_is_true(recordmix))
+			videoroom->recordmix = TRUE;
+		if(recmixfile)
+			videoroom->recordmix_file = g_strdup_printf("%s-%ld.wav", json_string_value(recmixfile), videoroom->room_id);
+		videoroom->recordingmix = NULL;		
+
 		videoroom->destroyed = 0;
 		janus_mutex_init(&videoroom->participants_mutex);
 		videoroom->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
@@ -1539,6 +1595,10 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 				janus_config_add_item(config, cat, "record", "yes");
 			if(videoroom->rec_dir)
 				janus_config_add_item(config, cat, "rec_dir", videoroom->rec_dir);
+			if(videoroom->recordmix_file) {
+				janus_config_add_item(config, cat, "recordmix", "yes");
+				janus_config_add_item(config, cat, "recordmix_file", videoroom->recordmix_file);
+			}				
 			/* Save modified configuration */
 			if(janus_config_save(config, config_folder, JANUS_VIDEOROOM_PACKAGE) < 0)
 				save = FALSE;	/* This will notify the user the room is not permanent */
@@ -1637,6 +1697,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 			janus_mutex_unlock(&config_mutex);
 		}
 		/* Done */
+		g_thread_join(videoroom->thread);
 		response = json_object();
 		json_object_set_new(response, "videoroom", json_string("destroyed"));
 		json_object_set_new(response, "room", json_integer(room_id));
@@ -3803,6 +3864,302 @@ error:
 	return NULL;
 }
 
+/* Thread to mix the contributions from all participants */
+static void *janus_videoroom_mixer_thread(void *data) {
+	JANUS_LOG(LOG_VERB, "Video Room audio mixer thread starting...\n");
+	janus_videoroom *videoroom = (janus_videoroom *)data;
+	if(!videoroom) {
+		JANUS_LOG(LOG_ERR, "Invalid room!\n");
+		return NULL;
+	}
+	int sampling_rate = 16000;
+	JANUS_LOG(LOG_VERB, "Thread is for mixing room %"SCNu64" (%s) at rate %"SCNu32"...\n", videoroom->room_id, videoroom->room_name, sampling_rate);
+
+	/* Do we need to record the mix? */
+	if(videoroom->recordmix) {
+		char filename[255];
+		if(videoroom->recordmix_file) {
+			g_snprintf(filename, 255, "%s", videoroom->recordmix_file);
+		} else {
+			g_snprintf(filename, 255, "janus-videoroom-%"SCNu64".wav", videoroom->room_id);
+		}
+		videoroom->recordingmix = fopen(filename, "wb");
+		if(videoroom->recordingmix == NULL) {
+			JANUS_LOG(LOG_WARN, "Recording requested, but could NOT open file %s for writing...\n", filename);
+		} else {
+			JANUS_LOG(LOG_VERB, "Recording requested, opened file %s for writing\n", filename);
+			/* Write WAV header */
+			wav_header header = {
+				{'R', 'I', 'F', 'F'},
+				0,
+				{'W', 'A', 'V', 'E'},
+				{'f', 'm', 't', ' '},
+				16,
+				1,
+				1,
+				sampling_rate,
+				sampling_rate * 2,
+				2,
+				16,
+				{'d', 'a', 't', 'a'},
+				0
+			};
+			if(fwrite(&header, 1, sizeof(header), videoroom->recordingmix) != sizeof(header)) {
+				JANUS_LOG(LOG_ERR, "Error writing WAV header...\n");
+			}
+			fflush(videoroom->recordingmix);
+			// videoroom->record_lastupdate = janus_get_monotonic_time();
+		}
+	}
+#if 0
+	/* Buffer (we allocate assuming 48kHz, although we'll likely use less than that) */
+	int samples = videoroom->sampling_rate/50;
+	opus_int32 buffer[960], sumBuffer[960];
+	opus_int16 outBuffer[960], *curBuffer = NULL;
+	memset(buffer, 0, 960*4);
+	memset(sumBuffer, 0, 960*4);
+	memset(outBuffer, 0, 960*2);
+
+	/* Base RTP packet, in case there are forwarders involved */
+	unsigned char *rtpbuffer = g_malloc0(1500);
+	rtp_header *rtph = (rtp_header *)rtpbuffer;
+	rtph->version = 2;
+
+	/* Timer */
+	struct timeval now, before;
+	gettimeofday(&before, NULL);
+	now.tv_sec = before.tv_sec;
+	now.tv_usec = before.tv_usec;
+	time_t passed, d_s, d_us;
+
+	/* RTP */
+	gint16 seq = 0;
+	gint32 ts = 0;
+
+	/* Loop */
+	int i=0;
+	int count = 0, rf_count = 0, prev_count = 0;
+	while(!g_atomic_int_get(&stopping) && videoroom->destroyed == 0) {	/* FIXME We need a per-room watchdog as well */
+		/* See if it's time to prepare a frame */
+		gettimeofday(&now, NULL);
+		d_s = now.tv_sec - before.tv_sec;
+		d_us = now.tv_usec - before.tv_usec;
+		if(d_us < 0) {
+			d_us += 1000000;
+			--d_s;
+		}
+		passed = d_s*1000000 + d_us;
+		if(passed < 15000) {	/* Let's wait about 15ms at max */
+			usleep(1000);
+			continue;
+		}
+		/* Update the reference time */
+		before.tv_usec += 20000;
+		if(before.tv_usec > 1000000) {
+			before.tv_sec++;
+			before.tv_usec -= 1000000;
+		}
+		/* Do we need to mix at all? */
+		janus_mutex_lock_nodebug(&videoroom->mutex);
+		count = g_hash_table_size(videoroom->participants);
+		rf_count = g_hash_table_size(videoroom->rtp_forwarders);
+		janus_mutex_unlock_nodebug(&videoroom->mutex);
+		if((count+rf_count) == 0) {
+			/* No participant and RTP forwarders, do nothing */
+			if(prev_count > 0) {
+				JANUS_LOG(LOG_VERB, "Last user/forwarder just left room %"SCNu64", going idle...\n", videoroom->room_id);
+				prev_count = 0;
+			}
+			continue;
+		}
+		if(prev_count == 0) {
+			JANUS_LOG(LOG_VERB, "First user/forwarder just joined room %"SCNu64", waking it up...\n", videoroom->room_id);
+		}
+		prev_count = count+rf_count;
+		/* Update RTP header information */
+		seq++;
+		ts += 960;
+		/* Mix all contributions */
+		janus_mutex_lock_nodebug(&videoroom->mutex);
+		GList *participants_list = g_hash_table_get_values(videoroom->participants);
+		janus_mutex_unlock_nodebug(&videoroom->mutex);
+		for(i=0; i<samples; i++)
+			buffer[i] = 0;
+		GList *ps = participants_list;
+		while(ps) {
+			janus_videoroom_participant *p = (janus_videoroom_participant *)ps->data;
+			janus_mutex_lock(&p->qmutex);
+			if(!p->active || p->muted || p->prebuffering || !p->inbuf) {
+				janus_mutex_unlock(&p->qmutex);
+				ps = ps->next;
+				continue;
+			}
+			GList *peek = g_list_first(p->inbuf);
+			janus_videoroom_rtp_relay_packet *pkt = (janus_videoroom_rtp_relay_packet *)(peek ? peek->data : NULL);
+			if(pkt != NULL && !pkt->silence) {
+				curBuffer = (opus_int16 *)pkt->data;
+				for(i=0; i<samples; i++) {
+					if(p->volume_gain == 100) {
+						buffer[i] += curBuffer[i];
+					} else {
+						buffer[i] += (curBuffer[i]*p->volume_gain)/100;
+					}
+				}
+			}
+			janus_mutex_unlock(&p->qmutex);
+			ps = ps->next;
+		}
+		/* Are we recording the mix? (only do it if there's someone in, though...) */
+		if(videoroom->recording != NULL && g_list_length(participants_list) > 0) {
+			for(i=0; i<samples; i++) {
+				/* FIXME Smoothen/Normalize instead of truncating? */
+				outBuffer[i] = buffer[i];
+			}
+			/* If the recording startTime is not initialized then do it for one time */
+			if(0 == videoroom->record_starttime) {
+				videoroom->record_startime = janus_get_real_time();
+			}
+			
+			fwrite(outBuffer, sizeof(opus_int16), samples, videoroom->recording);
+			/* Every 5 seconds we update the wav header */
+			gint64 now = janus_get_monotonic_time();
+			if(now - videoroom->record_lastupdate >= 5*G_USEC_PER_SEC) {
+				videoroom->record_lastupdate = now;
+				/* Update the length in the header */
+				fseek(videoroom->recording, 0, SEEK_END);
+				long int size = ftell(videoroom->recording);
+				if(size >= 8) {
+					size -= 8;
+					fseek(videoroom->recording, 4, SEEK_SET);
+					fwrite(&size, sizeof(uint32_t), 1, videoroom->recording);
+					size += 8;
+					fseek(videoroom->recording, 40, SEEK_SET);
+					fwrite(&size, sizeof(uint32_t), 1, videoroom->recording);
+					fflush(videoroom->recording);
+					fseek(videoroom->recording, 0, SEEK_END);
+				}
+			}
+		}
+		/* Send proper packet to each participant (remove own contribution) */
+		ps = participants_list;
+		while(ps) {
+			janus_videoroom_participant *p = (janus_videoroom_participant *)ps->data;
+			janus_videoroom_rtp_relay_packet *pkt = NULL;
+			janus_mutex_lock(&p->qmutex);
+			if(p->active && !p->muted && !p->prebuffering && p->inbuf) {
+				GList *first = g_list_first(p->inbuf);
+				pkt = (janus_videoroom_rtp_relay_packet *)(first ? first->data : NULL);
+				p->inbuf = g_list_delete_link(p->inbuf, first);
+			}
+			janus_mutex_unlock(&p->qmutex);
+			curBuffer = (opus_int16 *)((pkt && !pkt->silence) ? pkt->data : NULL);
+			for(i=0; i<samples; i++) {
+				if(p->volume_gain == 100)
+					sumBuffer[i] = buffer[i] - (curBuffer ? (curBuffer[i]) : 0);
+				else
+					sumBuffer[i] = buffer[i] - (curBuffer ? (curBuffer[i]*p->volume_gain)/100 : 0);
+			}
+			for(i=0; i<samples; i++)
+				/* FIXME Smoothen/Normalize instead of truncating? */
+				outBuffer[i] = sumBuffer[i];
+			/* Enqueue this mixed frame for encoding in the participant thread */
+			janus_videoroom_rtp_relay_packet *mixedpkt = g_malloc0(sizeof(janus_videoroom_rtp_relay_packet));
+			if(mixedpkt != NULL) {
+				mixedpkt->data = g_malloc0(samples*2);
+				memcpy(mixedpkt->data, outBuffer, samples*2);
+				mixedpkt->length = samples;	/* We set the number of samples here, not the data length */
+				mixedpkt->timestamp = ts;
+				mixedpkt->seq_number = seq;
+				mixedpkt->ssrc = videoroom->room_id;
+				g_async_queue_push(p->outbuf, mixedpkt);
+			}
+			if(pkt) {
+				if(pkt->data)
+					g_free(pkt->data);
+				pkt->data = NULL;
+				g_free(pkt);
+				pkt = NULL;
+			}
+			ps = ps->next;
+		}
+		g_list_free(participants_list);
+		/* Forward the mixed packet as RTP to any RTP forwarder that may be listening */
+		janus_mutex_lock(&videoroom->rtp_mutex);
+		if(g_hash_table_size(videoroom->rtp_forwarders) > 0 && videoroom->rtp_encoder) {
+			/* If the room is empty, check if there's any RTP forwarder with an "always on" option */
+			gboolean go_on = FALSE;
+			if(count == 0) {
+				GHashTableIter iter;
+				gpointer value;
+				g_hash_table_iter_init(&iter, videoroom->rtp_forwarders);
+				while(g_hash_table_iter_next(&iter, NULL, &value)) {
+					janus_videoroom_rtp_forwarder* forwarder = (janus_videoroom_rtp_forwarder *)value;
+					if(forwarder->always_on) {
+						go_on = TRUE;
+						break;
+					}
+				}
+			} else {
+				go_on = TRUE;
+			}
+			if(go_on) {
+				/* Encode the mixed frame first*/
+				for(i=0; i<samples; i++)
+					outBuffer[i] = buffer[i];
+				opus_int32 length = opus_encode(videoroom->rtp_encoder, outBuffer, samples, rtpbuffer+12, 1500-12);
+				if(length < 0) {
+					JANUS_LOG(LOG_ERR, "[Opus] Ops! got an error encoding the Opus frame: %d (%s)\n", length, opus_strerror(length));
+				} else {
+					/* Then send it to everybody */
+					GHashTableIter iter;
+					gpointer key, value;
+					g_hash_table_iter_init(&iter, videoroom->rtp_forwarders);
+					while(videoroom->rtp_udp_sock > 0 && g_hash_table_iter_next(&iter, &key, &value)) {
+						guint32 stream_id = GPOINTER_TO_UINT(key);
+						janus_videoroom_rtp_forwarder* forwarder = (janus_videoroom_rtp_forwarder *)value;
+						if(count == 0 && !forwarder->always_on)
+							continue;
+						/* Update header */
+						rtph->type = forwarder->payload_type;
+						rtph->ssrc = htonl(forwarder->ssrc ? forwarder->ssrc : stream_id);
+						forwarder->seq_number++;
+						rtph->seq_number = htons(forwarder->seq_number);
+						forwarder->timestamp += 960;
+						rtph->timestamp = htonl(forwarder->timestamp);
+						/* Send RTP packet */
+						sendto(videoroom->rtp_udp_sock, rtpbuffer, length+12, 0, (struct sockaddr*)&forwarder->serv_addr, sizeof(forwarder->serv_addr));
+					}
+				}
+			}
+		}
+		janus_mutex_unlock(&videoroom->rtp_mutex);
+	}
+#endif	
+	if(videoroom->recordingmix) {
+		/* Update the length in the header */
+		fseek(videoroom->recordingmix, 0, SEEK_END);
+		long int size = ftell(videoroom->recordingmix);
+		if(size >= 8) {
+			size -= 8;
+			fseek(videoroom->recordingmix, 4, SEEK_SET);
+			fwrite(&size, sizeof(uint32_t), 1, videoroom->recordingmix);
+			size += 8;
+			fseek(videoroom->recordingmix, 40, SEEK_SET);
+			fwrite(&size, sizeof(uint32_t), 1, videoroom->recordingmix);
+			/* Audio file duration in mili second is is size / (num_channels * sampling_rate * sample_size) */
+			// videoroom->record_duration = (1000 * size) / (1 * videoroom->samplerate * 2);
+			fflush(videoroom->recordingmix);
+			fclose(videoroom->recordingmix);
+		}
+	}
+	// g_free(rtpbuffer);
+	JANUS_LOG(LOG_VERB, "Leaving mixer thread for room %"SCNu64" (%s)...\n", videoroom->room_id, videoroom->room_name);
+
+	/* We'll let the watchdog worry about free resources */
+	// old_rooms = g_list_append(old_rooms, videoroom);
+
+	return NULL;
+}
 
 /* Helper to quickly relay RTP packets from publishers to subscribers */
 static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) {
@@ -3890,6 +4247,7 @@ static void janus_videoroom_free(janus_videoroom *room) {
 		g_free(room->room_secret);
 		g_free(room->room_pin);
 		g_free(room->rec_dir);
+		g_free(room->recordmix_file);
 		g_hash_table_unref(room->participants);
 		g_hash_table_unref(room->private_ids);
 		g_hash_table_destroy(room->allowed);

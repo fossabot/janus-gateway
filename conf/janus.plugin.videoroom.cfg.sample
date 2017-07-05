@@ -39,3 +39,5 @@ fir_freq = 10
 ;videocodec = vp8
 record = false
 ;rec_dir = /path/to/recordings-folder
+recordmix = false
+;recordmix_file = /home/ashwini/recordings/video-room-1234.wav
