@@ -611,6 +611,13 @@ typedef struct wav_header {
 /* Mixer settings */
 #define DEFAULT_PREBUFFERING	6
 
+/* Opus settings */		
+#define	BUFFER_SAMPLES	8000
+#define	OPUS_SAMPLES	160
+#define USE_FEC			0
+#define DEFAULT_COMPLEXITY	4
+
+
 
 /* Error codes */
 #define JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR		499
@@ -631,6 +638,8 @@ typedef struct wav_header {
 #define JANUS_VIDEOROOM_ERROR_NOT_PUBLISHED		435
 #define JANUS_VIDEOROOM_ERROR_ID_EXISTS			436
 #define JANUS_VIDEOROOM_ERROR_INVALID_SDP		437
+
+#define JANUS_VIDEOROOM_ERROR_LIBOPUS_ERROR	488
 
 
 static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_participant *p,
@@ -944,7 +953,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 				videoroom->recordmix_file = g_strdup(recmixfile->value);
 			videoroom->recordingmix = NULL;
 
-			if(videoroom->recordmix){
+			if(videoroom->recordmix) {
 				if(sampling == NULL || sampling->value == NULL) {
 					JANUS_LOG(LOG_ERR, "Can't add the video room, missing mandatory information...\n");
 					cl = cl->next;
@@ -2485,6 +2494,18 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 		packet.seq_number = ntohs(packet.data->seq_number);
 		/* Go */
 		g_slist_foreach(participant->listeners, janus_videoroom_relay_rtp_packet, &packet);
+
+		if(!video && participant->audio_active) {
+			opus_int16 output[BUFFER_SAMPLES];
+			int plen = 0;
+			const unsigned char *payload = (const unsigned char *)janus_rtp_payload(buf, len, &plen);
+			if(!payload) {
+				JANUS_LOG(LOG_ERR, "[Opus] Ops! got an error accessing the RTP payload\n");
+				return;
+			}			
+			int op_len = opus_decode(participant->decoder, payload, plen, (opus_int16 *)output, BUFFER_SAMPLES, USE_FEC);
+			JANUS_LOG(LOG_INFO, "[Opus] Decoded %d data\n", op_len);
+		}
 		
 		/* Check if we need to send any REMB, FIR or PLI back to this publisher */
 		if(video && participant->video_active) {
@@ -2986,6 +3007,13 @@ static void *janus_videoroom_handler(void *data) {
 				publisher->listeners = NULL;
 				publisher->subscriptions = NULL;
 				janus_mutex_init(&publisher->listeners_mutex);
+
+				publisher->inbuf = NULL;
+				publisher->last_drop = 0;
+				publisher->decoder = NULL;
+				publisher->reset = TRUE;
+				janus_mutex_init(&publisher->qmutex);
+
 				publisher->audio_pt = OPUS_PT;
 				switch(videoroom->acodec) {
 					case JANUS_VIDEOROOM_OPUS:
@@ -3074,6 +3102,26 @@ static void *janus_videoroom_handler(void *data) {
 					publisher->recording_base = g_strdup(json_string_value(recfile));
 					JANUS_LOG(LOG_VERB, "Setting recording basename: %s (room %"SCNu64", user %"SCNu64")\n", publisher->recording_base, publisher->room->room_id, publisher->user_id);
 				}
+
+				/* Create Opus Decoder */	
+				if(publisher->decoder == NULL) {
+					/* Opus decoder */
+					int error = 0;
+					publisher->decoder = opus_decoder_create(videoroom->sampling_rate, 1, &error);
+					if(error != OPUS_OK) {
+						janus_mutex_unlock(&videoroom->participants_mutex);
+						if(publisher->decoder)
+							opus_decoder_destroy(publisher->decoder);
+						publisher->decoder = NULL;
+						g_free(publisher);
+						JANUS_LOG(LOG_ERR, ">>>>>>> Ashwini Error creating Opus encoder\n");
+						error_code = JANUS_VIDEOROOM_ERROR_LIBOPUS_ERROR;
+						g_snprintf(error_cause, 512, "Error creating Opus decoder");
+						goto error;
+					}
+				}
+				publisher->reset = FALSE;
+
 				/* Done */
 				session->participant_type = janus_videoroom_p_type_publisher;
 				session->participant = publisher;
