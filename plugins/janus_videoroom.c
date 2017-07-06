@@ -133,6 +133,7 @@ rec_dir = <folder where recordings should be stored, when enabled>
 #include "plugin.h"
 
 #include <jansson.h>
+#include <opus/opus.h>
 
 #include "../debug.h"
 #include "../apierror.h"
@@ -471,17 +472,24 @@ typedef struct janus_videoroom {
 	gboolean playoutdelay_ext;	/* Whether the playout-delay extension must be negotiated or not for new publishers */
 	gboolean record;			/* Whether the feeds from publishers in this room should be recorded */
 	char *rec_dir;				/* Where to save the recordings of this room, if enabled */
-	gboolean recordmix;			/* Whether this room has to be mixed and recorded or not */
-	gchar *recordmix_file;      /* Path of the recording mix file */
-	FILE *recordingmix;			/* File to record the mix room into */
-	GThread *thread;			/* Mixer thread for this room */
 	gint64 destroyed;			/* Value to flag the room for destruction, done lazily */
 	GHashTable *participants;	/* Map of potential publishers (we get listeners from them) */
 	GHashTable *private_ids;	/* Map of existing private IDs */
 	gboolean check_tokens;		/* Whether to check tokens when participants join (see below) */
 	GHashTable *allowed;		/* Map of participants (as tokens) allowed to join */
 	janus_mutex participants_mutex;/* Mutex to protect room properties */
+
+	// Added for audio mixing
+	uint32_t sampling_rate;		/* Sampling rate of the mix (e.g., 16000 for wideband; can be 8, 12, 16, 24 or 48kHz) */
+	gint64 record_starttime;    /* Time when recording started in mili second */
+	uint32_t record_duration;   /* Recording duration in mili second */ 
+	gint64 record_lastupdate;	/* Time when we last updated the wav header */
+	gboolean recordmix;			/* Whether this room has to be mixed and recorded or not */
+	gchar *recordmix_file;      /* Path of the recording mix file */
+	FILE *recordingmix;			/* File to record the mix room into */
+	GThread *thread;			/* Mixer thread for this room */
 } janus_videoroom;
+
 static GHashTable *rooms;
 static janus_mutex rooms_mutex;
 static GList *old_rooms;
@@ -549,6 +557,14 @@ typedef struct janus_videoroom_participant {
 	janus_mutex rtp_forwarders_mutex;
 	int udp_sock; /* The udp socket on which to forward rtp packets */
 	gboolean kicked;	/* Whether this participant has been kicked */
+
+	// Added for audio mixing
+	GList *inbuf;			/* Incoming audio from this participant, as an ordered list of packets */
+	gint64 last_drop;		/* When we last dropped a packet because the imcoming queue was full */
+	janus_mutex qmutex;		/* Incoming queue mutex */
+	OpusDecoder *decoder;	/* Opus decoder instance */
+	gboolean reset;			/* Whether or not the Opus context must be reset, without re-joining the room */
+	
 } janus_videoroom_participant;
 static void janus_videoroom_participant_free(janus_videoroom_participant *p);
 static void janus_videoroom_rtp_forwarder_free_helper(gpointer data);
@@ -591,6 +607,10 @@ typedef struct wav_header {
 	char data[4];
 	uint32_t blocksize;
 } wav_header;
+
+/* Mixer settings */
+#define DEFAULT_PREBUFFERING	6
+
 
 /* Error codes */
 #define JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR		499
@@ -816,6 +836,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			janus_config_item *rec_dir = janus_config_get_item(cat, "rec_dir");
 			janus_config_item *recordmix = janus_config_get_item(cat, "recordmix");
 			janus_config_item *recmixfile = janus_config_get_item(cat, "recordmix_file");
+			janus_config_item *sampling = janus_config_get_item(cat, "sampling_rate");
 			
 			/* Create the video room */
 			janus_videoroom *videoroom = g_malloc0(sizeof(janus_videoroom));
@@ -922,6 +943,28 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			if(recmixfile && recmixfile->value)
 				videoroom->recordmix_file = g_strdup(recmixfile->value);
 			videoroom->recordingmix = NULL;
+
+			if(videoroom->recordmix){
+				if(sampling == NULL || sampling->value == NULL) {
+					JANUS_LOG(LOG_ERR, "Can't add the video room, missing mandatory information...\n");
+					cl = cl->next;
+					continue;
+				}
+				videoroom->sampling_rate = atol(sampling->value);
+				switch(videoroom->sampling_rate) {
+					case 8000:
+					case 12000:
+					case 16000:
+					case 24000:
+					case 48000:
+						JANUS_LOG(LOG_VERB, "Sampling rate for mixing: %"SCNu32"\n", videoroom->sampling_rate);
+						break;
+					default:
+						JANUS_LOG(LOG_ERR, "Unsupported sampling rate %"SCNu32"...\n", videoroom->sampling_rate);
+						cl = cl->next;
+						continue;
+				}
+			}
 
 			videoroom->destroyed = 0;
 			janus_mutex_init(&videoroom->participants_mutex);
