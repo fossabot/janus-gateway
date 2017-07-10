@@ -1606,7 +1606,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		if(recordmix)
 			videoroom->recordmix = json_is_true(recordmix);
 		if(recmixfile)
-			videoroom->recordmix_file = g_strdup_printf("%s-%ld.wav", json_string_value(recmixfile), videoroom->room_id);
+			videoroom->recordmix_file = g_strdup_printf("%s%ld.wav", json_string_value(recmixfile), videoroom->room_id);
 		videoroom->recordingmix = NULL;
 
 		if(videoroom->recordmix) {
@@ -1734,7 +1734,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		g_hash_table_iter_init(&iter, rooms);
 		while (g_hash_table_iter_next(&iter, NULL, &value)) {
 			janus_videoroom *vr = value;
-			JANUS_LOG(LOG_VERB, "  ::: [%"SCNu64"][%s] %"SCNu64", max %d publishers, FIR frequency of %d seconds\n", vr->room_id, vr->room_name, vr->bitrate, vr->max_publishers, vr->fir_freq);
+			JANUS_LOG(LOG_INFO, "  ::: [%"SCNu64"][%s] %"SCNu64", max %d publishers, FIR frequency of %d seconds\n", vr->room_id, vr->room_name, vr->bitrate, vr->max_publishers, vr->fir_freq);
 		}
 		janus_mutex_unlock(&rooms_mutex);
 		/* Send info back */
@@ -2934,11 +2934,11 @@ void janus_videoroom_hangup_media(janus_plugin_session *handle) {
 		return;
 	/* Send an event to the browser and tell the PeerConnection is over */
 	if(session->participant_type == janus_videoroom_p_type_publisher) {
-		
-		JANUS_LOG(LOG_INFO, "Ashwini janus_videoroom_hangup_media \n");
-
 		/* This publisher just 'unpublished' */
 		janus_videoroom_participant *participant = (janus_videoroom_participant *)session->participant;
+
+		JANUS_LOG(LOG_VERB, "videoroom: hangup_media room %ld participant=%s\n", participant->room->room_id, participant->display);
+		
 		if(participant->sdp)
 			g_free(participant->sdp);
 		participant->sdp = NULL;
@@ -2962,6 +2962,7 @@ void janus_videoroom_hangup_media(janus_plugin_session *handle) {
 		participant->reset = TRUE;
 
 		/* Get rid of queued packets */
+		janus_mutex_lock(&participant->qmutex);		
 		while(participant->inbuf) {
 			GList *first = g_list_first(participant->inbuf);
 			janus_videoroom_rtp_relay_packet *pkt = (janus_videoroom_rtp_relay_packet *)first->data;
@@ -3086,7 +3087,6 @@ static void *janus_videoroom_handler(void *data) {
 		json_t *event = NULL;
 		/* 'create' and 'destroy' are handled synchronously: what kind of participant is this session referring to? */
 		if(session->participant_type == janus_videoroom_p_type_none) {
-			JANUS_LOG(LOG_VERB, "Ashwini Configuring new participant\n");
 			/* Not configured yet, we need to do this now */
 			if(strcasecmp(request_text, "join") && strcasecmp(request_text, "joinandconfigure")) {
 				JANUS_LOG(LOG_ERR, "Invalid request on unconfigured participant\n");
@@ -3107,9 +3107,8 @@ static void *janus_videoroom_handler(void *data) {
 				goto error;
 			json_t *ptype = json_object_get(root, "ptype");
 			const char *ptype_text = json_string_value(ptype);
+			JANUS_LOG(LOG_VERB, "videoroom: room=%ld ptype-none to ptype-new=%s request=%s \n", videoroom->room_id, ptype_text, request_text);
 			if(!strcasecmp(ptype_text, "publisher")) {
-				JANUS_LOG(LOG_INFO, "Ashwini Configuring new publisher\n");
-
 				JANUS_VALIDATE_JSON_OBJECT(root, publisher_parameters,
 					error_code, error_cause, TRUE,
 					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
@@ -3446,8 +3445,6 @@ static void *janus_videoroom_handler(void *data) {
 			}
 		} else if(session->participant_type == janus_videoroom_p_type_publisher) {
 			/* Handle this publisher */
-			JANUS_LOG(LOG_INFO, "Ashwini Configuring the same participant\n");
-
 			janus_videoroom_participant *participant = (janus_videoroom_participant *)session->participant;
 			if(participant == NULL) {
 				JANUS_LOG(LOG_ERR, "Invalid participant instance\n");
@@ -3455,6 +3452,8 @@ static void *janus_videoroom_handler(void *data) {
 				g_snprintf(error_cause, 512, "Invalid participant instance");
 				goto error;
 			}
+			JANUS_LOG(LOG_VERB, "videoroom: room=%ld ptype-publisher request=%s, participant=%s \n", participant->room->room_id, request_text, participant->display);
+			
 			if(!strcasecmp(request_text, "join") || !strcasecmp(request_text, "joinandconfigure")) {
 				JANUS_LOG(LOG_ERR, "Already in as a publisher on this handle\n");
 				error_code = JANUS_VIDEOROOM_ERROR_ALREADY_JOINED;
@@ -3619,9 +3618,6 @@ static void *janus_videoroom_handler(void *data) {
 				}
 			} else if(!strcasecmp(request_text, "unpublish")) {
 				/* This participant wants to unpublish */
-
-				JANUS_LOG(LOG_INFO, "Ashwini unpublish participant\n");
-
 				if(!participant->sdp) {
 					JANUS_LOG(LOG_ERR, "Can't unpublish, not published\n");
 					error_code = JANUS_VIDEOROOM_ERROR_NOT_PUBLISHED;

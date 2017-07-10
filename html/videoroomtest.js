@@ -101,7 +101,7 @@ $(document).ready(function() {
 									registerUsername();
 
 									$('#username').focus();
-									$('#hangup').removeAttr('disabled').html("Hangup")
+									$('#hangup').removeClass('hide').html("Hangup")
 										.click(function() {
 											$(this).attr('disabled', true);
 											janus.destroy();
@@ -298,7 +298,7 @@ $(document).ready(function() {
 function checkEnter(field, event) {
 	var theCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
 	if(theCode == 13) {
-		registerUsername();
+		// registerUsername();
 		return false;
 	} else {
 		return true;
