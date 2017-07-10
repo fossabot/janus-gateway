@@ -1453,6 +1453,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		json_t *permanent = json_object_get(root, "permanent");
 		json_t *recordmix = json_object_get(root, "recordmix");
 		json_t *recmixfile = json_object_get(root, "recordmix_file");
+		json_t *sampling = json_object_get(root, "sampling_rate");
 
 		if(allowed) {
 			/* Make sure the "allowed" array only contains strings */
@@ -1601,11 +1602,36 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 			videoroom->rec_dir = g_strdup(json_string_value(rec_dir));
 		}
 
-		if(recordmix && json_is_true(recordmix))
-			videoroom->recordmix = TRUE;
+		videoroom->recordmix = FALSE;
+		if(recordmix)
+			videoroom->recordmix = json_is_true(recordmix);
 		if(recmixfile)
 			videoroom->recordmix_file = g_strdup_printf("%s-%ld.wav", json_string_value(recmixfile), videoroom->room_id);
-		videoroom->recordingmix = NULL;		
+		videoroom->recordingmix = NULL;
+
+		if(videoroom->recordmix) {
+			if(sampling) {
+				videoroom->sampling_rate = json_integer_value(sampling);
+			} else {
+				videoroom->sampling_rate = 16000;
+			}
+			
+			switch(videoroom->sampling_rate) {
+				case 8000:
+				case 12000:
+				case 16000:
+				case 24000:
+				case 48000:
+					JANUS_LOG(LOG_VERB, "Sampling rate for mixing: %"SCNu32"\n", videoroom->sampling_rate);
+					break;
+				default:
+					janus_mutex_unlock(&rooms_mutex);
+					JANUS_LOG(LOG_ERR, "Unsupported sampling rate %"SCNu32"...\n", videoroom->sampling_rate);
+					error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
+					g_snprintf(error_cause, 512, "We currently only support 16kHz (wideband) as a sampling rate for audio rooms, %"SCNu32" TBD...", videoroom->sampling_rate);
+					goto plugin_response;
+			}
+		}		
 
 		videoroom->destroyed = 0;
 		janus_mutex_init(&videoroom->participants_mutex);
@@ -1635,6 +1661,28 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		if(videoroom->record) {
 			JANUS_LOG(LOG_VERB, "  -- Room is going to be recorded in %s\n", videoroom->rec_dir ? videoroom->rec_dir : "the current folder");
 		}
+		/* We need a thread for the mix */
+		GError *error = NULL;
+		char tname[16];
+		g_snprintf(tname, sizeof(tname), "mixer %"SCNu64, videoroom->room_id);
+		videoroom->thread = g_thread_try_new(tname, &janus_videoroom_mixer_thread, videoroom, &error);
+		if(error != NULL) {
+			/* FIXME We should clear some resources... */
+			janus_mutex_unlock(&rooms_mutex);
+			JANUS_LOG(LOG_ERR, "Got error %d (%s) trying to launch the mixer thread...\n", error->code, error->message ? error->message : "??");
+			error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
+			g_snprintf(error_cause, 512, "Got error %d (%s) trying to launch the mixer thread", error->code, error->message ? error->message : "??");
+			g_free(videoroom->room_name);
+			g_free(videoroom->room_secret);
+			g_free(videoroom->room_pin);
+			g_free(videoroom->rec_dir);
+			g_free(videoroom->recordmix_file);
+			g_hash_table_destroy(videoroom->participants);
+			g_hash_table_destroy(videoroom->allowed);
+			g_free(videoroom);
+			goto plugin_response;
+		} 
+
 		if(save) {
 			/* This room is permanent: save to the configuration file too
 			 * FIXME: We should check if anything fails... */
@@ -1671,6 +1719,8 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 			if(videoroom->recordmix_file) {
 				janus_config_add_item(config, cat, "recordmix", "yes");
 				janus_config_add_item(config, cat, "recordmix_file", videoroom->recordmix_file);
+				g_snprintf(value, BUFSIZ, "%"SCNu32, videoroom->sampling_rate);
+				janus_config_add_item(config, cat, "sampling_rate", value);
 			}				
 			/* Save modified configuration */
 			if(janus_config_save(config, config_folder, JANUS_VIDEOROOM_PACKAGE) < 0)
@@ -1742,6 +1792,24 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 				/* Notify the user we're going to destroy the room... */
 				int ret = gateway->push_event(p->session->handle, &janus_videoroom_plugin, NULL, destroyed, NULL);
 				JANUS_LOG(LOG_VERB, "  >> %d (%s)\n", ret, janus_get_api_error(ret));
+
+				/* Get rid of queued packets */
+				janus_mutex_lock(&p->qmutex);
+				while(p->inbuf) {
+					GList *first = g_list_first(p->inbuf);
+					janus_videoroom_rtp_relay_packet *pkt = (janus_videoroom_rtp_relay_packet *)first->data;
+					p->inbuf = g_list_remove_link(p->inbuf, first);
+					first = NULL;
+					if(pkt == NULL)
+						continue;
+					if(pkt->data)
+						g_free(pkt->data);
+					pkt->data = NULL;
+					g_free(pkt);
+					pkt = NULL;
+				}
+				janus_mutex_unlock(&p->qmutex);
+
 				/* ... and then ask the core to remove the handle */
 				gateway->end_session(p->session->handle);
 			}
@@ -1770,6 +1838,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 			janus_mutex_unlock(&config_mutex);
 		}
 		/* Done */
+		JANUS_LOG(LOG_VERB, "Waiting for the video room mixer thread to complete...\n");
 		g_thread_join(videoroom->thread);
 		response = json_object();
 		json_object_set_new(response, "videoroom", json_string("destroyed"));
@@ -2516,7 +2585,25 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 		/* Go */
 		g_slist_foreach(participant->listeners, janus_videoroom_relay_rtp_packet, &packet);
 
+		/* Decode and queue up decoded data for recording mixed audio */
 		if(!video && participant->audio_active) {
+
+			/* First of all, check if a reset on the decoder is due */
+			if(participant->reset) {
+				/* Create a new decoder and get rid of the old one */
+				int error = 0;
+				OpusDecoder *decoder = opus_decoder_create(participant->room->sampling_rate, 1, &error);
+				if(error != OPUS_OK) {
+					JANUS_LOG(LOG_ERR, "Error resetting Opus decoder...\n");
+				} else {
+					if(participant->decoder)
+						opus_decoder_destroy(participant->decoder);
+					participant->decoder = decoder;
+					JANUS_LOG(LOG_VERB, "Opus decoder reset\n");
+				}
+				participant->reset = FALSE;
+			}
+
 			rtp_header *rtp = (rtp_header *)buf;
 			janus_videoroom_rtp_relay_packet *pkt = g_malloc0(sizeof(janus_videoroom_rtp_relay_packet));
 			pkt->data = g_malloc0(BUFFER_SAMPLES*sizeof(opus_int16));
@@ -2847,6 +2934,9 @@ void janus_videoroom_hangup_media(janus_plugin_session *handle) {
 		return;
 	/* Send an event to the browser and tell the PeerConnection is over */
 	if(session->participant_type == janus_videoroom_p_type_publisher) {
+		
+		JANUS_LOG(LOG_INFO, "Ashwini janus_videoroom_hangup_media \n");
+
 		/* This publisher just 'unpublished' */
 		janus_videoroom_participant *participant = (janus_videoroom_participant *)session->participant;
 		if(participant->sdp)
@@ -2862,6 +2952,32 @@ void janus_videoroom_hangup_media(janus_plugin_session *handle) {
 		participant->remb_latest = 0;
 		participant->fir_latest = 0;
 		participant->fir_seq = 0;
+		
+		/* Remove the decoder used for audio mixing */	
+		if(participant->decoder)
+			opus_decoder_destroy(participant->decoder);
+		participant->decoder = NULL;
+
+		// Ether: Check if has to be true or false
+		participant->reset = TRUE;
+
+		/* Get rid of queued packets */
+		while(participant->inbuf) {
+			GList *first = g_list_first(participant->inbuf);
+			janus_videoroom_rtp_relay_packet *pkt = (janus_videoroom_rtp_relay_packet *)first->data;
+			participant->inbuf = g_list_remove_link(participant->inbuf, first);
+			first = NULL;
+			if(pkt == NULL)
+				continue;
+			if(pkt->data)
+				g_free(pkt->data);
+			pkt->data = NULL;
+			g_free(pkt);
+			pkt = NULL;
+		}
+		participant->last_drop = 0;
+		janus_mutex_unlock(&participant->qmutex);		
+
 		/* Get rid of the recorders, if available */
 		janus_mutex_lock(&participant->rec_mutex);
 		janus_videoroom_recorder_close(participant);
@@ -2970,7 +3086,7 @@ static void *janus_videoroom_handler(void *data) {
 		json_t *event = NULL;
 		/* 'create' and 'destroy' are handled synchronously: what kind of participant is this session referring to? */
 		if(session->participant_type == janus_videoroom_p_type_none) {
-			JANUS_LOG(LOG_VERB, "Configuring new participant\n");
+			JANUS_LOG(LOG_VERB, "Ashwini Configuring new participant\n");
 			/* Not configured yet, we need to do this now */
 			if(strcasecmp(request_text, "join") && strcasecmp(request_text, "joinandconfigure")) {
 				JANUS_LOG(LOG_ERR, "Invalid request on unconfigured participant\n");
@@ -2992,7 +3108,8 @@ static void *janus_videoroom_handler(void *data) {
 			json_t *ptype = json_object_get(root, "ptype");
 			const char *ptype_text = json_string_value(ptype);
 			if(!strcasecmp(ptype_text, "publisher")) {
-				JANUS_LOG(LOG_VERB, "Configuring new publisher\n");
+				JANUS_LOG(LOG_INFO, "Ashwini Configuring new publisher\n");
+
 				JANUS_VALIDATE_JSON_OBJECT(root, publisher_parameters,
 					error_code, error_cause, TRUE,
 					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
@@ -3073,6 +3190,7 @@ static void *janus_videoroom_handler(void *data) {
 				publisher->subscriptions = NULL;
 				janus_mutex_init(&publisher->listeners_mutex);
 
+				/* Recording mix initialization */
 				publisher->inbuf = NULL;
 				publisher->last_drop = 0;
 				publisher->decoder = NULL;
@@ -3169,7 +3287,7 @@ static void *janus_videoroom_handler(void *data) {
 					JANUS_LOG(LOG_VERB, "Setting recording basename: %s (room %"SCNu64", user %"SCNu64")\n", publisher->recording_base, publisher->room->room_id, publisher->user_id);
 				}
 
-				/* Create Opus Decoder */	
+				/* Create Opus Decoder for recording mixed audio */	
 				if(publisher->decoder == NULL) {
 					/* Opus decoder */
 					int error = 0;
@@ -3328,6 +3446,8 @@ static void *janus_videoroom_handler(void *data) {
 			}
 		} else if(session->participant_type == janus_videoroom_p_type_publisher) {
 			/* Handle this publisher */
+			JANUS_LOG(LOG_INFO, "Ashwini Configuring the same participant\n");
+
 			janus_videoroom_participant *participant = (janus_videoroom_participant *)session->participant;
 			if(participant == NULL) {
 				JANUS_LOG(LOG_ERR, "Invalid participant instance\n");
@@ -3499,6 +3619,9 @@ static void *janus_videoroom_handler(void *data) {
 				}
 			} else if(!strcasecmp(request_text, "unpublish")) {
 				/* This participant wants to unpublish */
+
+				JANUS_LOG(LOG_INFO, "Ashwini unpublish participant\n");
+
 				if(!participant->sdp) {
 					JANUS_LOG(LOG_ERR, "Can't unpublish, not published\n");
 					error_code = JANUS_VIDEOROOM_ERROR_NOT_PUBLISHED;
@@ -3521,6 +3644,25 @@ static void *janus_videoroom_handler(void *data) {
 				/* This publisher is leaving, tell everybody */
 				session->participant_type = janus_videoroom_p_type_none;
 				janus_videoroom_leave_or_unpublish(participant, TRUE, FALSE);
+
+				/* Get rid of queued packets */
+				janus_mutex_lock(&participant->qmutex);
+				participant->prebuffering = TRUE;
+				while(participant->inbuf) {
+					GList *first = g_list_first(participant->inbuf);
+					janus_videoroom_rtp_relay_packet *pkt = (janus_videoroom_rtp_relay_packet *)first->data;
+					participant->inbuf = g_list_remove_link(participant->inbuf, first);
+					first = NULL;
+					if(pkt == NULL)
+						continue;
+					if(pkt->data)
+						g_free(pkt->data);
+					pkt->data = NULL;
+					g_free(pkt);
+					pkt = NULL;
+				}
+				janus_mutex_unlock(&participant->qmutex);				
+
 				/* Done */
 				participant->audio_active = FALSE;
 				participant->video_active = FALSE;
