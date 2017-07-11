@@ -1288,6 +1288,17 @@ void janus_audiobridge_destroy_session(janus_plugin_session *handle, int *error)
 		session->destroyed = janus_get_monotonic_time();
 		/* Cleaning up and removing the session is done in a lazy way */
 		old_sessions = g_list_append(old_sessions, session);
+
+		/* Send event to event handler */
+		if(notify_events && gateway->events_is_enabled() && session->participant) {
+			janus_audiobridge_room *audiobridge = ((janus_audiobridge_participant *)session->participant)->room;
+			if(0 == g_hash_table_size(audiobridge->participants)) {
+				json_t *info = json_object();
+				json_object_set_new(info, "event", json_string("all-left"));
+				json_object_set_new(info, "room", json_integer(audiobridge->room_id));
+				gateway->notify_event(&janus_audiobridge_plugin, session->handle, info);
+			}
+		}	
 	}
 	janus_mutex_unlock(&sessions_mutex);
 
@@ -2444,7 +2455,6 @@ void janus_audiobridge_hangup_media(janus_plugin_session *handle) {
 			json_object_set_new(info, "room", json_integer(audiobridge->room_id));
 			json_object_set_new(info, "id", json_integer(participant->user_id));
 			json_object_set_new(info, "display", json_string(participant->display));
-			json_object_set_new(info, "num_participant", json_integer(g_hash_table_size(audiobridge->participants)));
 			gateway->notify_event(&janus_audiobridge_plugin, session->handle, info);
 		}
 	}

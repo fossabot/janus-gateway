@@ -1206,6 +1206,7 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 		return;
 	}
 	JANUS_LOG(LOG_VERB, "Removing VideoRoom session...\n");
+
 	/* Cleaning up and removing the session is done in a lazy way */
 	janus_mutex_lock(&sessions_mutex);
 	if(!session->destroyed) {
@@ -1213,6 +1214,7 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 		janus_videoroom_hangup_media(handle);
 		session->destroyed = janus_get_monotonic_time();
 		old_sessions = g_list_append(old_sessions, session);
+
 		if(session->participant_type == janus_videoroom_p_type_publisher) {
 			/* Get rid of publisher */
 			janus_videoroom_participant *participant = (janus_videoroom_participant *)session->participant;
@@ -1231,6 +1233,16 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 		} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
 			/* Detaching this listener from its publisher is already done by hangup_media */
 		}
+		/* Send event to event handler */
+		if(notify_events && gateway->events_is_enabled() && session->participant) {
+			janus_videoroom *videoroom = ((janus_videoroom_participant *)session->participant)->room;
+			if(0 == g_hash_table_size(videoroom->participants)) {
+				json_t *info = json_object();
+				json_object_set_new(info, "event", json_string("all-left"));
+				json_object_set_new(info, "room", json_integer(videoroom->room_id));
+				gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
+			}
+		}			
 	}
 	janus_mutex_unlock(&sessions_mutex);
 
