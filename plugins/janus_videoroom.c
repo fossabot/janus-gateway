@@ -3297,7 +3297,6 @@ static void *janus_videoroom_handler(void *data) {
 							opus_decoder_destroy(publisher->decoder);
 						publisher->decoder = NULL;
 						g_free(publisher);
-						JANUS_LOG(LOG_ERR, ">>>>>>> Ashwini Error creating Opus encoder\n");
 						error_code = JANUS_VIDEOROOM_ERROR_LIBOPUS_ERROR;
 						g_snprintf(error_cause, 512, "Error creating Opus decoder");
 						goto error;

@@ -44,9 +44,9 @@
 //
 var server = null;
 if(window.location.protocol === 'http:')
-	server = "http://" + window.location.hostname + ":8088/janus";
+	server = "http://" + window.location.hostname + "/janus-meet/janus";
 else
-	server = "https://" + window.location.hostname + ":8089/janus";
+	server = "https://" + window.location.hostname + "/janus-meet/janus";
 
 var janus = null;
 var sfutest = null;
@@ -55,6 +55,7 @@ var opaqueId = "videoroomtest-"+Janus.randomString(12);
 var started = false;
 
 var myusername = null;
+var myroom = null;
 var myid = null;
 var mystream = null;
 // We use this other ID just to map our subscriptions to us
@@ -406,7 +407,7 @@ function newRemoteFeed(id, display) {
 				Janus.log("Plugin attached! (" + remoteFeed.getPlugin() + ", id=" + remoteFeed.getId() + ")");
 				Janus.log("  -- This is a subscriber");
 				// We wait for the plugin to send us an offer
-				var listen = { "request": "join", "room": 1234, "ptype": "listener", "feed": id, "private_id": mypvtid };
+				var listen = { "request": "join", "room": myroom, "ptype": "listener", "feed": id, "private_id": mypvtid };
 				remoteFeed.send({"message": listen});
 			},
 			error: function(error) {
@@ -457,7 +458,7 @@ function newRemoteFeed(id, display) {
 							success: function(jsep) {
 								Janus.debug("Got SDP!");
 								Janus.debug(jsep);
-								var body = { "request": "start", "room": 1234 };
+								var body = { "request": "start", "room": myroom };
 								remoteFeed.send({"message": body, "jsep": jsep});
 							},
 							error: function(error) {
