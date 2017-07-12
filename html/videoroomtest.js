@@ -44,9 +44,9 @@
 //
 var server = null;
 if(window.location.protocol === 'http:')
-	server = "http://" + window.location.hostname + ":8088/janus";
+	server = "http://" + window.location.hostname + "/janus-meet/janus";
 else
-	server = "https://" + window.location.hostname + ":8089/janus";
+	server = "https://" + window.location.hostname + "/janus-meet/janus";
 
 var janus = null;
 var sfutest = null;
@@ -55,6 +55,7 @@ var opaqueId = "videoroomtest-"+Janus.randomString(12);
 var started = false;
 
 var myusername = null;
+var myroom = null;
 var myid = null;
 var mystream = null;
 // We use this other ID just to map our subscriptions to us
@@ -68,7 +69,7 @@ $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
 	Janus.init({debug: "all", callback: function() {
 		// Use a button to start the demo
-		$('#start').click(function() {
+		$('#register').click(function() {
 			if(started)
 				return;
 			started = true;
@@ -96,9 +97,12 @@ $(document).ready(function() {
 									// Prepare the username registration
 									$('#videojoin').removeClass('hide').show();
 									$('#registernow').removeClass('hide').show();
-									$('#register').click(registerUsername);
+									// $('#register').click(registerUsername);
+									
+									registerUsername();
+
 									$('#username').focus();
-									$('#start').removeAttr('disabled').html("Stop")
+									$('#hangup').removeClass('hide').html("Hangup")
 										.click(function() {
 											$(this).attr('disabled', true);
 											janus.destroy();
@@ -295,11 +299,23 @@ $(document).ready(function() {
 function checkEnter(field, event) {
 	var theCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
 	if(theCode == 13) {
-		registerUsername();
+		// registerUsername();
 		return false;
 	} else {
 		return true;
 	}
+}
+
+function getRoomNoFromQueryParams(searchKey) {
+	var query = window.location.search.substring(1);
+	var params = query.split('&');
+	for (var i = 0; i < params.length; i++){
+		var pos = params[i].indexOf('=');
+		if(pos > 0 && searchKey == params[i].substring(0, pos)) {
+			return params[i].substring(pos+1);
+		}
+	}
+	return "";
 }
 
 function registerUsername() {
@@ -311,6 +327,7 @@ function registerUsername() {
 		// Try a registration
 		$('#username').attr('disabled', true);
 		$('#register').attr('disabled', true).unbind('click');
+		var meetingroom = parseInt(getRoomNoFromQueryParams('room'));
 		var username = $('#username').val();
 		if(username === "") {
 			$('#you')
@@ -328,8 +345,9 @@ function registerUsername() {
 			$('#register').removeAttr('disabled').click(registerUsername);
 			return;
 		}
-		var register = { "request": "join", "room": 1234, "ptype": "publisher", "display": username };
+		var register = { "request": "join", "room": meetingroom, "ptype": "publisher", "display": username };
 		myusername = username;
+		myroom = meetingroom;
 		sfutest.send({"message": register});
 	}
 }
@@ -389,7 +407,7 @@ function newRemoteFeed(id, display) {
 				Janus.log("Plugin attached! (" + remoteFeed.getPlugin() + ", id=" + remoteFeed.getId() + ")");
 				Janus.log("  -- This is a subscriber");
 				// We wait for the plugin to send us an offer
-				var listen = { "request": "join", "room": 1234, "ptype": "listener", "feed": id, "private_id": mypvtid };
+				var listen = { "request": "join", "room": myroom, "ptype": "listener", "feed": id, "private_id": mypvtid };
 				remoteFeed.send({"message": listen});
 			},
 			error: function(error) {
@@ -440,7 +458,7 @@ function newRemoteFeed(id, display) {
 							success: function(jsep) {
 								Janus.debug("Got SDP!");
 								Janus.debug(jsep);
-								var body = { "request": "start", "room": 1234 };
+								var body = { "request": "start", "room": myroom };
 								remoteFeed.send({"message": body, "jsep": jsep});
 							},
 							error: function(error) {

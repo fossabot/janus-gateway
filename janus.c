@@ -3108,7 +3108,7 @@ void janus_plugin_notify_event(janus_plugin *plugin, janus_plugin_session *plugi
 	json_t *event_type = json_object_get(event, "event");
 	if(event_type != NULL){
 		const char *event_text = json_string_value(event_type);
-		check_session = strcmp(event_text, "left");
+		check_session = strcmp(event_text, "all-left");
 	}
 
 	if(plugin_session != NULL && (check_session != 0)) {

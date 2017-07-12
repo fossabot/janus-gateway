@@ -28,45 +28,19 @@
 </head>
 <body>
 
-<a href="https://github.com/meetecho/janus-gateway"><img style="position: absolute; top: 0; left: 0; border: 0; z-index: 1001;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"></a>
-
-<nav class="navbar navbar-default navbar-static-top">
-</nav>
-
 <div class="container">
 	<div class="row">
 		<div class="col-md-12">
 			<div class="page-header">
-				<h1>Plugin Demo: Video Room
-					<button class="btn btn-default" autocomplete="off" id="start">Start</button>
+				<h1>Ether Video Room
+					<button class="btn btn-default hide" autocomplete="off" id="hangup">Hangup</button>
 				</h1>
 			</div>
-			<div class="container" id="details">
-				<div class="row">
-					<div class="col-md-12">
-						<h3>Demo details</h3>
-						<p>This demo is an example of how you can use the Video Room plugin to
-						implement a simple videoconferencing application. In particular, this
-						demo page allows you to have up to 6 active participants at the same time:
-						more participants joining the room will be instead just passive users.
-						No mixing is involved: all media are just relayed in a publisher/subscriber
-						approach. This means that the plugin acts as a SFU (Selective Forwarding Unit)
-						rather than an MCU (Multipoint Control Unit).</p>
-						<p>To use the demo, just insert a username to join the default room that
-						is configured. This will add you to the list of participants, and allow
-						you to automatically send your audio/video frames and receive the other
-						participants' feeds. The other participants will appear in separate
-						panels, whose title will be the names they chose when registering at
-						the demo.</p>
-						<p>Press the <code>Start</code> button above to launch the demo.</p>
-					</div>
-				</div>
-			</div>
-			<div class="container hide" id="videojoin">
+			<div class="container" id="videojoin">
 				<div class="row">
 					<span class="label label-info" id="you"></span>
 					<div class="col-md-12" id="controls">
-						<div class="input-group margin-bottom-md hide" id="registernow">
+						<div class="input-group margin-bottom-md" id="registernow">
 							<span class="input-group-addon">@</span>
 							<input autocomplete="off" class="form-control" autocomplete="off" type="text" placeholder="Choose a display name" id="username" onkeypress="return checkEnter(this, event);"></input>
 							<span class="input-group-btn">
@@ -134,8 +108,7 @@
 	</div>
 
 	<hr>
-	<div class="footer">
-	</div>
+
 </div>
 
 </body>

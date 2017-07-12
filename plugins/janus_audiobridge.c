@@ -737,6 +737,8 @@ typedef struct janus_audiobridge_room {
 	gboolean record;			/* Whether this room has to be recorded or not */
 	gchar *record_file;			/* Path of the recording file */
 	FILE *recording;			/* File to record the room into */
+	gint64 record_starttime;    /* Time when recording started in mili second */
+	uint32_t record_duration;   /* Recording duration in mili second */ 
 	gint64 record_lastupdate;	/* Time when we last updated the wav header */
 	gboolean destroy;			/* Value to flag the room for destruction */
 	GHashTable *participants;	/* Map of participants */
@@ -1286,6 +1288,17 @@ void janus_audiobridge_destroy_session(janus_plugin_session *handle, int *error)
 		session->destroyed = janus_get_monotonic_time();
 		/* Cleaning up and removing the session is done in a lazy way */
 		old_sessions = g_list_append(old_sessions, session);
+
+		/* Send event to event handler */
+		if(notify_events && gateway->events_is_enabled() && session->participant) {
+			janus_audiobridge_room *audiobridge = ((janus_audiobridge_participant *)session->participant)->room;
+			if(0 == g_hash_table_size(audiobridge->participants)) {
+				json_t *info = json_object();
+				json_object_set_new(info, "event", json_string("all-left"));
+				json_object_set_new(info, "room", json_integer(audiobridge->room_id));
+				gateway->notify_event(&janus_audiobridge_plugin, session->handle, info);
+			}
+		}	
 	}
 	janus_mutex_unlock(&sessions_mutex);
 
@@ -1542,7 +1555,8 @@ struct janus_plugin_result *janus_audiobridge_handle_message(janus_plugin_sessio
 		if(record && json_is_true(record))
 			audiobridge->record = TRUE;
 		if(recfile)
-			audiobridge->record_file = g_strdup_printf("%s-%ld.wav", json_string_value(recfile), audiobridge->room_id);
+			audiobridge->record_file = g_strdup_printf("%s%ld.wav", json_string_value(recfile), audiobridge->room_id);
+			
 		audiobridge->recording = NULL;
 		audiobridge->destroy = 0;
 		audiobridge->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
@@ -1729,6 +1743,9 @@ struct janus_plugin_result *janus_audiobridge_handle_message(janus_plugin_sessio
 		janus_mutex_unlock(&audiobridge->mutex);
 		janus_mutex_unlock(&rooms_mutex);
 		g_thread_join(audiobridge->thread);
+		/* Populate the recording information */
+		json_object_set_new(response, "recording_starttime", json_integer(audiobridge->record_starttime));
+		json_object_set_new(response, "recording_duration", json_integer(audiobridge->record_duration));
 		/* Done */
 		JANUS_LOG(LOG_VERB, "Audiobridge room destroyed\n");
 		goto plugin_response;
@@ -2438,7 +2455,6 @@ void janus_audiobridge_hangup_media(janus_plugin_session *handle) {
 			json_object_set_new(info, "room", json_integer(audiobridge->room_id));
 			json_object_set_new(info, "id", json_integer(participant->user_id));
 			json_object_set_new(info, "display", json_string(participant->display));
-			json_object_set_new(info, "num_participant", json_integer(g_hash_table_size(audiobridge->participants)));
 			gateway->notify_event(&janus_audiobridge_plugin, session->handle, info);
 		}
 	}
@@ -3632,6 +3648,11 @@ static void *janus_audiobridge_mixer_thread(void *data) {
 				/* FIXME Smoothen/Normalize instead of truncating? */
 				outBuffer[i] = buffer[i];
 			}
+			/* If the recording startTime is not initialized then do it for one time */
+			if(0 == audiobridge->record_starttime) {
+				audiobridge->record_starttime = janus_get_real_time() / 1000;
+			}
+			
 			fwrite(outBuffer, sizeof(opus_int16), samples, audiobridge->recording);
 			/* Every 5 seconds we update the wav header */
 			gint64 now = janus_get_monotonic_time();
@@ -3757,6 +3778,8 @@ static void *janus_audiobridge_mixer_thread(void *data) {
 			size += 8;
 			fseek(audiobridge->recording, 40, SEEK_SET);
 			fwrite(&size, sizeof(uint32_t), 1, audiobridge->recording);
+			/* Audio file duration in mili second is is size / (num_channels * sampling_rate * sample_size) */
+			audiobridge->record_duration = (1000 * size) / (1 * audiobridge->sampling_rate * 2);
 			fflush(audiobridge->recording);
 			fclose(audiobridge->recording);
 		}
