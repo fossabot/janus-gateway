@@ -3648,7 +3648,7 @@ static void *janus_audiobridge_mixer_thread(void *data) {
 				/* FIXME Smoothen/Normalize instead of truncating? */
 				outBuffer[i] = buffer[i];
 			}
-			/* If the recording startTime is not initialized then do it for one time */
+			/* If the recording startTime is not initialized then do it just once */
 			if(0 == audiobridge->record_starttime) {
 				audiobridge->record_starttime = janus_get_real_time() / 1000;
 			}
@@ -3778,7 +3778,7 @@ static void *janus_audiobridge_mixer_thread(void *data) {
 			size += 8;
 			fseek(audiobridge->recording, 40, SEEK_SET);
 			fwrite(&size, sizeof(uint32_t), 1, audiobridge->recording);
-			/* Audio file duration in mili second is is size / (num_channels * sampling_rate * sample_size) */
+			/* Audio file duration in mili second =  1000 * wave-data-chunk-size / (num_channels * sampling_rate * sample_size) */
 			audiobridge->record_duration = (1000 * size) / (1 * audiobridge->sampling_rate * 2);
 			fflush(audiobridge->recording);
 			fclose(audiobridge->recording);

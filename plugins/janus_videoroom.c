@@ -1621,6 +1621,9 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 			videoroom->recordmix_file = g_strdup_printf("%s%ld.wav", json_string_value(recmixfile), videoroom->room_id);
 		videoroom->recordingmix = NULL;
 
+		videoroom->record_starttime = 0;
+		videoroom->record_duration = 0;
+
 		if(videoroom->recordmix) {
 			if(sampling) {
 				videoroom->sampling_rate = json_integer_value(sampling);
@@ -1855,6 +1858,9 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		response = json_object();
 		json_object_set_new(response, "videoroom", json_string("destroyed"));
 		json_object_set_new(response, "room", json_integer(room_id));
+		/* Populate the recording information */
+		json_object_set_new(response, "recording_starttime", json_integer(videoroom->record_starttime));
+		json_object_set_new(response, "recording_duration", json_integer(videoroom->record_duration));
 		goto plugin_response;
 	} else if(!strcasecmp(request_text, "list")) {
 		/* List all rooms (but private ones) and their details (except for the secret, of course...) */
@@ -4324,11 +4330,10 @@ static void *janus_videoroom_mixer_thread(void *data) {
 				/* FIXME Smoothen/Normalize instead of truncating? */
 				outBuffer[i] = buffer[i];
 			}
-			/* If the recording startTime is not initialized then do it for one time */
-			/*
+			/* If the recording startTime is not initialized then do it just once */
 			if(0 == videoroom->record_starttime) {
-				videoroom->record_startime = janus_get_real_time();
-			} */
+				videoroom->record_starttime = janus_get_real_time() / 1000 ;
+			}
 			
 			fwrite(outBuffer, sizeof(opus_int16), samples, videoroom->recordingmix);
 			/* Every 5 seconds we update the wav header */
@@ -4364,17 +4369,14 @@ static void *janus_videoroom_mixer_thread(void *data) {
 			size += 8;
 			fseek(videoroom->recordingmix, 40, SEEK_SET);
 			fwrite(&size, sizeof(uint32_t), 1, videoroom->recordingmix);
-			/* Audio file duration in mili second is is size / (num_channels * sampling_rate * sample_size) */
-			// videoroom->record_duration = (1000 * size) / (1 * videoroom->samplerate * 2);
+			/* Audio file duration in mili second =  1000 * wave-data-chunk-size / (num_channels * sampling_rate * sample_size) */
+			videoroom->record_duration = (1000 * size) / (1 * videoroom->sampling_rate * 2);
 			fflush(videoroom->recordingmix);
 			fclose(videoroom->recordingmix);
 		}
 	}
 	g_free(rtpbuffer);
 	JANUS_LOG(LOG_VERB, "Leaving mixer thread for room %"SCNu64" (%s)...\n", videoroom->room_id, videoroom->room_name);
-
-	/* We'll let the watchdog worry about free resources */
-	// old_rooms = g_list_append(old_rooms, videoroom);
 	return NULL;
 }
 
