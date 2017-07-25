@@ -242,8 +242,11 @@ $(document).ready(function() {
 									if($('#myvideo').length === 0) {
 										$('#videolocal').append('<video class="rounded centered" id="myvideo" width="100%" height="100%" autoplay muted="muted" style="transform: rotateY(180Deg);"/>');
 										// Add a 'mute' button
-										$('#videolocal').append('<button class="btn btn-warning btn-xs" id="mute" style="position: absolute; bottom: 0px; left: 0px; margin: 15px;">Mute</button>');
+										$('#videolocal').append('<button class="btn btn-warning btn-xs" id="mute" style="position: absolute;bottom: 0px;left: 0px;margin: 41px;background: transparent;"><img class="audio" src="microphone-128.png" style="width: 23px;"/></button>')
+										$('#videolocal').append('<button class="btn btn-warning btn-xs" id="videomute" style="position: absolute;bottom: 0px;left: 60px;margin: 41px;background: transparent;"><img class="video" src="video-128.png" style="width: 23px;"/></button>');
+
 										$('#mute').click(toggleMute);
+										$('#videomute').click(toggleVideo);
 										// Add an 'unpublish' button
 										$('#videolocal').append('<button class="btn btn-warning btn-xs" id="unpublish" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;">Unpublish</button>');
 										$('#unpublish').click(unpublishOwnFeed);
@@ -385,7 +388,33 @@ function toggleMute() {
 	else
 		sfutest.muteAudio();
 	muted = sfutest.isAudioMuted();
-	$('#mute').html(muted ? "Unmute" : "Mute");
+	if (muted) {
+		$('#mute').html('<img class="audio" src="microphone-off-128.png" style="width: 23px;"/>');
+		$("#mute").css("background","orange")
+	}else{
+		$('#mute').html('<img class="audio" src="microphone-128.png" style="width: 23px;"/>');
+		if (!sfutest.isVideoMuted())
+			$('#mute').css('background','transparent')
+	}
+}
+
+function toggleVideo() {
+	var muted = sfutest.isVideoMuted()
+	Janus.log((muted ? "Unmuting" : "Muting") + " local stream...");
+	if(muted)
+		sfutest.unmuteVideo();
+	else
+		sfutest.muteVideo();
+	muted = sfutest.isVideoMuted()
+	if (muted) {
+		$('#videomute').html('<img class="video" src="video-off-128.png" style="width: 23px;"/>');
+		$('#videomute').css("background","orange")
+	}else {
+		$('#videomute').html('<img class="video" src="video-128.png" style="width: 23px;"/>');
+		$('#videomute').css('background','transparent')
+		if (!sfutest.isAudioMuted())
+			$('#mute').css('background','transparent')
+	}
 }
 
 function unpublishOwnFeed() {
