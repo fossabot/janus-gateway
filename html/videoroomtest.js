@@ -69,235 +69,254 @@ $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
 	Janus.init({debug: "all", callback: function() {
 		// Use a button to start the demo
-		$('#register').click(function() {
-			if(started)
-				return;
-			started = true;
-			$(this).attr('disabled', true).unbind('click');
-			// Make sure the browser supports WebRTC
-			if(!Janus.isWebrtcSupported()) {
-				bootbox.alert("No WebRTC support... ");
-				return;
-			}
-			// Create session
-			janus = new Janus(
-				{
-					server: server,
-					success: function() {
-						// Attach to video room test plugin
-						janus.attach(
-							{
-								plugin: "janus.plugin.videoroom",
-								opaqueId: opaqueId,
-								success: function(pluginHandle) {
-									$('#details').remove();
-									sfutest = pluginHandle;
-									Janus.log("Plugin attached! (" + sfutest.getPlugin() + ", id=" + sfutest.getId() + ")");
-									Janus.log("  -- This is a publisher/manager");
-									// Prepare the username registration
-									$('#videojoin').removeClass('hide').show();
-									$('#registernow').removeClass('hide').show();
-									// $('#register').click(registerUsername);
-									
-									registerUsername();
-
-									$('#username').focus();
-									$('#hangup').removeClass('hide').html("Hangup")
-										.click(function() {
-											$(this).attr('disabled', true);
-											janus.destroy();
-										});
-								},
-								error: function(error) {
-									Janus.error("  -- Error attaching plugin...", error);
-									bootbox.alert("Error attaching plugin... " + error);
-								},
-								consentDialog: function(on) {
-									Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
-									if(on) {
-										// Darken screen and show hint
-										$.blockUI({ 
-											message: '<div><img src="up_arrow.png"/></div>',
-											css: {
-												border: 'none',
-												padding: '15px',
-												backgroundColor: 'transparent',
-												color: '#aaa',
-												top: '10px',
-												left: (navigator.mozGetUserMedia ? '-100px' : '300px')
-											} });
-									} else {
-										// Restore screen
-										$.unblockUI();
-									}
-								},
-								mediaState: function(medium, on) {
-									Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
-								},
-								webrtcState: function(on) {
-									Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
-									$("#videolocal").parent().parent().unblock();
-								},
-								onmessage: function(msg, jsep) {
-									Janus.debug(" ::: Got a message (publisher) :::");
-									Janus.debug(JSON.stringify(msg));
-									var event = msg["videoroom"];
-									Janus.debug("Event: " + event);
-									if(event != undefined && event != null) {
-										if(event === "joined") {
-											// Publisher/manager created, negotiate WebRTC and attach to existing feeds, if any
-											myid = msg["id"];
-											mypvtid = msg["private_id"];
-											Janus.log("Successfully joined room " + msg["room"] + " with ID " + myid);
-											publishOwnFeed(true);
-											// Any new feed to attach to?
-											if(msg["publishers"] !== undefined && msg["publishers"] !== null) {
-												var list = msg["publishers"];
-												Janus.debug("Got a list of available publishers/feeds:");
-												Janus.debug(list);
-												for(var f in list) {
-													var id = list[f]["id"];
-													var display = list[f]["display"];
-													Janus.debug("  >> [" + id + "] " + display);
-													newRemoteFeed(id, display)
-												}
-											}
-										} else if(event === "destroyed") {
-											// The room has been destroyed
-											Janus.warn("The room has been destroyed!");
-											bootbox.alert("The room has been destroyed", function() {
-												window.location.reload();
-											});
-										} else if(event === "event") {
-											// Any new feed to attach to?
-											if(msg["publishers"] !== undefined && msg["publishers"] !== null) {
-												var list = msg["publishers"];
-												Janus.debug("Got a list of available publishers/feeds:");
-												Janus.debug(list);
-												for(var f in list) {
-													var id = list[f]["id"];
-													var display = list[f]["display"];
-													Janus.debug("  >> [" + id + "] " + display);
-													newRemoteFeed(id, display)
-												}
-											} else if(msg["leaving"] !== undefined && msg["leaving"] !== null) {
-												// One of the publishers has gone away?
-												var leaving = msg["leaving"];
-												Janus.log("Publisher left: " + leaving);
-												var remoteFeed = null;
-												for(var i=1; i<6; i++) {
-													if(feeds[i] != null && feeds[i] != undefined && feeds[i].rfid == leaving) {
-														remoteFeed = feeds[i];
-														break;
-													}
-												}
-												if(remoteFeed != null) {
-													Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
-													$('#remote'+remoteFeed.rfindex).empty().hide();
-													$('#videoremote'+remoteFeed.rfindex).empty();
-													feeds[remoteFeed.rfindex] = null;
-													remoteFeed.detach();
-												}
-											} else if(msg["unpublished"] !== undefined && msg["unpublished"] !== null) {
-												// One of the publishers has unpublished?
-												var unpublished = msg["unpublished"];
-												Janus.log("Publisher left: " + unpublished);
-												if(unpublished === 'ok') {
-													// That's us
-													sfutest.hangup();
-													return;
-												}
-												var remoteFeed = null;
-												for(var i=1; i<6; i++) {
-													if(feeds[i] != null && feeds[i] != undefined && feeds[i].rfid == unpublished) {
-														remoteFeed = feeds[i];
-														break;
-													}
-												}
-												if(remoteFeed != null) {
-													Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
-													$('#remote'+remoteFeed.rfindex).empty().hide();
-													$('#videoremote'+remoteFeed.rfindex).empty();
-													feeds[remoteFeed.rfindex] = null;
-													remoteFeed.detach();
-												}
-											} else if(msg["error"] !== undefined && msg["error"] !== null) {
-												bootbox.alert(msg["error"]);
-											}
-										}
-									}
-									if(jsep !== undefined && jsep !== null) {
-										Janus.debug("Handling SDP as well...");
-										Janus.debug(jsep);
-										sfutest.handleRemoteJsep({jsep: jsep});
-									}
-								},
-								onlocalstream: function(stream) {
-									Janus.debug(" ::: Got a local stream :::");
-									mystream = stream;
-									Janus.debug(JSON.stringify(stream));
-									$('#videolocal').empty();
-									$('#videojoin').hide();
-									$('#videos').removeClass('hide').show();
-									if($('#myvideo').length === 0) {
-										$('#videolocal').append('<video class="rounded centered" id="myvideo" width="100%" height="100%" autoplay muted="muted" style="transform: rotateY(180Deg);"/>');
-										// Add a 'mute' button
-										$('#videolocal').append('<button class="btn btn-warning btn-xs" id="mute" style="position: absolute;bottom: 0px;left: 0px;margin: 41px;background: transparent;"><img class="audio" src="microphone-128.png" style="width: 23px;"/></button>')
-										$('#videolocal').append('<button class="btn btn-warning btn-xs" id="videomute" style="position: absolute;bottom: 0px;left: 60px;margin: 41px;background: transparent;"><img class="video" src="video-128.png" style="width: 23px;"/></button>');
-
-										$('#mute').click(toggleMute);
-										$('#videomute').click(toggleVideo);
-										// Add an 'unpublish' button
-										$('#videolocal').append('<button class="btn btn-warning btn-xs" id="unpublish" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;">Unpublish</button>');
-										$('#unpublish').click(unpublishOwnFeed);
-									}
-									$('#publisher').removeClass('hide').html(myusername).show();
-									Janus.attachMediaStream($('#myvideo').get(0), stream);
-									$("#myvideo").get(0).muted = "muted";
-									$("#videolocal").parent().parent().block({
-										message: '<b>Publishing...</b>',
-										css: {
-											border: 'none',
-											backgroundColor: 'transparent',
-											color: 'white'
-										}
-									});
-									var videoTracks = stream.getVideoTracks();
-									if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-										// No webcam
-										$('#myvideo').hide();
-										$('#videolocal').append(
-											'<div class="no-video-container">' +
-												'<i class="fa fa-video-camera fa-5 no-video-icon" style="height: 100%;"></i>' +
-												'<span class="no-video-text" style="font-size: 16px;">No webcam available</span>' +
-											'</div>');
-									}
-								},
-								onremotestream: function(stream) {
-									// The publisher stream is sendonly, we don't expect anything here
-								},
-								oncleanup: function() {
-									Janus.log(" ::: Got a cleanup notification: we are unpublished now :::");
-									mystream = null;
-									$('#videolocal').html('<button id="publish" class="btn btn-primary">Publish</button>');
-									$('#publish').click(function() { publishOwnFeed(true); });
-									$("#videolocal").parent().parent().unblock();
-								}
-							});
-					},
-					error: function(error) {
-						Janus.error(error);
-						bootbox.alert(error, function() {
-							window.location.reload();
-						});
-					},
-					destroyed: function() {
-						window.location.reload();
-					}
-				});
-		});
+		window.onload = handleJanusCall;
+		$("#registernow").click(handleJanusCall);
+		$(".bootbox .btn-primary").click(function(){window.location.replace(window.location.origin)})
 	}});
 });
+
+function handleJanusCall() {
+	if(started)
+		return;
+	started = true;
+	// $(this).attr('disabled', true).unbind('click');
+	// Make sure the browser supports WebRTC
+	if(!Janus.isWebrtcSupported()) {
+		bootbox.alert("No WebRTC support... ");
+		return;
+	}
+	// Create session
+	janus = new Janus(
+		{
+			server: server,
+			success: function() {
+				// Attach to video room test plugin
+				janus.attach(
+					{
+						plugin: "janus.plugin.videoroom",
+						opaqueId: opaqueId,
+						success: function(pluginHandle) {
+							$('#details').remove();
+							sfutest = pluginHandle;
+							Janus.log("Plugin attached! (" + sfutest.getPlugin() + ", id=" + sfutest.getId() + ")");
+							Janus.log("  -- This is a publisher/manager");
+							joinMeeting()
+
+						},
+						error: function(error) {
+							$('#registernow').removeClass('hide').show();
+							Janus.error("  -- Error attaching plugin...", error);
+							bootbox.alert("Error attaching plugin... " + error);
+						},
+						consentDialog: function(on) {
+							Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
+							if(on) {
+								// Darken screen and show hint
+								$.blockUI({
+									message: '<div><img src="up_arrow.png"/></div>',
+									css: {
+										border: 'none',
+										padding: '15px',
+										backgroundColor: 'transparent',
+										color: '#aaa',
+										top: '10px',
+										left: (navigator.mozGetUserMedia ? '-100px' : '300px')
+									} });
+							} else {
+								// Restore screen
+								$.unblockUI();
+							}
+						},
+						mediaState: function(medium, on) {
+							Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
+						},
+						webrtcState: function(on) {
+							Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
+							$("#videolocal").parent().parent().unblock();
+						},
+						onmessage: function(msg, jsep) {
+							Janus.debug(" ::: Got a message (publisher) :::");
+							Janus.debug(JSON.stringify(msg));
+							var event = msg["videoroom"];
+							Janus.debug("Event: " + event);
+							if(event != undefined && event != null) {
+								if(event === "joined") {
+									// Publisher/manager created, negotiate WebRTC and attach to existing feeds, if any
+									$('#registernow').addClass('hide');
+									$('#videojoin').removeClass('hide').show();
+									myid = msg["id"];
+									mypvtid = msg["private_id"];
+									Janus.log("Successfully joined room " + msg["room"] + " with ID " + myid);
+									publishOwnFeed(true);
+									// Any new feed to attach to?
+									if(msg["publishers"] !== undefined && msg["publishers"] !== null) {
+										var list = msg["publishers"];
+										Janus.debug("Got a list of available publishers/feeds:");
+										Janus.debug(list);
+										for(var f in list) {
+											var id = list[f]["id"];
+											var display = list[f]["display"];
+											Janus.debug("  >> [" + id + "] " + display);
+											newRemoteFeed(id, display)
+										}
+									}
+								} else if(event === "destroyed") {
+									// The room has been destroyed
+									Janus.warn("The room has been destroyed!");
+									bootbox.alert("The room has been destroyed", function() {
+										window.location.reload();
+									});
+								} else if(event === "event") {
+									// Any new feed to attach to?
+									if(msg["publishers"] !== undefined && msg["publishers"] !== null) {
+										var list = msg["publishers"];
+										Janus.debug("Got a list of available publishers/feeds:");
+										Janus.debug(list);
+										for(var f in list) {
+											var id = list[f]["id"];
+											var display = list[f]["display"];
+											Janus.debug("  >> [" + id + "] " + display);
+											newRemoteFeed(id, display)
+										}
+									} else if(msg["leaving"] !== undefined && msg["leaving"] !== null) {
+										// One of the publishers has gone away?
+										var leaving = msg["leaving"];
+										Janus.log("Publisher left: " + leaving);
+										var remoteFeed = null;
+										for(var i=1; i<6; i++) {
+											if(feeds[i] != null && feeds[i] != undefined && feeds[i].rfid == leaving) {
+												remoteFeed = feeds[i];
+												break;
+											}
+										}
+										if(remoteFeed != null) {
+											Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
+											$('#remote'+remoteFeed.rfindex).empty().hide();
+											$('#videoremote'+remoteFeed.rfindex).empty();
+											feeds[remoteFeed.rfindex] = null;
+											remoteFeed.detach();
+										}
+									} else if(msg["unpublished"] !== undefined && msg["unpublished"] !== null) {
+										// One of the publishers has unpublished?
+										var unpublished = msg["unpublished"];
+										Janus.log("Publisher left: " + unpublished);
+										if(unpublished === 'ok') {
+											// That's us
+											sfutest.hangup();
+											return;
+										}
+										var remoteFeed = null;
+										for(var i=1; i<6; i++) {
+											if(feeds[i] != null && feeds[i] != undefined && feeds[i].rfid == unpublished) {
+												remoteFeed = feeds[i];
+												break;
+											}
+										}
+										if(remoteFeed != null) {
+											Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
+											$('#remote'+remoteFeed.rfindex).empty().hide();
+											$('#videoremote'+remoteFeed.rfindex).empty();
+											feeds[remoteFeed.rfindex] = null;
+											remoteFeed.detach();
+										}
+									} else if(msg["error"] !== undefined && msg["error"] !== null) {
+										bootbox.alert(msg["error"]);
+									}
+								}
+							}
+							if(jsep !== undefined && jsep !== null) {
+								Janus.debug("Handling SDP as well...");
+								Janus.debug(jsep);
+								sfutest.handleRemoteJsep({jsep: jsep});
+							}
+						},
+						onlocalstream: function(stream) {
+							Janus.debug(" ::: Got a local stream :::");
+							mystream = stream;
+							Janus.debug(JSON.stringify(stream));
+							$('#videolocal').empty();
+							$('#videojoin').hide();
+							$('#videos').removeClass('hide').show();
+							if($('#myvideo').length === 0) {
+								$('#videolocal').append('<video class="rounded centered" id="myvideo" width="100%" height="100%" autoplay muted="muted" style="transform: rotateY(180Deg);"/>');
+								// Add a 'mute' button
+								$('#videolocal').append('<button class="btn btn-warning btn-xs" id="mute" style="position: absolute;bottom: 0px;left: 0px;margin: 41px;background: transparent;"><img class="audio" src="microphone-128.png" style="width: 23px;"/></button>')
+								$('#videolocal').append('<button class="btn btn-warning btn-xs" id="videomute" style="position: absolute;bottom: 0px;left: 60px;margin: 41px;background: transparent;"><img class="video" src="video-128.png" style="width: 23px;"/></button>');
+
+								$('#mute').click(toggleMute);
+								$('#videomute').click(toggleVideo);
+								// Add an 'unpublish' button
+								$('#videolocal').append('<button class="btn btn-warning btn-xs" id="unpublish" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;">Unpublish</button>');
+								$('#unpublish').click(unpublishOwnFeed);
+							}
+							$('#publisher').removeClass('hide').html(myusername).show();
+							Janus.attachMediaStream($('#myvideo').get(0), stream);
+							$("#myvideo").get(0).muted = "muted";
+							$("#videolocal").parent().parent().block({
+								message: '<b>Publishing...</b>',
+								css: {
+									border: 'none',
+									backgroundColor: 'transparent',
+									color: 'white'
+								}
+							});
+							var videoTracks = stream.getVideoTracks();
+							if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+								// No webcam
+								$('#myvideo').hide();
+								$('#videolocal').append(
+									'<div class="no-video-container">' +
+										'<i class="fa fa-video-camera fa-5 no-video-icon" style="height: 100%;"></i>' +
+										'<span class="no-video-text" style="font-size: 16px;">No webcam available</span>' +
+									'</div>');
+							}
+						},
+						onremotestream: function(stream) {
+							// The publisher stream is sendonly, we don't expect anything here
+						},
+						oncleanup: function() {
+							Janus.log(" ::: Got a cleanup notification: we are unpublished now :::");
+							mystream = null;
+							$('#videolocal').html('<button id="publish" class="btn btn-primary">Publish</button>');
+							$('#publish').click(function() { publishOwnFeed(true); });
+							$("#videolocal").parent().parent().unblock();
+						}
+					});
+			},
+			error: function(error) {
+				Janus.error(error);
+				bootbox.alert(error, function() {
+					window.location.reload();
+				});
+			},
+			destroyed: function() {
+				window.location.reload();
+			}
+		});
+}
+
+function joinMeeting(){
+	if (myusername === null){
+		myusername = getFromQueryParams("userName")
+		if (myusername === null ){
+			console.log("userName not given")
+			$('#registernow').removeClass('hide').show();
+			registerUsername();
+		}else{
+			$('#registernow').addClass('hide');
+			console.log("userName  given "+ myusername)
+			$('#videojoin').removeClass('hide').show();
+			$('#hangup').removeClass('hide').html("Hangup").click(function() {
+				$(this).attr('disabled', true);
+				janus.destroy();
+				window.location.replace(window.location.origin)
+			});
+			myroom = parseInt(getFromQueryParams('room'));
+			var register = { "request": "join", "room": myroom, "ptype": "publisher", "display": myusername };
+			sfutest.send({"message": register});
+		}
+	}
+}
 
 function checkEnter(field, event) {
 	var theCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
@@ -309,16 +328,9 @@ function checkEnter(field, event) {
 	}
 }
 
-function getRoomNoFromQueryParams(searchKey) {
-	var query = window.location.search.substring(1);
-	var params = query.split('&');
-	for (var i = 0; i < params.length; i++){
-		var pos = params[i].indexOf('=');
-		if(pos > 0 && searchKey == params[i].substring(0, pos)) {
-			return params[i].substring(pos+1);
-		}
-	}
-	return "";
+function getFromQueryParams(searchKey) {
+	var params = (new URL(document.location)).searchParams;
+	return params.get(searchKey)
 }
 
 function registerUsername() {
@@ -330,7 +342,7 @@ function registerUsername() {
 		// Try a registration
 		$('#username').attr('disabled', true);
 		$('#register').attr('disabled', true).unbind('click');
-		var meetingroom = parseInt(getRoomNoFromQueryParams('room'));
+		var meetingroom = parseInt(getFromQueryParams('room'));
 		var username = $('#username').val();
 		if(username === "") {
 			$('#you')
