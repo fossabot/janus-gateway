@@ -63,12 +63,14 @@ var mypvtid = null;
 
 var feeds = [];
 var bitrateTimer = [];
-
+var meetingId = null;
+var userId	= null;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
 	Janus.init({debug: "all", callback: function() {
 		// Use a button to start the demo
+		parseQueryParams()
 		window.onload = handleJanusCall;
 		$("#registernow").click(handleJanusCall);
 		$(".bootbox .btn-primary").click(function(){window.location.replace(window.location.origin)})
@@ -296,26 +298,53 @@ function handleJanusCall() {
 }
 
 function joinMeeting(){
-	if (myusername === null){
-		myusername = getFromQueryParams("userName")
-		if (myusername === null ){
-			console.log("userName not given")
-			$('#registernow').removeClass('hide').show();
-			registerUsername();
-		}else{
-			$('#registernow').addClass('hide');
-			console.log("userName  given "+ myusername)
-			$('#videojoin').removeClass('hide').show();
-			$('#hangup').removeClass('hide').html("Hangup").click(function() {
-				$(this).attr('disabled', true);
-				janus.destroy();
-				window.location.replace(window.location.origin)
-			});
-			myroom = parseInt(getFromQueryParams('room'));
-			var register = { "request": "join", "room": myroom, "ptype": "publisher", "display": myusername };
-			sfutest.send({"message": register});
-		}
+	if (myusername === null ){
+		$('#registernow').removeClass('hide').show();
+		registerUsername();
+	}else{
+		$('#registernow').addClass('hide');
+		$('#videojoin').removeClass('hide').show();
+		sendJoinMessage()
 	}
+}
+
+function enableMarking(){
+	if (meetingId != null && userId !=null){
+		$('.marker').removeClass('hide')
+		$('#markNow').click(createMarker)
+	}
+}
+
+function enableHangup(){
+	$('#hangup').removeClass('hide').html("Hangup").click(function() {
+		$(this).attr('disabled', true);
+		janus.destroy();
+		window.location.replace(window.location.origin)
+	});
+}
+
+function createMarker(){
+	data = {
+		"meetingId": meetingId,
+		"description": $('#markerText').val(),
+		"createdBy": userId,
+		"timestamp": (new Date(Date.now() - 30*1000).toISOString())
+	}
+
+	$.ajax({
+	  type: "POST",
+	  // url: "/v1/meetings/"+meetingId+"/markers",
+	  url: "http://ether-staging-1553540497.us-east-1.elb.amazonaws.com/v1/meetings/"+meetingId+"/markers",
+	  data: JSON.stringify(data),
+	  crossDomain: true
+	});
+}
+
+function sendJoinMessage(){
+	var register = { "request": "join", "room": myroom, "ptype": "publisher", "display": myusername };
+	sfutest.send({"message": register});
+	enableHangup()
+	enableMarking()
 }
 
 function checkEnter(field, event) {
@@ -333,6 +362,14 @@ function getFromQueryParams(searchKey) {
 	return params.get(searchKey)
 }
 
+function parseQueryParams(){
+	meetingId = getFromQueryParams("meetingId")
+	userId = getFromQueryParams("userId")
+	myusername = getFromQueryParams("userName")
+	myroom = parseInt(getFromQueryParams('room'))
+	history.pushState("changing url after param extraction", "url", window.location.origin)
+}
+
 function registerUsername() {
 	if($('#username').length === 0) {
 		// Create fields to register
@@ -342,7 +379,6 @@ function registerUsername() {
 		// Try a registration
 		$('#username').attr('disabled', true);
 		$('#register').attr('disabled', true).unbind('click');
-		var meetingroom = parseInt(getFromQueryParams('room'));
 		var username = $('#username').val();
 		if(username === "") {
 			$('#you')
@@ -360,10 +396,8 @@ function registerUsername() {
 			$('#register').removeAttr('disabled').click(registerUsername);
 			return;
 		}
-		var register = { "request": "join", "room": meetingroom, "ptype": "publisher", "display": username };
 		myusername = username;
-		myroom = meetingroom;
-		sfutest.send({"message": register});
+		sendJoinMessage()
 	}
 }
 
