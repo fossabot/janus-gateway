@@ -97,3 +97,16 @@ div.no-video-container {
 .meetecho-logo > img {
 	height: 26px;
 }
+
+#markerText {
+	height: 60px;
+	width: 310px;
+	margin-left: 7%;
+	font-size: small;
+}
+
+#markNow {
+	margin-top: -8%;
+	background: lightblue;
+	padding: 5px;
+}

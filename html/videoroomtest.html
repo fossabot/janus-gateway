@@ -32,8 +32,15 @@
 	<div class="row">
 		<div class="col-md-12">
 			<div class="page-header">
-				<h1>Ether Video Room
-					<button class="btn btn-default hide" autocomplete="off" id="hangup">Hangup</button>
+				<h1>
+					<div class="row">
+						<div class="col-md-6">Ether Video Room
+						<button class="btn btn-default hide" autocomplete="off" id="hangup">Hangup</button></div>
+						<div class="marker col-md-6 hide">
+							<textarea id="markerText" class="text" maxlength="1000" style="height: 60px;width: 310px;margin-left: 7%;font-size: small;"></textarea>
+							<button class="btn" id="markNow" style="margin-top: -8%; background: lightblue;padding: 5px;">Mark</button>
+						</div>
+					</div>
 				</h1>
 			</div>
 			<div class="container" id="videojoin">
