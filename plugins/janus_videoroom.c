@@ -2592,6 +2592,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 		janus_mutex_unlock(&participant->rtp_forwarders_mutex);
 		/* Save the frame if we're recording */
 		janus_recorder_save_frame(video ? participant->vrc : participant->arc, buf, len);
+
 		/* Done, relay it */
 		janus_videoroom_rtp_relay_packet packet;
 		packet.data = rtp;
@@ -2604,7 +2605,12 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 		g_slist_foreach(participant->listeners, janus_videoroom_relay_rtp_packet, &packet);
 
 		/* Decode and queue up decoded data for recording mixed audio */
-		if(!video && participant->audio_active) {
+		if(!video && participant->audio_active && participant->room->recordmix) {
+
+			/* If the recording startTime is not initialized then do it just once */
+			if(0 == participant->room->record_starttime) {
+				participant->room->record_starttime = janus_get_real_time() / 1000 ;
+			}
 
 			/* First of all, check if a reset on the decoder is due */
 			if(participant->reset) {
@@ -2976,7 +2982,7 @@ void janus_videoroom_hangup_media(janus_plugin_session *handle) {
 			opus_decoder_destroy(participant->decoder);
 		participant->decoder = NULL;
 
-		// Ether: Check if has to be true or false
+		// TODO Ether: Check if has to be true or false
 		participant->reset = TRUE;
 
 		/* Get rid of queued packets */
@@ -3305,7 +3311,7 @@ static void *janus_videoroom_handler(void *data) {
 				}
 
 				/* Create Opus Decoder for recording mixed audio */	
-				if(publisher->decoder == NULL) {
+				if(videoroom->recordmix && (publisher->decoder == NULL)) {
 					/* Opus decoder */
 					int error = 0;
 					publisher->decoder = opus_decoder_create(videoroom->sampling_rate, 1, &error);
@@ -4330,10 +4336,7 @@ static void *janus_videoroom_mixer_thread(void *data) {
 				/* FIXME Smoothen/Normalize instead of truncating? */
 				outBuffer[i] = buffer[i];
 			}
-			/* If the recording startTime is not initialized then do it just once */
-			if(0 == videoroom->record_starttime) {
-				videoroom->record_starttime = janus_get_real_time() / 1000 ;
-			}
+			
 			
 			fwrite(outBuffer, sizeof(opus_int16), samples, videoroom->recordingmix);
 			/* Every 5 seconds we update the wav header */
