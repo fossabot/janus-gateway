@@ -50,7 +50,7 @@ ADD .      $JANUS_HOME/
 ## Build and configure Janus
 RUN  cd $JANUS_HOME && \
      ./autogen.sh && \
-     ./configure --prefix=/usr/local --disable-websockets --disable-data-channels && \
+     ./configure --prefix=/usr/local --disable-websockets --disable-data-channels --enable-post-processing && \
      make && \
      make install && \
      make configs 

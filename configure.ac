@@ -531,6 +531,19 @@ PKG_CHECK_MODULES([OPUS],
 AC_SUBST([OPUS_CFLAGS])
 AC_SUBST([OPUS_LIBS])
 
+PKG_CHECK_MODULES([OPUS],
+                  [opus],
+                  [
+                    AS_IF([test "x$enable_plugin_videoroom" = "xmaybe"],
+                          [enable_plugin_videoroom=yes])
+                  ],
+                  [
+                    AS_IF([test "x$enable_plugin_videoroom" = "xyes"],
+                          [AC_MSG_ERROR([libopus not found. See README.md for installation instructions or use --disable-plugin-videoroom])])
+                  ])
+AC_SUBST([OPUS_CFLAGS])
+AC_SUBST([OPUS_LIBS])
+
 PKG_CHECK_MODULES([OGG],
                   [ogg],
                   [
