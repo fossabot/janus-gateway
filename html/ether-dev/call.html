@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../favicon.png">
+    <title>ether labs</title>
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet"  href="assets/css/bootstrap.css" type="text/css">
+    
+    <link rel="stylesheet" href="assets/css/costom.css" type="text/css" >
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
+    <!-- // <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/js/bootstrap.min.js"></script> -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.1.0/bootbox.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script type="text/javascript" src="janus.js" ></script>
+    <script type="text/javascript" src="videocall.js?version=1"></script>
+    <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/tooltip-viewport.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="assets/js/ie10-viewport-bug-workaround.js"></script>
+
+  </head>
+
+  <body class="ether-chat-body">
+    <nav class="el-navbar">
+     <div class="el-logo">
+       <span class="el-display-name--logo text-primary">
+         <img src="assets/images/logo.png">
+       </span>
+     </div>
+    </nav>
+
+    <div class="el-progress">
+      <div class="progress">
+            <div class="bar-step" style="left: 75%">
+                <div class="label-txt icon-crown"> </div>
+            </div>
+            <div class="bar-step" style="left: 10%">
+                <div class="label-txt icon-star-o"> </div>
+            </div>
+            <div class="bar-step" style="left: 25%">
+                <div class="label-txt icon-video"> </div>
+            </div>
+            <div class="bar-step" style="left: 30%">
+                <div class="label-txt icon-arrow-swap"> </div>
+            </div>
+            <div class="bar-step" style="left: 55%">
+                <div class="label-txt icon-arrow-swap"> </div>
+            </div>
+            <div class="progress-bar progress-bar-success" style="width: 86%;">
+              <span class="progress-bar--time"> <i>30min</i> </span>
+            </div>
+       </div>
+    </div> <!-- / el-progress -->
+
+    <ul class="el-marker">
+      <div class="el-marker--item-block-title"> Markers </div>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-crown"> </span>
+        <span class="el-marker--item-title"> Topic </span>
+      </button>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-star-o "> </span>
+        <span class="el-marker--item-title"> Action Item </span>
+      </button>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-arrow-swap"> </span>
+        <span class="el-marker--item-title"> Decision </span>
+      </button>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-alert"> </span>
+        <span class="el-marker--item-title"> Priority </span>
+      </button>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-user-outline"> </span>
+        <span class="el-marker--item-title"> Personal </span>
+      </button>
+    </ul> <!-- / el-marker -->
+
+    <div class="container" id="videos">
+      <div class="el-participants-wrap">
+
+        <div class="el-participants flex row">
+            <div class="el-participants--item col-md-6">
+              <span class="el-participants--item-video el-participants--item-active hide" id="videolocal">
+                <span class="el-participants--item-name" style="z-index: 10;"></span>
+              </span>
+            </div>
+
+            <div class="el-participants--item col-md-6">
+              <span class="el-participants--item-video hide" id="videoremote1">
+                <span class="el-participants--item-name" style="z-index: 10;"></span>
+              </span>
+            </div>
+        </div>
+
+        <div class="el-participants flex row">
+            <div class="el-participants--item col-md-6">
+              <span class="el-participants--item-video hide" id="videoremote2">
+                <span class="el-participants--item-name" style="z-index: 10;"></span>
+              </span>
+            </div>
+
+            <div class="el-participants--item col-md-6">
+              <span class="el-participants--item-video hide" id="videoremote3">
+                <span class="el-participants--item-name" style="z-index: 10;"></span>
+              </span>
+            </div>
+        </div>
+      </div>
+    </div><!-- el-participants -->
+
+    <ul class="el-chat-controller">
+      <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="Turn off Camera">  </button>
+      <button class="btn el-chat-controller--item el-chat-controller--mute icon-microphone tooltip-bottom" id="mic" title="Mute">  </button>
+      <!-- <button class="btn el-chat-controller--item icon-microphone-slash tooltip-bottom" title="Turn on ">  </button> -->
+      <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="Mute">  </button>
+      <button class="btn el-chat-controller--item icon-computer-imac tooltip-bottom" title="Turn on ">  </button> <!--el-chat-controller--turn-on -->
+      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title="Hungup"></button>
+      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" title="Hungup"></button>
+
+    </ul>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+  </body>
+</html>
