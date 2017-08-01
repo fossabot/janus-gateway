@@ -65,6 +65,13 @@ var feeds = [];
 var bitrateTimer = [];
 var meetingId = null;
 var userId	= null;
+var startTime = null;
+var currentProgressbarValue = null;
+var currentCallTime = null;
+var progressbarMaxVal = 720;
+var maxCallTime = 60;
+var progressbarRefreshInterval = 2;//sec
+var timeLapsedRefreshInterval = 60;//sec
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -74,8 +81,37 @@ $(document).ready(function() {
 		window.onload = handleJanusCall;
 		$("#registernow").click(handleJanusCall);
 		$(".bootbox .btn-primary").click(function(){window.location.replace(window.location.origin)})
+		currentCallTime = getCurrentCallTime()
+		initProgressbar(currentCallTime)
+		refreshTime(true)
+		setInterval(progressTheBar, progressbarRefreshInterval*1000)
+		setInterval(refreshTime, timeLapsedRefreshInterval*1000)
 	}});
 });
+
+function getCurrentCallTime(){
+	if (startTime != null) {
+		var startedAt = new Date(startTime)
+		diff = (new Date((Date.now()-startedAt)))
+		return diff.getHours()*60+diff.getMinutes()
+	}
+}
+
+function refreshTime(init = false){
+	if (!init)
+		currentCallTime += timeLapsedRefreshInterval/60
+	hr = Math.floor(currentCallTime/60)
+	min = Math.floor(currentCallTime%60)
+	$('.el-progress .progress-bar--time').html(formattedTime(hr,min))
+}
+
+function formattedTime(hr, min){
+	if (hr < 10)
+		hr = "0"+hr
+	if (min < 10)
+		min = "0"+min
+	return hr+":"+min
+}
 
 function handleJanusCall() {
 	if(started)
@@ -238,8 +274,9 @@ function handleJanusCall() {
 							Janus.debug(JSON.stringify(stream));
 							$('#videojoin').hide();
 							$('#videos').removeClass('hide').show();
-							if($('#myvideo').length === 0) {
-								$('#videolocal').append('<video class="rounded centered" id="myvideo" width="100%" height="100%" autoplay muted="muted" style="transform: rotateY(180Deg);"/>');
+							if($('.myvideo').length === 0) {
+								$('#videolocal').append('<video class="rounded centered myvideo" width="100%" height="100%" autoplay muted="muted" style="transform: rotateY(180Deg);"/>');
+								$('#videolocal_side').append('<video class="rounded centered myvideo" width="100%" height="100%" autoplay muted="muted" style="transform: rotateY(180Deg);"/>');
 								// Add a 'mute' button
 								// $('#videolocal').append('<button class="btn btn-warning btn-xs" id="mute" style="position: absolute;bottom: 0px;left: 0px;margin: 41px;background: transparent;"><img class="audio" src="microphone-128.png" style="width: 23px;"/></button>')
 								// $('#videolocal').append('<button class="btn btn-warning btn-xs" id="videomute" style="position: absolute;bottom: 0px;left: 60px;margin: 41px;background: transparent;"><img class="video" src="video-128.png" style="width: 23px;"/></button>');
@@ -251,9 +288,12 @@ function handleJanusCall() {
 								$('#unpublish').click(unpublishOwnFeed);
 								$('#videolocal').removeClass('hide').show()
 								$('#videolocal .el-participants--item-name').html(myusername)
+								$('#videolocal_side .el-participants--item-name').html(myusername)
 							}
-							Janus.attachMediaStream($('#myvideo').get(0), stream);
-							$("#myvideo").get(0).muted = "muted";
+							Janus.attachMediaStream($('.myvideo').get(0), stream);
+							Janus.attachMediaStream($('.myvideo').get(1), stream);
+							$(".myvideo").get(0).muted = "muted";
+							$(".myvideo").get(1).muted = "muted";
 							$("#videolocal").parent().parent().block({
 								message: '<b>Publishing...</b>',
 								css: {
@@ -265,7 +305,7 @@ function handleJanusCall() {
 							var videoTracks = stream.getVideoTracks();
 							if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
 								// No webcam
-								$('#myvideo').hide();
+								$('.myvideo').hide();
 								$('#videolocal').append(
 									'<div class="no-video-container">' +
 										'<i class="fa fa-video-camera fa-5 no-video-icon" style="height: 100%;"></i>' +
@@ -316,7 +356,7 @@ function enableMarking(){
 }
 
 function enableHangup(){
-	$('#hangup').removeClass('hide').html("Hangup").click(function() {
+	$('#hangup').click(function() {
 		$(this).attr('disabled', true);
 		janus.destroy();
 		window.location.replace(window.location.origin)
@@ -367,6 +407,7 @@ function parseQueryParams(){
 	userId = getFromQueryParams("userId")
 	myusername = getFromQueryParams("userName")
 	myroom = parseInt(getFromQueryParams('room'))
+	startTime = getFromQueryParams("startTime")
 	// history.pushState("changing url after param extraction", "url", window.location.origin)
 }
 
@@ -456,6 +497,39 @@ function toggleVideo() {
 	}
 }
 
+function initProgressbar(currentCallTime){
+	remainingMin = maxCallTime - currentCallTime
+	if (remainingMin < 0){
+		currentProgressbarValue = progressbarMaxVal
+	} else{
+		currentProgressbarValue = progressbarMaxVal*(currentCallTime/maxCallTime)
+	}
+	$('#progress-bar').progressbar({
+		classes: {
+			'ui-progressbar-value': 'progress-bar progress-bar-success'
+		},
+		max: progressbarMaxVal,
+		value: Math.floor(currentProgressbarValue)
+	})
+}
+
+function nextProgressbarValue(){
+	currentProgressbarValue = currentProgressbarValue + (progressbarMaxVal/(maxCallTime*60))*progressbarRefreshInterval
+	return currentProgressbarValue
+}
+
+function progressTheBar(){
+	nextValue = nextProgressbarValue()
+	// console.log("progressing to "+nextValue)
+	$('#progress-bar').progressbar("value", nextValue)
+	$('#progress-bar .progress-bar').css("width",nextValue*100/progressbarMaxVal+"%")
+}
+
+function onFirstParticipantJoin(){
+	$('#videolocal_side').removeClass('hide')
+	$('#videolocal').empty().attr("id", "videoremote1").html("<span class="el-participants--item-name"></span>")
+}
+
 function unpublishOwnFeed() {
 	// Unpublish our stream
 	$('#unpublish').attr('disabled', true).unbind('click');
@@ -507,6 +581,9 @@ function newRemoteFeed(id, display) {
 						}
 						Janus.log("Successfully attached to feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") in room " + msg["room"]);
 						// $('#videoremote'+remoteFeed.rfindex).removeClass('hide').html(remoteFeed.rfdisplay).show();
+						if (remoteFeed.rfindex === 1){
+							onFirstParticipantJoin()
+						}
 						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().removeClass('hide').show()
 					} else if(msg["error"] !== undefined && msg["error"] !== null) {
 						bootbox.alert(msg["error"]);

@@ -14,14 +14,15 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
-    <!-- // <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/js/bootstrap.min.js"></script> -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.1.0/bootbox.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="janus.js" ></script>
     <script type="text/javascript" src="videocall.js?version=1"></script>
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
+    <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
     <script src="assets/js/tooltip-viewport.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="assets/js/ie10-viewport-bug-workaround.js"></script>
@@ -38,7 +39,7 @@
     </nav>
 
     <div class="el-progress">
-      <div class="progress">
+      <div class="progress" id="progress-bar">
             <div class="bar-step" style="left: 75%">
                 <div class="label-txt icon-crown"> </div>
             </div>
@@ -54,10 +55,8 @@
             <div class="bar-step" style="left: 55%">
                 <div class="label-txt icon-arrow-swap"> </div>
             </div>
-            <div class="progress-bar progress-bar-success" style="width: 86%;">
-              <span class="progress-bar--time"> <i>30min</i> </span>
-            </div>
-       </div>
+      </div>
+      <span class="progress-bar--time"> <i>00:00</i> </span>
     </div> <!-- / el-progress -->
 
     <ul class="el-marker">
@@ -90,27 +89,27 @@
         <div class="el-participants flex row">
             <div class="el-participants--item col-md-6">
               <span class="el-participants--item-video el-participants--item-active hide" id="videolocal">
-                <span class="el-participants--item-name" style="z-index: 10;"></span>
+                <span class="el-participants--item-name"></span>
               </span>
             </div>
 
             <div class="el-participants--item col-md-6">
-              <span class="el-participants--item-video hide" id="videoremote1">
-                <span class="el-participants--item-name" style="z-index: 10;"></span>
+              <span class="el-participants--item-video hide" id="videoremote2">
+                <span class="el-participants--item-name"></span>
               </span>
             </div>
         </div>
 
         <div class="el-participants flex row">
             <div class="el-participants--item col-md-6">
-              <span class="el-participants--item-video hide" id="videoremote2">
-                <span class="el-participants--item-name" style="z-index: 10;"></span>
+              <span class="el-participants--item-video hide" id="videoremote3">
+                <span class="el-participants--item-name"></span>
               </span>
             </div>
 
             <div class="el-participants--item col-md-6">
-              <span class="el-participants--item-video hide" id="videoremote3">
-                <span class="el-participants--item-name" style="z-index: 10;"></span>
+              <span class="el-participants--item-video hide" id="videoremote4">
+                <span class="el-participants--item-name"></span>
               </span>
             </div>
         </div>
@@ -118,18 +117,44 @@
     </div><!-- el-participants -->
 
     <ul class="el-chat-controller">
-      <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="Turn off Camera">  </button>
-      <button class="btn el-chat-controller--item el-chat-controller--mute icon-microphone tooltip-bottom" id="mic" title="Mute">  </button>
+      <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="">  </button>
+      <button class="btn el-chat-controller--item el-chat-controller--mute icon-microphone tooltip-bottom" id="mic" title="">  </button>
       <!-- <button class="btn el-chat-controller--item icon-microphone-slash tooltip-bottom" title="Turn on ">  </button> -->
-      <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="Mute">  </button>
+      <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="">  </button>
       <button class="btn el-chat-controller--item icon-computer-imac tooltip-bottom" title="Turn on ">  </button> <!--el-chat-controller--turn-on -->
-      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title="Hungup"></button>
-      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" title="Hungup"></button>
+      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title=""></button>
+      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" id="hangup" title=""></button>
 
     </ul>
+    <div class="el-rightBar-selfie">
+      <span class="el-rightBar-selfie--item hide" id="videolocal_side">
+        <span class="el-participants--item-name" style="z-index: 10;"></span>
+      </span>
+<!--       <span class="el-rightBar-selfie--activeCall">
+        Active Call: 8:05 min
+      </span>
+ -->    </div> <!-- el-rightBar--selfie-->
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
+    <div class="el-rightBar-participans hide">
+      <span class="el-rightBar-participans--title"> Participans (2) </span>
+
+      <div class="el-rightBar--participans-item">
+        <span> <img src="assets/images/attendies-2.png" class="el-rightBar--participans-avathar"> </span>
+        <span class="el-rightBar--participans-name"> Participans username  </span>
+        <span class="el-rightBar--participans-muteIcon  icon-microphone">  </span>
+      </div>
+
+      <div class="el-rightBar--participans-item">
+        <span> <img src="assets/images/attendies-2.png" class="el-rightBar--participans-avathar"> </span>
+        <span class="el-rightBar--participans-name"> Participans username </span>
+        <span class="el-rightBar--participans-muteIcon  icon-microphone">  </span>
+      </div>
+
+      <div class="el-rightBar--participans-controler">
+        <button type="button" class="btn btn-primary btn-sm btn-block"> Mute All</button>
+        <button type="button" class="btn btn-primary btn-sm btn-block"> Unmute All </button>
+        <button type="button" class="btn btn-primary btn-sm btn-block"> More </button>
+      </div>
+     </div> <!-- el-rightBar--participans -->
   </body>
 </html>
