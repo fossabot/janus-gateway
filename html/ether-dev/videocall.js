@@ -72,29 +72,52 @@ var progressbarMaxVal = 720;
 var maxCallTime = 60;
 var progressbarRefreshInterval = 2;//sec
 var timeLapsedRefreshInterval = 60;//sec
+var currentMeetingInfo = null;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
 	Janus.init({debug: "all", callback: function() {
 		// Use a button to start the demo
 		parseQueryParams()
+		getCurrentMeetingInfo()
 		window.onload = handleJanusCall;
 		$("#registernow").click(handleJanusCall);
 		$(".bootbox .btn-primary").click(function(){window.location.replace(window.location.origin)})
-		currentCallTime = getCurrentCallTime()
-		initProgressbar(currentCallTime)
-		refreshTime(true)
-		setInterval(progressTheBar, progressbarRefreshInterval*1000)
-		setInterval(refreshTime, timeLapsedRefreshInterval*1000)
 	}});
 });
 
-function getCurrentCallTime(){
-	if (startTime != null) {
-		var startedAt = new Date(startTime)
-		diff = (new Date((Date.now()-startedAt)))
-		return diff.getHours()*60+diff.getMinutes()
+
+function getCurrentMeetingInfo(){
+	if (currentMeetingInfo === null){
+		$.ajax({
+			type: "GET",
+			url: "http://localhost:8080/v1/meetings/"+meetingId,
+			crossDomain: true,
+			success: function(res){
+				currentMeetingInfo = res
+				console.log(currentMeetingInfo)
+				populateFieldsMeetingFields()
+			}
+		})
 	}
+	return currentMeetingInfo
+}
+
+function populateFieldsMeetingFields(){
+	currentCallTime = getCurrentCallTime()
+	initProgressbar(currentCallTime)
+	refreshTime(true)
+	setInterval(progressTheBar, progressbarRefreshInterval*1000)
+	setInterval(refreshTime, timeLapsedRefreshInterval*1000)
+}
+
+function getCurrentCallTime(){
+	if (startTime === null || startTime === ""){
+		startTime = getCurrentMeetingInfo().startedAt
+	}
+	var startedAt = new Date(startTime)
+	diff = Date.now()-startedAt
+	return diff/(1000*60)
 }
 
 function refreshTime(init = false){
@@ -527,7 +550,7 @@ function progressTheBar(){
 
 function onFirstParticipantJoin(){
 	$('#videolocal_side').removeClass('hide')
-	$('#videolocal').empty().attr("id", "videoremote1").html("<span class="el-participants--item-name"></span>")
+	$('#videolocal').empty().attr("id", "videoremote1").html('<span class="el-participants--item-name"></span>')
 }
 
 function unpublishOwnFeed() {
