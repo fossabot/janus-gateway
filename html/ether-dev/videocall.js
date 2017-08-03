@@ -92,7 +92,8 @@ function getCurrentMeetingInfo(){
 	if (currentMeetingInfo === null){
 		$.ajax({
 			type: "GET",
-			url: "http://localhost:8080/v1/meetings/"+meetingId,
+			url: "https://ether-staging-1553540497.us-east-1.elb.amazonaws.com:8080/v1/meetings/"+meetingId,
+			// url: "http://localhost:8080/v1/meetings/"+meetingId,
 			crossDomain: true,
 			success: function(res){
 				currentMeetingInfo = res
@@ -175,7 +176,7 @@ function handleJanusCall() {
 							if(on) {
 								// Darken screen and show hint
 								$.blockUI({
-									message: '<div><img src="up_arrow.png"/></div>',
+									message: '<div><img src="assets/images/up_arrow.png" style="transform: rotate(270deg);"/></div>',
 									css: {
 										border: 'none',
 										padding: '15px',
@@ -194,7 +195,7 @@ function handleJanusCall() {
 						},
 						webrtcState: function(on) {
 							Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
-							$("#videolocal").parent().parent().unblock();
+							$("#videos").unblock();
 						},
 						onmessage: function(msg, jsep) {
 							Janus.debug(" ::: Got a message (publisher) :::");
@@ -226,7 +227,7 @@ function handleJanusCall() {
 									// The room has been destroyed
 									Janus.warn("The room has been destroyed!");
 									bootbox.alert("The room has been destroyed", function() {
-										window.location.reload();
+										window.location.replace(window.location.origin)
 									});
 								} else if(event === "event") {
 									// Any new feed to attach to?
@@ -318,8 +319,8 @@ function handleJanusCall() {
 							Janus.attachMediaStream($('.myvideo').get(1), stream);
 							$(".myvideo").get(0).muted = "muted";
 							$(".myvideo").get(1).muted = "muted";
-							$("#videolocal").parent().parent().block({
-								message: '<b>Publishing...</b>',
+							$("#videos").block({
+								message: '<b>Joining Ether Call ...</b>',
 								css: {
 									border: 'none',
 									backgroundColor: 'transparent',
@@ -345,18 +346,18 @@ function handleJanusCall() {
 							mystream = null;
 							$('#videolocal').html('<button id="publish" class="btn btn-primary">Publish</button>');
 							$('#publish').click(function() { publishOwnFeed(true); });
-							$("#videolocal").parent().parent().unblock();
+							$("#videos").unblock();
 						}
 					});
 			},
 			error: function(error) {
 				Janus.error(error);
 				bootbox.alert(error, function() {
-					window.location.reload();
+					window.location.replace(window.location.origin)
 				});
 			},
 			destroyed: function() {
-				window.location.reload();
+				window.location.replace(window.location.origin)
 			}
 		});
 }
@@ -372,13 +373,6 @@ function joinMeeting(){
 	}
 }
 
-function enableMarking(){
-	if (meetingId != null && userId !=null){
-		$('.marker').removeClass('hide')
-		$('#markNow').click(createMarker)
-	}
-}
-
 function enableHangup(){
 	$('#hangup').click(function() {
 		$(this).attr('disabled', true);
@@ -387,28 +381,11 @@ function enableHangup(){
 	});
 }
 
-function createMarker(){
-	data = {
-		"meetingId": meetingId,
-		"description": $('#markerText').val(),
-		"createdBy": userId,
-		"timestamp": (new Date(Date.now() - 30*1000).toISOString())
-	}
-
-	$.ajax({
-	  type: "POST",
-	  // url: "/v1/meetings/"+meetingId+"/markers",
-	  url: "http://ether-staging-1553540497.us-east-1.elb.amazonaws.com/v1/meetings/"+meetingId+"/markers",
-	  data: JSON.stringify(data),
-	  crossDomain: true
-	});
-}
 
 function sendJoinMessage(){
 	var register = { "request": "join", "room": myroom, "ptype": "publisher", "display": myusername };
 	sfutest.send({"message": register});
 	enableHangup()
-	enableMarking()
 }
 
 function checkEnter(field, event) {

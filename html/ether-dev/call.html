@@ -11,6 +11,14 @@
     <link rel="stylesheet"  href="assets/css/bootstrap.css" type="text/css">
     
     <link rel="stylesheet" href="assets/css/costom.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/icons.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/style.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css" type="text/css" >
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
@@ -19,6 +27,8 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="janus.js" ></script>
+    <script type="text/javascript" src="marker.js" ></script>
+    <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
     <script type="text/javascript" src="videocall.js?version=1"></script>
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
@@ -28,6 +38,42 @@
     <script src="assets/js/ie10-viewport-bug-workaround.js"></script>
 
   </head>
+
+
+<!-- Large modal -->
+<div class="modal bd-example-modal-lg fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header desc">
+          <h5 class="modal-title" id="exampleModalLabel">SET A TOPIC MARKER
+            <div class="small"> Leave your mark! You can mention folks in the message - and we’ll notify and route the marker to them - like magic! </div>
+          </h5>
+          <button type="button" class="close hide" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="marker-form">
+            <div class="form-group">
+              <input type="text" class="form-control hide" id="marker-topic" placeholder="Enter Topic for Marker" aria-describedby="sizing-addon1">
+            </div>
+            <div class="form-group">
+              <textarea class="form-control" placeholder="Marker Description" id="marker-description" required></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <div class="note">
+            <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
+          </div>
+          <div class="button-list">
+            <button type="button" class="btn btn-secondary" onclick="resetMarkerForm()" data-dismiss="modal" aria-label="Close">CLOSE</button>
+            <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">MARK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <body class="ether-chat-body">
     <nav class="el-navbar">
@@ -61,8 +107,8 @@
 
     <ul class="el-marker">
       <div class="el-marker--item-block-title"> Markers </div>
-      <button class="btn el-marker--item">
-        <span class="el-marker--item-icon icon-crown"> </span>
+      <button class="btn el-marker--item" data-toggle="modal" data-target=".bd-example-modal-lg">
+        <span class="el-marker--item-icon icon-crown" id="mark-topic"> </span>
         <span class="el-marker--item-title"> Topic </span>
       </button>
       <button class="btn el-marker--item">

@@ -1,0 +1,50 @@
+.el-navbar {
+  padding: 15px;
+  background: #343434;
+}
+.el-participants-wrap {
+  display: flex;
+  flex-wrap:wrap;
+  padding-bottom: 90px;
+}
+.el-participants--item {
+  position: relative;
+  border-color: transparent;
+  padding: 15px;
+  flex-basis: 50%
+}
+.el-participants--item-video,
+.el-participants--item-video img,
+.el-participants--item-video video {
+  width: 100%;
+}
+.el-participants--item-active {
+  border-color: #cf641c;
+  border-width: 3px;
+  border-style: solid;
+  display: inline-block;
+}
+.el-participants--item-name {
+  padding: 20px 20px 10px 20px;
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  left: 15px;
+  top: initial;
+  color: #fff;
+  text-align: center;
+
+  background: #000;
+  background: -webkit-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38));
+  background: -o-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38));
+  background: -moz-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38));
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38));
+
+}
+.el-participants--item-avathar {
+  font-size: 30px;
+  border: 2px rgba(204, 204, 204, 0.18) solid;
+  padding: 16px 25px;
+  border-radius: 3px;
+  color: #464a58;
+}

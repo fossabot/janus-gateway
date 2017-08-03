@@ -56,4 +56,4 @@ Makefile.in
 .wav
 .vscode/
 .mjr
-
+**/.DS_Store
