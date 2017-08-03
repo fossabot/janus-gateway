@@ -73,6 +73,7 @@ var maxCallTime = 60;
 var progressbarRefreshInterval = 2;//sec
 var timeLapsedRefreshInterval = 60;//sec
 var currentMeetingInfo = null;
+var maxProgressPerc = 95;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -521,15 +522,10 @@ function toggleVideo() {
 }
 
 function initProgressbar(currentCallTime){
-	remainingMin = maxCallTime - currentCallTime
-	if (remainingMin < 0){
-		currentProgressbarValue = progressbarMaxVal
-	} else{
-		currentProgressbarValue = progressbarMaxVal*(currentCallTime/maxCallTime)
-	}
+	currentProgressbarValue = progressbarMaxVal*(currentCallTime/maxCallTime)
 	$('#progress-bar').progressbar({
 		classes: {
-			'ui-progressbar-value': 'progress-bar progress-bar-success'
+			'ui-progressbar-value': 'progress-bar progress-bar-striped progress-bar-animated progress-bar-success'
 		},
 		max: progressbarMaxVal,
 		value: Math.floor(currentProgressbarValue)
@@ -543,11 +539,22 @@ function nextProgressbarValue(){
 
 function progressTheBar(){
 	nextValue = nextProgressbarValue()
-	// console.log("progressing to "+nextValue)
-	$('#progress-bar').progressbar("value", nextValue)
-	$('#progress-bar .progress-bar').css("width",nextValue*100/progressbarMaxVal+"%")
+	progressPerc = nextValue*100/progressbarMaxVal
+	if (progressPerc < maxProgressPerc){
+		$('#progress-bar').progressbar("value", nextValue)
+		$('#progress-bar .progress-bar').css("width",progressPerc+"%")
+	}else{
+		$('#progress-bar .progress-bar').css("width",maxProgressPerc+"%")
+		adjustMarkerPosition()
+	}
 }
 
+function adjustMarkerPosition(){
+	perc = (progressbarRefreshInterval*100)/(maxCallTime*60)
+	$.each($('.bar-step'), function(index, marker){
+		$(marker).css("left", (parseInt($(marker).css("left"))/$(marker).parent().width())*100 - perc+"%")
+	})
+}
 function onFirstParticipantJoin(){
 	$('#videolocal_side').removeClass('hide')
 	$('#videolocal').empty().attr("id", "videoremote1").html('<span class="el-participants--item-name"></span>')
