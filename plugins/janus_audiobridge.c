@@ -1294,7 +1294,7 @@ void janus_audiobridge_destroy_session(janus_plugin_session *handle, int *error)
 			janus_audiobridge_room *audiobridge = ((janus_audiobridge_participant *)session->participant)->room;
 			if(0 == g_hash_table_size(audiobridge->participants)) {
 				json_t *info = json_object();
-				json_object_set_new(info, "event", json_string("all-left"));
+				json_object_set_new(info, "event", json_string("last-left"));
 				json_object_set_new(info, "room", json_integer(audiobridge->room_id));
 				gateway->notify_event(&janus_audiobridge_plugin, session->handle, info);
 			}

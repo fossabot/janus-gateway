@@ -488,6 +488,9 @@ typedef struct janus_videoroom {
 	gchar *recordmix_file;      /* Path of the recording mix file */
 	FILE *recordingmix;			/* File to record the mix room into */
 	GThread *thread;			/* Mixer thread for this room */
+
+	// Added for tracking meeting start and endtime
+	gboolean first_joined;
 } janus_videoroom;
 
 static GHashTable *rooms;
@@ -997,6 +1000,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			}
 
 			videoroom->destroyed = 0;
+			videoroom->first_joined = FALSE;
 			janus_mutex_init(&videoroom->participants_mutex);
 			videoroom->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
 			videoroom->private_ids = g_hash_table_new(NULL, NULL);
@@ -1238,7 +1242,7 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 			janus_videoroom *videoroom = ((janus_videoroom_participant *)session->participant)->room;
 			if(0 == g_hash_table_size(videoroom->participants)) {
 				json_t *info = json_object();
-				json_object_set_new(info, "event", json_string("all-left"));
+				json_object_set_new(info, "event", json_string("last-left"));
 				json_object_set_new(info, "room", json_integer(videoroom->room_id));
 				gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
 			}
@@ -1649,6 +1653,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		}		
 
 		videoroom->destroyed = 0;
+		videoroom->first_joined = FALSE;
 		janus_mutex_init(&videoroom->participants_mutex);
 		videoroom->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
 		videoroom->private_ids = g_hash_table_new(NULL, NULL);
@@ -3359,7 +3364,14 @@ static void *janus_videoroom_handler(void *data) {
 				/* Also notify event handlers */
 				if(notify_events && gateway->events_is_enabled()) {
 					json_t *info = json_object();
-					json_object_set_new(info, "event", json_string("joined"));
+
+					if(!videoroom->first_joined && (1 == g_hash_table_size(videoroom->participants))) {
+						json_object_set_new(info, "event", json_string("first-joined"));
+						videoroom->first_joined = TRUE;
+					} else{
+						json_object_set_new(info, "event", json_string("joined"));
+					}
+				
 					json_object_set_new(info, "room", json_integer(videoroom->room_id));
 					json_object_set_new(info, "id", json_integer(user_id));
 					json_object_set_new(info, "private_id", json_integer(publisher->pvt_id));

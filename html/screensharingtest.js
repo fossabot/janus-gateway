@@ -44,9 +44,9 @@
 //
 var server = null;
 if(window.location.protocol === 'http:')
-	server = "http://" + window.location.hostname + ":8088/janus";
+	server = "http://" + window.location.hostname + "/janus-meet/janus";
 else
-	server = "https://" + window.location.hostname + ":8089/janus";
+	server = "https://" + window.location.hostname + "/janus-meet/janus";
 
 
 var janus = null;
@@ -96,7 +96,7 @@ $(document).ready(function() {
 			janus = new Janus(
 				{
 					server: server,
-					success: function() {
+					success: function() {c
 						// Attach to video room test plugin
 						janus.attach(
 							{
@@ -343,7 +343,7 @@ function shareScreen() {
 	// Create a new room
 	var desc = $('#desc').val();
 	role = "publisher";
-	var create = { "request": "create", "description": desc, "bitrate": 0, "publishers": 1 };
+	var create = { "request": "create", "description": desc, "bitrate": 0, "publishers": 7 };
 	screentest.send({"message": create, success: function(result) {
 		var event = result["videoroom"];
 		Janus.debug("Event: " + event);
