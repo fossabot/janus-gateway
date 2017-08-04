@@ -116,6 +116,9 @@ function populateFieldsMeetingFields(){
 function getCurrentCallTime(){
 	if (startTime === null || startTime === ""){
 		startTime = getCurrentMeetingInfo().startedAt
+		if (startTime === "0001-01-01T00:00:00Z"){
+			startTime = (new Date()).toISOString()
+		}
 	}
 	var startedAt = new Date(startTime)
 	diff = Date.now()-startedAt
