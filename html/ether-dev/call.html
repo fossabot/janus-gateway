@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../favicon.png">
+    <title>ether labs</title>
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet"  href="assets/css/bootstrap.css" type="text/css">
+    <link rel="stylesheet" href="assets/css/costom.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/icons.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/style.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css" type="text/css" >
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.1.0/bootbox.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="janus.js" ></script>
+    <script type="text/javascript" src="marker.js" ></script>
+    <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
+    <script type="text/javascript" src="videocall.js?version=1"></script>
+    <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
+    <script src="assets/js/tooltip-viewport.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="assets/js/ie10-viewport-bug-workaround.js"></script>
+
+  </head>
+
+
+<!-- Large modal -->
+<div class="modal bd-example-modal-lg fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header desc">
+          <h5 class="modal-title" id="exampleModalLabel">SET A TOPIC MARKER
+            <div class="small"> Leave your mark! You can mention folks in the message - and we’ll notify and route the marker to them - like magic! </div>
+          </h5>
+          <button type="button" class="close hide" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="marker-form">
+            <div class="form-group">
+              <input type="text" class="form-control hide" id="marker-topic" placeholder="Enter Topic for Marker" aria-describedby="sizing-addon1">
+            </div>
+            <div class="form-group">
+              <textarea class="form-control" placeholder="Marker Description" id="marker-description" required></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <div class="note">
+            <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
+          </div>
+          <div class="button-list">
+            <button type="button" class="btn btn-secondary" onclick="resetMarkerForm()" data-dismiss="modal" aria-label="Close">CLOSE</button>
+            <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">MARK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <body class="ether-chat-body">
+    <nav class="el-navbar">
+     <div class="el-logo">
+       <span class="el-display-name--logo text-primary">
+         <img src="assets/images/logo.png">
+       </span>
+     </div>
+    </nav>
+
+    <div class="el-progress">
+      <div class="progress" id="progress-bar">
+      </div>
+      <span class="progress-bar--time"> <i>00:00</i> </span>
+    </div> <!-- / el-progress -->
+
+    <ul class="el-marker">
+      <div class="el-marker--item-block-title"> Markers </div>
+      <button class="btn el-marker--item" data-toggle="modal" data-target=".bd-example-modal-lg">
+        <span class="el-marker--item-icon icon-crown" id="mark-topic"> </span>
+        <span class="el-marker--item-title"> Topic </span>
+      </button>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-star-o "> </span>
+        <span class="el-marker--item-title"> Action Item </span>
+      </button>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-arrow-swap"> </span>
+        <span class="el-marker--item-title"> Decision </span>
+      </button>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-alert"> </span>
+        <span class="el-marker--item-title"> Priority </span>
+      </button>
+      <button class="btn el-marker--item">
+        <span class="el-marker--item-icon icon-user-outline"> </span>
+        <span class="el-marker--item-title"> Personal </span>
+      </button>
+    </ul> <!-- / el-marker -->
+
+    <div class="container" id="videos">
+      <div class="el-participants-wrap">
+
+        <div class="el-participants flex row">
+            <div class="el-participants--item col-md-6">
+              <span class="el-participants--item-video el-participants--item-active hide" id="videolocal">
+                <span class="el-participants--item-name"></span>
+              </span>
+            </div>
+
+            <div class="el-participants--item col-md-6">
+              <span class="el-participants--item-video el-participants--item-active hide" id="videoremote2">
+                <span class="el-participants--item-name"></span>
+              </span>
+            </div>
+        </div>
+
+        <div class="el-participants flex row">
+            <div class="el-participants--item col-md-6">
+              <span class="el-participants--item-video el-participants--item-active hide" id="videoremote3">
+                <span class="el-participants--item-name"></span>
+              </span>
+            </div>
+
+            <div class="el-participants--item col-md-6">
+              <span class="el-participants--item-video el-participants--item-active hide" id="videoremote4">
+                <span class="el-participants--item-name"></span>
+              </span>
+            </div>
+        </div>
+      </div>
+    </div><!-- el-participants -->
+
+    <ul class="el-chat-controller">
+      <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="">  </button>
+      <button class="btn el-chat-controller--item el-chat-controller--mute icon-microphone tooltip-bottom" id="mic" title="">  </button>
+      <!-- <button class="btn el-chat-controller--item icon-microphone-slash tooltip-bottom" title="Turn on ">  </button> -->
+      <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="">  </button>
+      <button class="btn el-chat-controller--item icon-computer-imac tooltip-bottom" title="Turn on ">  </button> <!--el-chat-controller--turn-on -->
+      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title=""></button>
+      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" id="hangup" title=""></button>
+
+    </ul>
+    <div class="el-rightBar-selfie">
+      <span class="el-rightBar-selfie--item hide" id="videolocal_side">
+        <span class="el-participants--item-name" style="z-index: 10;"></span>
+      </span>
+<!--       <span class="el-rightBar-selfie--activeCall">
+        Active Call: 8:05 min
+      </span>
+ -->    </div> <!-- el-rightBar--selfie-->
+
+    <div class="el-rightBar-participans hide">
+      <span class="el-rightBar-participans--title"> Participans (2) </span>
+
+      <div class="el-rightBar--participans-item">
+        <span> <img src="assets/images/attendies-2.png" class="el-rightBar--participans-avathar"> </span>
+        <span class="el-rightBar--participans-name"> Participans username  </span>
+        <span class="el-rightBar--participans-muteIcon  icon-microphone">  </span>
+      </div>
+
+      <div class="el-rightBar--participans-item">
+        <span> <img src="assets/images/attendies-2.png" class="el-rightBar--participans-avathar"> </span>
+        <span class="el-rightBar--participans-name"> Participans username </span>
+        <span class="el-rightBar--participans-muteIcon  icon-microphone">  </span>
+      </div>
+
+      <div class="el-rightBar--participans-controler">
+        <button type="button" class="btn btn-primary btn-sm btn-block"> Mute All</button>
+        <button type="button" class="btn btn-primary btn-sm btn-block"> Unmute All </button>
+        <button type="button" class="btn btn-primary btn-sm btn-block"> More </button>
+      </div>
+     </div> <!-- el-rightBar--participans -->
+  </body>
+</html>

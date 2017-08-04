@@ -1,0 +1,36 @@
+.modal-dialog {
+  margin-top: 5%
+}
+.modal-content {
+  width: 75%;
+  border: 3px #cf641c solid !important
+}
+.modal-title {
+  color: #cf641c;
+}
+
+.desc {
+  padding: 8px !important; 
+  padding-bottom: 0px !important;
+}
+
+.modal-footer .button-list{
+  padding: 6px;
+  text-align: right;
+}
+
+.modal-footer {
+  padding-top: 0px !important;  
+}
+
+.modal-footer .button-list{
+  margin-top: -20px;
+}
+
+.modal-footer .note{
+  text-align: left;
+}
+
+#marker-description{
+  height: 60px
+}

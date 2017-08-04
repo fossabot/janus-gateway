@@ -1,0 +1,41 @@
+.el-marker {
+  text-align: center;
+  padding: 25px 0 0;
+}
+.el-marker--item  {
+  background: none;
+  cursor: pointer;
+  &:focus {
+    z-index: 1060;
+    position: relative;
+  } 
+}
+.el-marker--item-icon  {
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  line-height: 41px;
+  border-radius: 36px;
+  border: 2px #fff solid;
+  display: inline-block;
+  font-size: 19px;
+  &:hover, &:focus {
+    border: 2px #cf641c solid;
+    color: #cf641c;
+  }
+}
+
+.el-marker--item-title {
+  color: #fff;
+  display: block;
+  font-size: 11px;
+  padding-top: 8px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+.el-marker--item-block-title {
+  -webkit-transform: rotate(-90deg);
+  border-bottom: 2px solid #fff;
+  display: inline-block;
+  font-size: 12px;
+}

@@ -1,0 +1,40 @@
+.el-progress {
+  position: absolute;
+  top: 46px;
+  right: 168px;
+  left: 110px;
+}
+.bar-step {
+  position: absolute;
+  margin-top: -11px;
+  z-index: 1;
+  font-size: 12px;
+  background: #fff;
+  height: 26px;
+  width: 26px;
+  border-radius: 30px;
+}
+.label-txt {
+  float: left;
+  padding: 7px;
+  font-weight: 900;
+  color: #000;
+}
+.label-line {
+  float: right;
+  background: #000;
+  height:50px;
+  width:1px;
+  margin-left: 5px;
+}
+.label-percent {
+  float: right;
+  margin-left: 5px;
+}
+.progress-bar--time {
+  float: right;
+}
+.progress-bar--time i {
+  position: absolute;
+  bottom: 5px;
+} 
