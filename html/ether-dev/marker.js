@@ -56,6 +56,6 @@ function updateMarkerList(){
 function renderMarkerList(res){
 	$('.bar-step').remove()
 	res.forEach(function(summary, index){
-		setMarkerOnProgressBar(new Date(summary.marker.timestamp))
+		setMarkerOnProgressBar(new Date(summary.timestamp))
 	})
 }
