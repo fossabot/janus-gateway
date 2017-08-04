@@ -318,7 +318,8 @@ function enableMarking(){
 function enableHangup(){
 	$('#hangup').removeClass('hide').html("Hangup").click(function() {
 		$(this).attr('disabled', true);
-		janus.destroy();
+		// janus.destroy();
+		setTimeout(function(){janus.destroy();}, 2000)
 		window.location.replace(window.location.origin)
 	});
 }

@@ -379,7 +379,7 @@ function joinMeeting(){
 function enableHangup(){
 	$('#hangup').click(function() {
 		$(this).attr('disabled', true);
-		janus.destroy();
+		setTimeout(function(){janus.destroy();}, 2000)
 		window.location.replace(window.location.origin)
 	});
 }
