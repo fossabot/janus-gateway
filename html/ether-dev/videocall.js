@@ -522,7 +522,7 @@ function progressTheBar(){
 		$('#progress-bar .progress-bar').css("width",progressPerc+"%")
 	}else{
 		$('#progress-bar .progress-bar').css("width",maxProgressPerc+"%")
-		adjustMarkerPosition()
+		// adjustMarkerPosition()
 	}
 }
 

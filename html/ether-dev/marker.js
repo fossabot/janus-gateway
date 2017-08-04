@@ -31,6 +31,11 @@ function createMarker(description, type, topic){
 function setMarkerOnProgressBar(timestamp){
 	offsetMin = (timestamp - new Date(startTime))/(1000*60)
 	leftOffsetPerc = (offsetMin/maxCallTime)*100
+
+	if (currentCallTime >= (maxProgressPerc*maxCallTime)/100){
+		leftOffsetPerc = (offsetMin/currentCallTime)*100
+	}
+
 	$("#progress-bar").append('<div class="bar-step" style="left: '+leftOffsetPerc+'%"><div class="label-txt icon-crown"> </div></div>')
 }
 
@@ -50,11 +55,7 @@ function updateMarkerList(){
 
 function renderMarkerList(res){
 	$('.bar-step').remove()
-	res.forEach(function(summary, index){ setMarkerOnProgressBar(new Date(summary.marker.timestamp))})
+	res.forEach(function(summary, index){
+		setMarkerOnProgressBar(new Date(summary.marker.timestamp))
+	})
 }
-
-
-
-
-
-
