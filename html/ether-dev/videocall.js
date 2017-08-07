@@ -92,7 +92,7 @@ function getCurrentMeetingInfo(){
 	if (currentMeetingInfo === null){
 		$.ajax({
 			type: "GET",
-			url: "https://ether-staging-1553540497.us-east-1.elb.amazonaws.com:8080/v1/meetings/"+meetingId,
+			url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId,
 			// url: "http://localhost:8080/v1/meetings/"+meetingId,
 			crossDomain: true,
 			success: function(res){
