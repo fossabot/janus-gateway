@@ -14,7 +14,7 @@
   padding-bottom: 0px;
 }
 
-.modal-footer .button-list{
+.modal-footer .button-list {
   padding: 6px;
   text-align: right;
 }
@@ -25,15 +25,15 @@
   border-top: initial;
 }
 
-.modal-footer .button-list{
+.modal-footer .button-list {
   margin-top: -20px;
 }
 
-.modal-footer .note{
+.modal-footer .note {
   text-align: left;
 }
 
-#marker-description{
+#marker-description {
   height: 75px;
   font-size: 1.1rem;
 }
@@ -43,6 +43,10 @@
   padding-bottom: 5px;
 }
 
-.modal-footer .btn{
+.modal-footer .btn {
   line-height: 0.65;
+}
+
+.modal-dialog.marker-modal-dialog {
+  width: 675px
 }
