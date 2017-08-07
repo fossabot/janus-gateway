@@ -1,17 +1,17 @@
 .modal-dialog {
   margin-top: 5%
 }
-.modal-content {
+.modal-content.marker-modal-content {
   width: 75%;
-  border: 3px #cf641c solid !important
+  border: 3px #cf641c solid
 }
 .modal-title {
   color: #cf641c;
 }
 
-.desc {
-  padding: 8px !important; 
-  padding-bottom: 0px !important;
+.modal-header.desc {
+  padding: 8px;
+  padding-bottom: 0px;
 }
 
 .modal-footer .button-list{
@@ -19,8 +19,10 @@
   text-align: right;
 }
 
-.modal-footer {
-  padding-top: 0px !important;  
+.modal-footer.marker-modal-footer {
+  padding-top: 0px;
+  padding-bottom: 5px ;
+  border-top: initial;
 }
 
 .modal-footer .button-list{
@@ -32,5 +34,15 @@
 }
 
 #marker-description{
-  height: 60px
+  height: 75px;
+  font-size: 1.1rem;
+}
+
+.modal-body.marker-modal-body {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.modal-footer .btn{
+  line-height: 0.65;
 }
