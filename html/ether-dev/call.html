@@ -26,7 +26,6 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="janus.js" ></script>
-    <script type="text/javascript" src="marker.js?version=2" ></script>
     <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
     <script type="text/javascript" src="videocall.js?version=2"></script>
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
@@ -40,11 +39,11 @@
 
 
 <!-- Large modal -->
-<div class="modal bd-example-modal-lg fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+<div id="marker-modal" class="modal bd-example-modal-lg fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg marker-modal-dialog" role="document">
       <div class="modal-content marker-modal-content">
         <div class="modal-header desc">
-          <h5 class="modal-title" id="exampleModalLabel">SET A TOPIC MARKER
+          <h5 class="modal-title" id="exampleModalLabel"><div class="big"></div>
             <div class="small"> Leave your mark! You can mention folks in the message - and we’ll notify and route the marker to them - like magic! </div>
           </h5>
           <button type="button" class="close hide" data-dismiss="modal" aria-label="Close">
@@ -66,8 +65,8 @@
             <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
           </div>
           <div class="button-list">
-            <button type="button" class="btn btn-secondary" onclick="resetMarkerForm()" data-dismiss="modal" aria-label="Close">CLOSE</button>
-            <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">MARK</button>
+            <button type="button" class="btn btn-secondary" onclick="resetMarkerForm()" data-dismiss="modal" aria-label="Close">Close</button>
+            <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button>
           </div>
         </div>
       </div>
@@ -85,29 +84,30 @@
 
     <div class="el-progress">
       <div class="progress" id="progress-bar">
+        <img class="progress-bar--indicator" src="assets/images/elipse.png">
       </div>
       <span class="progress-bar--time"> <i>00:00</i> </span>
     </div> <!-- / el-progress -->
 
     <ul class="el-marker">
       <div class="el-marker--item-block-title"> Markers </div>
-      <button class="btn el-marker--item" data-toggle="modal" data-target=".bd-example-modal-lg">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="topic">
         <span class="el-marker--item-icon icon-crown" id="mark-topic"> </span>
         <span class="el-marker--item-title"> Topic </span>
       </button>
-      <button class="btn el-marker--item">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="action" data-title="set an action marker">
         <span class="el-marker--item-icon icon-star-o "> </span>
         <span class="el-marker--item-title"> Action Item </span>
       </button>
-      <button class="btn el-marker--item">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="decision">
         <span class="el-marker--item-icon icon-arrow-swap"> </span>
         <span class="el-marker--item-title"> Decision </span>
       </button>
-      <button class="btn el-marker--item">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="priority">
         <span class="el-marker--item-icon icon-alert"> </span>
         <span class="el-marker--item-title"> Priority </span>
       </button>
-      <button class="btn el-marker--item">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="personal">
         <span class="el-marker--item-icon icon-user-outline"> </span>
         <span class="el-marker--item-title"> Personal </span>
       </button>
@@ -115,30 +115,28 @@
 
     <div class="container" id="videos">
       <div class="el-participants-wrap">
-
         <div class="el-participants flex row">
-            <div class="el-participants--item col-md-6">
-              <span class="el-participants--item-video el-participants--item-active hide" id="videolocal">
+            <div class="el-participants--item col-md-6 hide">
+              <span class="el-participants--item-video el-participants--item-active" id="videolocal">
                 <span class="el-participants--item-name"></span>
               </span>
             </div>
 
-            <div class="el-participants--item col-md-6">
-              <span class="el-participants--item-video el-participants--item-active hide" id="videoremote2">
+            <div class="el-participants--item  col-md-6 hide">
+              <span class="el-participants--item-video el-participants--item-active" id="videoremote2">
                 <span class="el-participants--item-name"></span>
               </span>
             </div>
         </div>
 
         <div class="el-participants flex row">
-            <div class="el-participants--item col-md-6">
-              <span class="el-participants--item-video el-participants--item-active hide" id="videoremote3">
+            <div class="el-participants--item col-md-6 hide">
+              <span class="el-participants--item-video el-participants--item-active" id="videoremote3">
                 <span class="el-participants--item-name"></span>
               </span>
             </div>
-
-            <div class="el-participants--item col-md-6">
-              <span class="el-participants--item-video el-participants--item-active hide" id="videoremote4">
+            <div class="el-participants--item col-md-6 hide">
+              <span class="el-participants--item-video el-participants--item-active" id="videoremote4">
                 <span class="el-participants--item-name"></span>
               </span>
             </div>
@@ -150,12 +148,13 @@
       <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="">  </button>
       <button class="btn el-chat-controller--item el-chat-controller--mute icon-microphone tooltip-bottom" id="mic" title="">  </button>
       <!-- <button class="btn el-chat-controller--item icon-microphone-slash tooltip-bottom" title="Turn on ">  </button> -->
+      <button class="btn el-chat-controller--item icon-computer-imac tooltip-bottom" title="">  </button> <!--el-chat-controller--turn-on -->
       <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="">  </button>
-      <button class="btn el-chat-controller--item icon-computer-imac tooltip-bottom" title="Turn on ">  </button> <!--el-chat-controller--turn-on -->
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title=""></button>
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" id="hangup" title=""></button>
 
     </ul>
+
     <div class="el-rightBar-selfie">
       <span class="el-rightBar-selfie--item hide" id="videolocal_side">
         <span class="el-participants--item-name" style="z-index: 10;"></span>
@@ -187,4 +186,5 @@
       </div>
      </div> <!-- el-rightBar--participans -->
   </body>
+  <script type="text/javascript" src="marker.js?version=2" ></script>
 </html>

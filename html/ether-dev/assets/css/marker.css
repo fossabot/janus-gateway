@@ -1,6 +1,7 @@
 .el-marker {
   text-align: center;
   padding: 25px 0 0;
+  padding-top: 5px;
 }
 .el-marker--item  {
   background: none;

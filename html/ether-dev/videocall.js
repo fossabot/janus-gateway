@@ -69,8 +69,8 @@ var startTime = null;
 var currentProgressbarValue = null;
 var currentCallTime = null;
 var progressbarMaxVal = 720;
-var maxCallTime = 60;
-var progressbarRefreshInterval = 2;//sec
+var maxCallTime = 30;
+var progressbarRefreshInterval = 1;//sec
 var timeLapsedRefreshInterval = 60;//sec
 var currentMeetingInfo = null;
 var maxProgressPerc = 95;
@@ -258,7 +258,7 @@ function handleJanusCall() {
 										if(remoteFeed != null) {
 											Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
 											$('#remote'+remoteFeed.rfindex).empty().hide();
-											$('#videoremote'+remoteFeed.rfindex).empty();
+											$('#videoremote'+remoteFeed.rfindex).parent().addClass('hide')
 											feeds[remoteFeed.rfindex] = null;
 											remoteFeed.detach();
 										}
@@ -281,7 +281,7 @@ function handleJanusCall() {
 										if(remoteFeed != null) {
 											Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
 											$('#remote'+remoteFeed.rfindex).empty().hide();
-											$('#videoremote'+remoteFeed.rfindex).empty();
+											$('#videoremote'+remoteFeed.rfindex).parent().empty();
 											feeds[remoteFeed.rfindex] = null;
 											remoteFeed.detach();
 										}
@@ -314,7 +314,7 @@ function handleJanusCall() {
 								// Add an 'unpublish' button
 								// $('#videolocal').append('<button class="btn btn-warning btn-xs" id="unpublish" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;">Unpublish</button>');
 								$('#unpublish').click(unpublishOwnFeed);
-								$('#videolocal').removeClass('hide').show()
+								$('#videolocal').parent().removeClass('hide').show()
 								$('#videolocal .el-participants--item-name').html(myusername)
 								$('#videolocal_side .el-participants--item-name').html(myusername)
 							}
@@ -513,7 +513,7 @@ function initProgressbar(currentCallTime){
 }
 
 function nextProgressbarValue(){
-	currentProgressbarValue = currentProgressbarValue + (progressbarMaxVal/(maxCallTime*60))*progressbarRefreshInterval
+	currentProgressbarValue = currentProgressbarValue + (progressbarMaxVal/((maxCallTime*maxProgressPerc/100)*60))*progressbarRefreshInterval
 	return currentProgressbarValue
 }
 
@@ -523,8 +523,10 @@ function progressTheBar(){
 	if (progressPerc < maxProgressPerc){
 		$('#progress-bar').progressbar("value", nextValue)
 		$('#progress-bar .progress-bar').css("width",progressPerc+"%")
+		$('#progress-bar .progress-bar--indicator').css("left", progressPerc-1+"%")
 	}else{
 		$('#progress-bar .progress-bar').css("width",maxProgressPerc+"%")
+		$('#progress-bar .progress-bar--indicator').css("left", maxProgressPerc-1+"%")
 		// adjustMarkerPosition()
 	}
 }
@@ -594,7 +596,7 @@ function newRemoteFeed(id, display) {
 						if (remoteFeed.rfindex === 1){
 							onFirstParticipantJoin()
 						}
-						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().removeClass('hide').show()
+						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
 					} else if(msg["error"] !== undefined && msg["error"] !== null) {
 						bootbox.alert(msg["error"]);
 					} else {
