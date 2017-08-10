@@ -1,8 +1,16 @@
 setInterval(updateMarkerList, 10*1000)
 
+$('#marker-modal').on('show.bs.modal', function(e) {
+  markerType = e.relatedTarget.dataset.type
+  $(this).data().type =  e.relatedTarget.dataset.type
+  title = e.relatedTarget.dataset.title == null ? 'set a '+markerType+' marker': e.relatedTarget.dataset.title
+  $(this).find('.big').html(title.toUpperCase())
+});
+
 function mark(){
 	description = $("#marker-description").val()
-	createMarker(description)
+	type = $('#marker-modal').data().type
+	createMarker(description, type)
 	resetMarkerForm()
 }
 
@@ -10,33 +18,44 @@ function resetMarkerForm(){
 	$("#marker-form").trigger('reset')
 }
 
-function createMarker(description, type, topic){
-	timestamp = new Date(Date.now() - 30*1000)
+function createMarker(description, type){
+	timestamp = new Date()
 	data = {
 		"meetingId": meetingId,
 		"description": description,
 		"createdBy": userId,
-		"timestamp": timestamp.toISOString()
+		"timestamp": timestamp.toISOString(),
+		"type": type
 	}
 	$.ajax({
 	  type: "POST",
 	  // url: "http://localhost:8080/v1/meetings/"+meetingId+"/markers",
 	  url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/markers",
 	  data: JSON.stringify(data),
-	  crossDomain: true
+	  crossDomain: true,
+	  success: function(res) {
+		setMarkerOnProgressBar(res)
+	  }
 	});
-	setMarkerOnProgressBar(timestamp)
 }
 
-function setMarkerOnProgressBar(timestamp){
-	offsetMin = (timestamp - new Date(startTime))/(1000*60)
-	leftOffsetPerc = (offsetMin/maxCallTime)*100
-
-	if (currentCallTime >= (maxProgressPerc*maxCallTime)/100){
-		leftOffsetPerc = (offsetMin/currentCallTime)*100
+function setMarkerOnProgressBar(marker){
+	markerTypeClassMappinng = {
+		"topic": "icon-crown",
+		"action": "icon-star-o",
+		"decision": "icon-arrow-swap",
+		"priority": "icon-alert",
+		"personal": "icon-user-outline"
 	}
+	offsetMin = (new Date(marker.timestamp) - new Date(startTime))/(1000*60)
 
-	$("#progress-bar").append('<div class="bar-step" style="left: '+leftOffsetPerc+'%"><div class="label-txt icon-crown"> </div></div>')
+	if (currentCallTime < maxCallTime)
+		leftOffsetPerc = (((offsetMin*maxProgressPerc)/100)/maxCallTime)*100
+	else
+		leftOffsetPerc = (((offsetMin*maxProgressPerc)/100)/currentCallTime)*100
+	if (leftOffsetPerc > maxProgressPerc)
+		leftOffsetPerc = maxProgressPerc
+	$("#progress-bar").append('<div class="bar-step" style="left: '+(leftOffsetPerc-1)+'%"><div class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
 }
 
 function updateMarkerList(){
@@ -46,16 +65,14 @@ function updateMarkerList(){
 	  url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/markers",
 	  crossDomain: true,
 	  success: function(res){
-	  	console.log(res)
 	  	renderMarkerList(res)
 	  }
-
 	});
 }
 
 function renderMarkerList(res){
 	$('.bar-step').remove()
 	res.forEach(function(summary, index){
-		setMarkerOnProgressBar(new Date(summary.timestamp))
+		setMarkerOnProgressBar(summary)
 	})
 }
