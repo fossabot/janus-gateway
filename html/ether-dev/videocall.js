@@ -380,7 +380,8 @@ function enableHangup(){
 	$('#hangup').click(function() {
 		$(this).attr('disabled', true);
 		setTimeout(function(){janus.destroy();}, 2000)
-		window.location.replace(window.location.origin)
+		// window.location.replace(window.location.origin)
+		window.close()
 	});
 }
 
