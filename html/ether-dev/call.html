@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="assets/css/marker.css" type="text/css" >
     <link rel="stylesheet" href="assets/css/progess-bar.css" type="text/css" >
     <link rel="stylesheet" href="assets/css/room.css" type="text/css" >
+    <link rel="stylesheet" href="assets/css/search_bar.css" type="text/css" >
     <link rel="stylesheet" href="assets/css/side-bar.css" type="text/css" >
     <link rel="stylesheet" href="assets/css/marker-modal.css" type="text/css" >
     <link rel="stylesheet" href="assets/css/bootstrap.model.css" type="text/css" >
@@ -84,7 +85,7 @@
     </nav>
 
     <div class="el-progress">
-      <div class="progress" id="progress-bar">
+       <div class="progress" onclick="clickOnProgressBar(event)" id="progress-bar">
         <img class="progress-bar--indicator" src="assets/images/elipse.png">
       </div>
       <span class="progress-bar--time"> <i>00:00</i> </span>
@@ -120,7 +121,7 @@
         <div class="el-participants--item-video">
           <div class="el-participants--item-video el-participants--item-active hide" id="postCallVideo" >
             <video
-              src="https://s3.amazonaws.com/io.etherlabs.ether.recordings/e1cafece6843466b8feaed92c17a7fbe%2Fe1cafece6843466b8feaed92c17a7fbe.mp4"
+            src="#"
               type="video/mp4"
               id="recordingVideo"
               preload="metadata"
@@ -173,8 +174,16 @@
       <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="">  </button>
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title=""></button>
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" id="hangup" title=""></button>
-
     </ul>
+
+<div class="container el-playback-searchbox">
+  <div class="input-group mb-2 mr-sm-2 mb-sm-0 hide">
+    <input type="text" class="form-control el-playback-searchbox--form-control" id="inlineFormInputGroup" placeholder="Username">
+      <div class="input-group-addon el-playback-searchbox--input-group-addon">
+      <span class="icon-search"></span>
+      </div>
+ </div>
+</div>
 
     <div class="el-rightBar-selfie">
       <span class="el-rightBar-selfie--item hide" id="videolocal_side">
@@ -206,6 +215,7 @@
         <button type="button" class="btn btn-primary btn-sm btn-block"> More </button>
       </div>
      </div> <!-- el-rightBar--participans -->
+
   </body>
   <script type="text/javascript" src="marker.js?version=2" ></script>
 </html>
