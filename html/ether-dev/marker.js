@@ -50,9 +50,9 @@ function setMarkerOnProgressBar(marker){
 	offsetMin = (new Date(marker.timestamp) - new Date(startTime))/(1000*60)
 
 	if (currentCallTime < maxCallTime)
-		leftOffsetPerc = (((offsetMin*maxProgressPerc)/100)/maxCallTime)*100
+		leftOffsetPerc = offsetMin*maxProgressPerc/maxCallTime
 	else
-		leftOffsetPerc = (((offsetMin*maxProgressPerc)/100)/currentCallTime)*100
+		leftOffsetPerc = offsetMin*maxProgressPerc/currentCallTime
 	if (leftOffsetPerc > maxProgressPerc)
 		leftOffsetPerc = maxProgressPerc
 	$("#progress-bar").append('<div class="bar-step" style="left: '+(leftOffsetPerc-1)+'%"><div class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
