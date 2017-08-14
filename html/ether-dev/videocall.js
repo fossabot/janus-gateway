@@ -71,7 +71,7 @@ var currentCallTime = null;
 var progressbarMaxVal = 720;
 var maxCallTime = 30;
 var progressbarRefreshInterval = 1;//sec
-var timeLapsedRefreshInterval = 60;//sec
+var timeLapsedRefreshInterval = 1;//sec
 var currentMeetingInfo = null;
 var maxProgressPerc = 95;
 
@@ -565,7 +565,7 @@ function toggleVideo() {
 }
 
 function initProgressbar(currentCallTime){
-	currentProgressbarValue = progressbarMaxVal*(currentCallTime/maxCallTime)
+	currentProgressbarValue = (progressbarMaxVal*currentCallTime*maxProgressPerc)/(maxCallTime*100)
 	$('#progress-bar').progressbar({
 		classes: {
 			'ui-progressbar-value': 'progress-bar progress-bar-striped progress-bar-animated progress-bar-success'
@@ -586,7 +586,8 @@ function initPostCallProgressBarr(){
 }
 
 function nextProgressbarValue(){
-	currentProgressbarValue = currentProgressbarValue + (progressbarMaxVal/((maxCallTime*maxProgressPerc/100)*60))*progressbarRefreshInterval
+	diff = (progressbarMaxVal*maxProgressPerc*progressbarRefreshInterval)/(60*100*maxCallTime)
+	currentProgressbarValue = currentProgressbarValue + diff
 	return currentProgressbarValue
 }
 
@@ -597,17 +598,18 @@ function progressTheBar(){
 		progressBarValue = progressBarValue*100
 		$('#progress-bar').progressbar("value", progressBarValue)
 		$('#progress-bar .progress-bar').css("width",progressBarValue+"%")
-	}
-	else{
+	} else {
 		nextValue = nextProgressbarValue()
 		progressPerc = nextValue*100/progressbarMaxVal
-			if (progressPerc < maxProgressPerc){
-				$('#progress-bar').progressbar("value", nextValue)
-				$('#progress-bar .progress-bar').css("width",progressPerc+"%")
-			}else{
-				$('#progress-bar .progress-bar').css("width",maxProgressPerc+"%")
-				// adjustMarkerPosition()
-			}
+		if (progressPerc < maxProgressPerc){
+			$('#progress-bar').progressbar("value", nextValue)
+			$('#progress-bar .progress-bar').css("width",progressPerc+"%")
+			$('#progress-bar .progress-bar--indicator').css("left", progressPerc-1+"%")
+		} else {
+			$('#progress-bar .progress-bar').css("width",maxProgressPerc+"%")
+			$('#progress-bar .progress-bar--indicator').css("left", maxProgressPerc-1+"%")
+			// adjustMarkerPosition()
+		}
 	}
 }
 
