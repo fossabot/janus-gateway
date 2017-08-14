@@ -493,6 +493,21 @@ function registerUsername() {
 	}
 }
 
+function updateMeetingAttendees(meetingId, userId){
+	$.ajax({
+		type: "POST",
+		data: JSON.stringify({
+			"userId": userId
+		}),
+		url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/attendees",
+		// url: "http://localhost:8080/v1/meetings/"+meetingId+"/attendees",
+		crossDomain: true,
+		success: function(res){
+			console.log("updated meeting attendees")
+		}
+	})
+}
+
 function publishOwnFeed(useAudio) {
 	// Publish our stream
 	$('#publish').attr('disabled', true).unbind('click');
@@ -505,6 +520,7 @@ function publishOwnFeed(useAudio) {
 				Janus.debug(jsep);
 				var publish = { "request": "configure", "audio": useAudio, "video": true };
 				sfutest.send({"message": publish, "jsep": jsep});
+				updateMeetingAttendees(meetingId, userId)
 			},
 			error: function(error) {
 				Janus.error("WebRTC error:", error);
