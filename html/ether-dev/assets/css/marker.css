@@ -34,9 +34,21 @@
   font-weight: 400;
   letter-spacing: 0px;
 }
+
 .el-marker--item-block-title {
   -webkit-transform: rotate(-90deg);
   border-bottom: 2px solid #fff;
   display: inline-block;
   font-size: 12px;
+}
+
+.bar-step.el-marker-pending {
+    left: 84.26356779006672%;
+    border: 2px #cf641c solid;
+    background: #343434;
+    z-index: 1100;
+}
+
+.el-marker-pending .label-txt {
+    color: #cf641c
 }

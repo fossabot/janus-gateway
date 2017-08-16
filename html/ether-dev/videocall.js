@@ -72,6 +72,7 @@ var progressbarMaxVal = 720;
 var maxCallTime = 30;
 var progressbarRefreshInterval = 1;//sec
 var timeLapsedRefreshInterval = 1;//sec
+var markerPollingInterval = 10;//sec
 var currentMeetingInfo = null;
 var maxProgressPerc = 95;
 var recordingDuration = 0;
@@ -98,7 +99,7 @@ function getCurrentMeetingInfo(){
 			success: function(res){
 				currentMeetingInfo = res
 				console.log(currentMeetingInfo)
-				populateFieldsMeetingFields(currentMeetingInfo)
+				populateMeetingFields(currentMeetingInfo)
 			}
 		})
 	}
@@ -159,7 +160,7 @@ function clickOnProgressBar(event){
 	recording.currentTime = recording.duration*progressBarPercentage/100
 }
 
-function populateFieldsMeetingFields(currentMeetingInfo){
+function populateMeetingFields(currentMeetingInfo){
 	currentCallTime = getCurrentCallTime()
 	if (currentMeetingInfo.status === "recording-available"){
 		initPostCallProgressBarr()
@@ -640,7 +641,7 @@ function progressTheBar(){
 		$('#progress-bar .progress-bar').css("width",maxProgressPerc+"%")
 		$('#progress-bar .progress-bar--indicator').css("left", maxProgressPerc-0.5+"%")
 		// adjustMarkerPosition()
-		}
+	}
 }
 
 function adjustMarkerPosition(){

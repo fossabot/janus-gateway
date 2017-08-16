@@ -1,8 +1,4 @@
-.modal-dialog {
-  margin-top: 5%
-}
 .modal-content.marker-modal-content {
-  width: 75%;
   border: 3px #cf641c solid
 }
 .modal-title {
@@ -48,5 +44,6 @@
 }
 
 .modal-dialog.marker-modal-dialog {
-  width: 675px
+  width: 500px;
+  margin-top: 170px
 }
