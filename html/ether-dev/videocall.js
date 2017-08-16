@@ -74,6 +74,7 @@ var progressbarRefreshInterval = 1;//sec
 var timeLapsedRefreshInterval = 1;//sec
 var currentMeetingInfo = null;
 var maxProgressPerc = 95;
+var recordingDuration = 0;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -96,19 +97,32 @@ function getCurrentMeetingInfo(){
 			crossDomain: true,
 			success: function(res){
 				currentMeetingInfo = res
-				postCallPlayback(currentMeetingInfo)
 				console.log(currentMeetingInfo)
-				populateFieldsMeetingFields()
+				populateFieldsMeetingFields(currentMeetingInfo)
 			}
 		})
 	}
 	return currentMeetingInfo
 }
 
+function setVideoDetails(meeting){
+	$.ajax({
+			type: "GET",
+			url: "https://hive.etherlabs.io:8080/v1/recordings/"+meeting.recordingId,
+			crossDomain: true,
+			success: function(results){
+				document.getElementById("recordingVideo").setAttribute("src",results.url)
+				recordingDuration = results.duration
+			}
+		})
+}
+
+
 function postCallPlayback(currentMeetingInfo){
 	if (currentMeetingInfo.status === "recording-available"){
 		$('#postCallVideo').removeClass('hide')
 		$('.el-playback-controller').removeClass('hide')
+		$('.input-group').removeClass('hide')
 		$('.el-chat-controller').hide()
 	}
 }
@@ -133,13 +147,28 @@ function pauseRecordingVideo(){
 	document.getElementById("recordingVideo").pause();
 }
 
-function populateFieldsMeetingFields(){
+function clickOnProgressBar(event){
+	var progressBarOffset = $("#progress-bar").offset();
+	var clickPosition = event.clientX - progressBarOffset.left;
+	progressBarLength = parseInt($("#progress-bar").css("width"))
+	progressBarPercentage = (clickPosition*100)/progressBarLength
+	$('#progress-bar').progressbar("value", clickPosition)
+	$('#progress-bar .progress-bar').css("width",progressBarPercentage+"%")
+	$('.el-progress .progress-bar--indicator').css("left",(progressBarPercentage-0.5)+"%")
+	recording= document.getElementById("recordingVideo")
+	recording.currentTime = recording.duration*progressBarPercentage/100
+}
+
+function populateFieldsMeetingFields(currentMeetingInfo){
 	currentCallTime = getCurrentCallTime()
 	if (currentMeetingInfo.status === "recording-available"){
 		initPostCallProgressBarr()
 		postCallProgressBarRefreshTime(true)
-		setInterval(progressTheBar, progressbarRefreshInterval*1000)
+		postCallPlayback(currentMeetingInfo)
+		setVideoDetails(currentMeetingInfo)
+		setInterval(postCallProgressTheBar, progressbarRefreshInterval*1000)
 		setInterval(postCallProgressBarRefreshTime, 1000)
+		updateMarkerList()
 	}
 	else{
 		initProgressbar(currentCallTime)
@@ -591,26 +620,27 @@ function nextProgressbarValue(){
 	return currentProgressbarValue
 }
 
+function postCallProgressTheBar(){
+	recording = document.getElementById('recordingVideo')
+	progressBarValue = recording.currentTime/recording.duration
+	progressBarValue = progressBarValue*100
+	$('#progress-bar').progressbar("value", progressBarValue)
+	$('#progress-bar .progress-bar').css("width",progressBarValue+"%")
+	$('#progress-bar .progress-bar--indicator').css("left", progressBarValue-0.5+"%")
+}
+
 function progressTheBar(){
-	if (currentMeetingInfo.status === "recording-available" ){
-		recording = document.getElementById('recordingVideo')
-		progressBarValue = recording.currentTime/recording.duration
-		progressBarValue = progressBarValue*100
-		$('#progress-bar').progressbar("value", progressBarValue)
-		$('#progress-bar .progress-bar').css("width",progressBarValue+"%")
+	nextValue = nextProgressbarValue()
+	progressPerc = nextValue*100/progressbarMaxVal
+	if (progressPerc < maxProgressPerc){
+		$('#progress-bar').progressbar("value", nextValue)
+		$('#progress-bar .progress-bar').css("width",progressPerc+"%")
+		$('#progress-bar .progress-bar--indicator').css("left", progressPerc-0.5+"%")
 	} else {
-		nextValue = nextProgressbarValue()
-		progressPerc = nextValue*100/progressbarMaxVal
-		if (progressPerc < maxProgressPerc){
-			$('#progress-bar').progressbar("value", nextValue)
-			$('#progress-bar .progress-bar').css("width",progressPerc+"%")
-			$('#progress-bar .progress-bar--indicator').css("left", progressPerc-1+"%")
-		} else {
-			$('#progress-bar .progress-bar').css("width",maxProgressPerc+"%")
-			$('#progress-bar .progress-bar--indicator').css("left", maxProgressPerc-1+"%")
-			// adjustMarkerPosition()
+		$('#progress-bar .progress-bar').css("width",maxProgressPerc+"%")
+		$('#progress-bar .progress-bar--indicator').css("left", maxProgressPerc-0.5+"%")
+		// adjustMarkerPosition()
 		}
-	}
 }
 
 function adjustMarkerPosition(){
