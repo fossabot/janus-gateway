@@ -5,7 +5,7 @@
 #  Check if size of docker image can be reduced in production image, only binaries of janus ? no code ?? 
 
 # set base image debian jessie
-FROM debian:jessie
+FROM ubuntu:16.04
 ENV  ETHER_HOME /usr/local/ether
 ENV  JANUS_HOME $ETHER_HOME/janus-gateway
 RUN  mkdir -p $JANUS_HOME
@@ -32,8 +32,8 @@ RUN apt-get install -y vim
 ## Install Janus Dependencies
 RUN apt-get install -y libmicrohttpd-dev libjansson-dev libnice-dev \
     libssl-dev libsrtp-dev libsofia-sip-ua-dev libglib2.0-dev \
-    libopus-dev libogg-dev libcurl4-openssl-dev pkg-config gengetopt \
-    libtool automake wget make git
+    libopus-dev libogg-dev libcurl4-openssl-dev libavutil-dev libavcodec-dev libavformat-dev \
+    pkg-config gengetopt libtool automake wget make git
 
 ## Install LibSRTP
 RUN  apt-get purge -y libsrtp0 libsrtp0-dev
@@ -64,7 +64,7 @@ RUN sed -i 's/***REMOVED***/stun_port = 19302/g' /usr/local/etc/janus/janus.cfg
 
 ## Run Nginx and Janus
 RUN chmod +x $JANUS_HOME/scripts/run_janus.sh
-CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
+# CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 
 EXPOSE 80 443
 
