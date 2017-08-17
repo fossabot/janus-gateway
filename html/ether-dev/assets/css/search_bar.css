@@ -1,0 +1,16 @@
+.el-playback-searchbox {
+  width: 600px;
+  padding-bottom: 40px;
+  
+}
+.el-playback-searchbox--form-control,
+.el-playback-searchbox--form-control:focus,
+.el-playback-searchbox--input-group-addon,
+.el-playback-searchbox--input-group-addon:focus {
+  background-color: rgba(0, 0, 0, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+}
+.el-playback-searchbox--input-group-addon {
+  padding: 0 18px;
+  color: rgba(255, 255, 255, 0.55);
+}

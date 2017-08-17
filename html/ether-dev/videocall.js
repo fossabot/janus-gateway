@@ -76,6 +76,7 @@ var markerPollingInterval = 10;//sec
 var currentMeetingInfo = null;
 var maxProgressPerc = 95;
 var recordingDuration = 0;
+var videoOffset=0;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -114,10 +115,14 @@ function setVideoDetails(meeting){
 			success: function(results){
 				document.getElementById("recordingVideo").setAttribute("src",results.url)
 				recordingDuration = results.duration
+				if(videoOffset !== null){
+					$('#recordingVideo')[0].currentTime = videoOffset
+				}else{
+					$('#recordingVideo')[0].currentTime = 0
+				}
 			}
 		})
 }
-
 
 function postCallPlayback(currentMeetingInfo){
 	if (currentMeetingInfo.status === "recording-available"){
@@ -129,23 +134,28 @@ function postCallPlayback(currentMeetingInfo){
 }
 
 function rewindRecordingVideo(){
-	var recording = document.getElementById("recordingVideo");
+	var recording= $('#recordingVideo')[0];
 	recording.currentTime = recording.currentTime - 10;
 	postCallProgressBarRefreshTime()
 }
 
-function playRecordingVideo(){
-	document.getElementById("recordingVideo").play();
+function toggleRecordingPlay(){
+	recording= $('#recordingVideo')[0]
+	if(recording.paused){
+		recording.play()
+		$(".icon-playback-play").addClass("hide")
+		$(".icon-playback-pause").removeClass('hide')
+	}else{
+		recording.pause()
+		$(".icon-playback-pause").addClass("hide")
+		$(".icon-playback-play").removeClass('hide')
+	}
 }
 
 function forwardRecordingVideo(){
-	var recording = document.getElementById("recordingVideo");
+	var recording= $('#recordingVideo')[0];
 	recording.currentTime = recording.currentTime + 10;
 	postCallProgressBarRefreshTime()
-}
-
-function pauseRecordingVideo(){
-	document.getElementById("recordingVideo").pause();
 }
 
 function clickOnProgressBar(event){
@@ -156,8 +166,7 @@ function clickOnProgressBar(event){
 	$('#progress-bar').progressbar("value", clickPosition)
 	$('#progress-bar .progress-bar').css("width",progressBarPercentage+"%")
 	$('.el-progress .progress-bar--indicator').css("left",(progressBarPercentage-0.5)+"%")
-	recording= document.getElementById("recordingVideo")
-	recording.currentTime = recording.duration*progressBarPercentage/100
+	$('#recordingVideo')[0].currentTime = recordingDuration*progressBarPercentage/100
 }
 
 function populateMeetingFields(currentMeetingInfo){
@@ -200,7 +209,7 @@ function refreshTime(init = false){
 }
 
 function postCallProgressBarRefreshTime(init = false){
-	recording = document.getElementById('recordingVideo')
+	recording= $('#recordingVideo')[0]
 	if (!init){
 		postCallVideoTime = recording.currentTime
 		hr = Math.floor(postCallVideoTime/3600)
@@ -489,6 +498,7 @@ function parseQueryParams(){
 	myusername = getFromQueryParams("userName")
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
+	videoOffset = getFromQueryParams("offset")
 	// history.pushState("changing url after param extraction", "url", window.location.origin)
 }
 
@@ -622,8 +632,8 @@ function nextProgressbarValue(){
 }
 
 function postCallProgressTheBar(){
-	recording = document.getElementById('recordingVideo')
-	progressBarValue = recording.currentTime/recording.duration
+	recording= $('#recordingVideo')[0]
+	progressBarValue = recording.currentTime/recordingDuration
 	progressBarValue = progressBarValue*100
 	$('#progress-bar').progressbar("value", progressBarValue)
 	$('#progress-bar .progress-bar').css("width",progressBarValue+"%")

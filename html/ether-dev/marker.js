@@ -13,7 +13,7 @@ $('#marker-modal').on('show.bs.modal', function(e) {
 	timestamp = new Date(e.timeStamp)
 	$(this).data().type =  markerType
 	$(this).data().markerTimestamp = timestamp
-	$(this).data().videoPlaybackOffset = $('#recordingVideo').currentTime
+	$(this).data().videoPlaybackOffset = $('#recordingVideo')[0].currentTime
 
 	title = e.relatedTarget.dataset.title == null ? 'set a '+markerType+' marker': e.relatedTarget.dataset.title
 	$(this).find('.big').html(title.toUpperCase())
@@ -107,7 +107,7 @@ function setPendingMarkerOnProgressBar(timestamp, type){
 
 function renderMarker(leftOffsetPerc, type, pending = false){
 	markerClass = pending == true ? "bar-step el-marker-pending" : "bar-step"
-	$("#progress-bar").append('<div class="'+markerClass+'" style="left: '+(leftOffsetPerc-1)+'%"><div class="label-txt '+ markerTypeClassMappinng[type] +'"> </div></div>')
+	$("#progress-bar").append('<div class="'+markerClass+'" style="left: '+(leftOffsetPerc-1)+'%"><div onclick=handleClickOnMarker() class="label-txt '+ markerTypeClassMappinng[type] +'"> </div></div>')
 }
 
 function calcLiveMarkerLeftOffsetPerc(offsetMin) {
