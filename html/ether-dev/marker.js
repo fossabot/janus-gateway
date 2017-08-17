@@ -18,7 +18,12 @@ $('#marker-modal').on('show.bs.modal', function(e) {
 	title = e.relatedTarget.dataset.title == null ? 'set a '+markerType+' marker': e.relatedTarget.dataset.title
 	$(this).find('.big').html(title.toUpperCase())
 
-	setPendingMarkerOnProgressBar(timestamp, e.relatedTarget.dataset.type)
+	if (currentMeetingInfo.status === "recording-available"){
+		setPostCallPendingMarkerOnProgressBar($(this).data().videoPlaybackOffset, e.relatedTarget.dataset.type)
+	}else{
+		setPendingMarkerOnProgressBar(timestamp, e.relatedTarget.dataset.type)
+	}
+
 	setTimeout(function (){
 		$('#marker-description').focus();
 	}, 500)
@@ -40,7 +45,6 @@ function mark(){
 		timestamp = $("#marker-modal").data().markerTimestamp
 		createMarker(description, timestamp, type)
 	}
-	resetMarkerForm()
 }
 
 function createPostCallMarker(description, offset, type){
@@ -102,6 +106,11 @@ function setMarkerOnProgressBar(marker) {
 function setPendingMarkerOnProgressBar(timestamp, type){
 	offsetMin = calcMarkerOffsetMins(timestamp)
 	leftOffsetPerc = calcLiveMarkerLeftOffsetPerc(offsetMin)
+	renderMarker(leftOffsetPerc, type, true)
+}
+
+function setPostCallPendingMarkerOnProgressBar(offset, type){
+	leftOffsetPerc = (offset/recordingDuration)*100
 	renderMarker(leftOffsetPerc, type, true)
 }
 

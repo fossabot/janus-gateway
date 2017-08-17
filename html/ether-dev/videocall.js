@@ -113,7 +113,7 @@ function setVideoDetails(meeting){
 			url: "https://hive.etherlabs.io:8080/v1/recordings/"+meeting.recordingId,
 			crossDomain: true,
 			success: function(results){
-				document.getElementById("recordingVideo").setAttribute("src",results.url)
+				$('#recordingVideo').attr("src",results.url)
 				recordingDuration = results.duration
 				if(videoOffset !== null){
 					$('#recordingVideo')[0].currentTime = videoOffset
