@@ -8,19 +8,19 @@
     <link rel="icon" href="../favicon.png">
     <title>ether labs</title>
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet"  href="assets/css/bootstrap.css" type="text/css">
-    <link rel="stylesheet" href="assets/css/costom.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/chat-controller.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/playback-controller.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/spinner.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/icons.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/marker.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/progess-bar.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/room.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/search_bar.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/side-bar.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/marker-modal.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/bootstrap.model.css" type="text/css" >
+    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=3" type="text/css">
+    <link rel="stylesheet" href="assets/css/costom.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/playback-controller.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/spinner.css?version=3" type="text/css" >
+    <!-- <link rel="stylesheet" href="assets/css/icons.css" type="text/css" > -->
+    <link rel="stylesheet" href="assets/css/marker.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/search_bar.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker-modal.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=3" type="text/css" >
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="janus.js" ></script>
     <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
-    <script type="text/javascript" src="videocall.js?version=2"></script>
+    <script type="text/javascript" src="videocall.js?version=3"></script>
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
@@ -42,10 +42,13 @@
 
 
 <!-- Large modal -->
-<div id="marker-modal" class="modal bd-example-modal-lg fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+<div id="marker-modal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg marker-modal-dialog" role="document">
       <div class="modal-content marker-modal-content">
         <div class="modal-header desc">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="icon-close a" aria-hidden="true"></span>
+          </button>
           <h5 class="modal-title" id="exampleModalLabel"><div class="big"></div>
             <div class="small"> Leave your mark! You can mention folks in the message - and we’ll notify and route the marker to them - like magic! </div>
           </h5>
@@ -68,8 +71,9 @@
             <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
           </div>
           <div class="button-list">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close</button>
-            <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button>
+            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close</button> -->
+            <!-- <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button> -->
+            <button type="button" class="el-btn-save btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close"> <i class="icon-save clearfix"></i> Mark</button>
           </div>
         </div>
       </div>
@@ -86,7 +90,7 @@
     </nav>
 
     <div class="el-progress">
-       <div class="progress" onclick="clickOnProgressBar(event)" id="progress-bar">
+       <div id="progress-bar" class="progress" onclick="clickOnProgressBar(event)">
         <img class="progress-bar--indicator" src="assets/images/elipse.png">
       </div>
       <span class="progress-bar--time"> <i>00:00</i> </span>
@@ -95,7 +99,7 @@
     <ul class="el-marker">
       <div class="el-marker--item-block-title"> Markers </div>
       <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="topic">
-        <span class="el-marker--item-icon icon-crown" id="mark-topic"> </span>
+        <span class="el-marker--item-icon icon-crown"> </span>
         <span class="el-marker--item-title"> Topic </span>
       </button>
       <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="action" data-title="set an action marker">
@@ -219,5 +223,5 @@
      </div> <!-- el-rightBar--participans -->
 
   </body>
-  <script type="text/javascript" src="marker.js?version=2" ></script>
+  <script type="text/javascript" src="marker.js?version=3" ></script>
 </html>

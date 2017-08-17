@@ -7,7 +7,8 @@
 
 .modal-header.desc {
   padding: 8px;
-  padding-bottom: 0px;
+  padding-bottom: 6px;
+  padding-left: 18px;
 }
 
 .modal-footer .button-list {
@@ -22,7 +23,7 @@
 }
 
 .modal-footer .button-list {
-  margin-top: -20px;
+  margin-top: -35px;
 }
 
 .modal-footer .note {
@@ -32,6 +33,7 @@
 #marker-description {
   height: 75px;
   font-size: 1.1rem;
+  background: #efebeb;
 }
 
 .modal-body.marker-modal-body {
@@ -44,6 +46,28 @@
 }
 
 .modal-dialog.marker-modal-dialog {
-  width: 500px;
+  width: 575px;
   margin-top: 170px
+}
+.el-btn-save {
+  background: none;
+  border: none;
+  color: #049ec1;
+  font-size: 12px;
+}
+.el-btn-save i {
+  font-size: 20px;
+  line-height: 0;
+}
+.el-btn-save .icon-save:before {
+  content: "\42";
+  padding-bottom: 5px;
+  padding-left: 5px;
+  transform: rotateZ(10Deg);
+}
+
+.el-btn-save:hover {
+  background: none;
+  border: none;
+  color: #049ec1;
 }
