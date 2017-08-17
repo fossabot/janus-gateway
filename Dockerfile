@@ -8,7 +8,8 @@
 FROM ubuntu:16.04
 ENV  ETHER_HOME /usr/local/ether
 ENV  JANUS_HOME $ETHER_HOME/janus-gateway
-RUN  mkdir -p $JANUS_HOME
+
+RUN mkdir -p $JANUS_HOME
 
 RUN apt-get update
 
@@ -64,7 +65,7 @@ RUN sed -i 's/***REMOVED***/stun_port = 19302/g' /usr/local/etc/janus/janus.cfg
 
 ## Run Nginx and Janus
 RUN chmod +x $JANUS_HOME/scripts/run_janus.sh
-# CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
+CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 
 EXPOSE 80 443
 
