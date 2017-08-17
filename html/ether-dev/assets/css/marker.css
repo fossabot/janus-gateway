@@ -42,13 +42,6 @@
   font-size: 12px;
 }
 
-.bar-step.el-marker-pending {
-    left: 84.26356779006672%;
-    border: 2px #cf641c solid;
-    background: #343434;
-    z-index: 1100;
-}
-
 .el-marker-pending .label-txt {
     color: #cf641c;
     padding: 5px;
@@ -71,4 +64,14 @@
 }
 .el-marker--item--active .el-marker--item-title {
   visibility: hidden;
+}
+.el-marker--item--clicked::before {
+  content: "";
+  display: inline-block;
+  background: #cf641c;
+  width: 2px;
+  height: 100px;
+  position: absolute;
+  top: 24px;
+  left: 9px;
 }

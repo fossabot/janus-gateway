@@ -7,6 +7,20 @@ var markerTypeClassMappinng = {
 		"priority": "icon-alert",
 		"personal": "icon-user-outline"
 	}
+$('#marker-info-modal').on('shown.bs.modal', function(e) {
+	$(e.relatedTarget).parent().addClass('el-marker-pending').addClass('el-marker--item--clicked')
+	offset = $(e.relatedTarget).offset()
+	$(this).find('.modal-dialog').css("margin-top", offset.top+60+'px').css('margin-left', offset.left-50+'px')
+	markerInfo = $(e.relatedTarget).parent().data().info
+	console.log("marker info "+markerInfo)
+	$(this).find('.big').html(markerInfo.type.toUpperCase())
+	$(this).find('.modal-title .small').empty().html(markerInfo.user.name+" - "+(new Date(markerInfo.timestamp)).toString().split(' ', 5).join(' '))
+	$(this).find('.marked-description').html(decorateDescription(markerInfo.description))
+});
+
+function decorateDescription(description){
+	return description.replace(/@\w+/g, function decorate(ref) { return '<span style="color: dodgerblue;">'+ref+'</span>' })
+}
 
 $('#marker-modal').on('show.bs.modal', function(e) {
 	markerType = e.relatedTarget.dataset.type
@@ -33,6 +47,10 @@ $('#marker-modal').on('shown.bs.modal', function(e) {
 $('#marker-modal').on('hidden.bs.modal', function(e) {
 	$('#progress-bar .el-marker-pending').remove()
 	$("#marker-form").trigger('reset')
+});
+
+$('#marker-info-modal').on('hidden.bs.modal', function(e) {
+	$('#progress-bar .el-marker-pending').removeClass('el-marker--item--clicked').removeClass('el-marker-pending')
 });
 
 $('#marker-modal').on('hide.bs.modal', function(e) {
@@ -66,8 +84,9 @@ function createPostCallMarker(description, offset, type){
 	  url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/markers",
 	  data: JSON.stringify(data),
 	  crossDomain: true,
-	  success: function(result) {
-		setPostCallMarkersOnProgressBar(result)
+	  success: function(res) {
+		res.user.name = myusername
+		setPostCallMarkersOnProgressBar(res)
 	  }
 	});
 }
@@ -87,6 +106,7 @@ function createMarker(description, timestamp, type){
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
+		res.user.name = myusername
 		setMarkerOnProgressBar(res)
 	  }
 	});
@@ -95,7 +115,7 @@ function createMarker(description, timestamp, type){
 
 function setPostCallMarkersOnProgressBar(marker){
 	leftOffsetPerc = (marker.offset/recordingDuration)*100
-	renderMarker(leftOffsetPerc, marker.type)
+	renderMarker(leftOffsetPerc, marker)
 }
 
 function handleClickOnMarker(){
@@ -105,23 +125,27 @@ function handleClickOnMarker(){
 function setMarkerOnProgressBar(marker) {
 	offsetMin = calcMarkerOffsetMins(marker.timestamp)
 	leftOffsetPerc = calcLiveMarkerLeftOffsetPerc(offsetMin)
-	renderMarker(leftOffsetPerc, marker.type)
+	renderMarker(leftOffsetPerc, marker)
 }
 
 function setPendingMarkerOnProgressBar(timestamp, type){
 	offsetMin = calcMarkerOffsetMins(timestamp)
 	leftOffsetPerc = calcLiveMarkerLeftOffsetPerc(offsetMin)
-	renderMarker(leftOffsetPerc, type, true)
+	renderPendingMarker(leftOffsetPerc, type)
 }
 
 function setPostCallPendingMarkerOnProgressBar(offset, type){
 	leftOffsetPerc = (offset/recordingDuration)*100
-	renderMarker(leftOffsetPerc, type, true)
+	renderPendingMarker(leftOffsetPerc, type)
 }
 
-function renderMarker(leftOffsetPerc, type, pending = false){
-	markerClass = pending == true ? "bar-step el-marker-pending" : "bar-step"
-	$("#progress-bar").append('<div class="'+markerClass+'" style="left: '+(leftOffsetPerc-1)+'%"><div onclick=handleClickOnMarker() class="label-txt '+ markerTypeClassMappinng[type] +'"> </div></div>')
+function renderMarker(leftOffsetPerc, marker){
+	$("#progress-bar").append('<div id="'+marker.id+'"class="bar-step" style="left: '+(leftOffsetPerc-1)+'%"><div data-toggle="modal" data-target="#marker-info-modal" class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
+	$("#"+marker.id).data("info", marker)
+}
+
+function renderPendingMarker(leftOffsetPerc, type){
+	$("#progress-bar").append('<div class="bar-step el-marker-pending" style="left: '+(leftOffsetPerc-1)+'%"><div class="label-txt '+ markerTypeClassMappinng[type] +'"> </div></div>')
 }
 
 function calcLiveMarkerLeftOffsetPerc(offsetMin) {

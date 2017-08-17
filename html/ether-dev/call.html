@@ -8,19 +8,20 @@
     <link rel="icon" href="../favicon.png">
     <title>ether labs</title>
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=3" type="text/css">
-    <link rel="stylesheet" href="assets/css/costom.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/chat-controller.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/playback-controller.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/spinner.css?version=3" type="text/css" >
+    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=5" type="text/css">
+    <link rel="stylesheet" href="assets/css/costom.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/playback-controller.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/spinner.css?version=5" type="text/css" >
     <!-- <link rel="stylesheet" href="assets/css/icons.css" type="text/css" > -->
-    <link rel="stylesheet" href="assets/css/marker.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/progess-bar.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/room.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/search_bar.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/side-bar.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/marker-modal.css?version=3" type="text/css" >
-    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=3" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/nav.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/search_bar.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker-modal.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=5" type="text/css" >
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
@@ -30,7 +31,7 @@
     <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="janus.js" ></script>
     <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
-    <script type="text/javascript" src="videocall.js?version=3"></script>
+    <script type="text/javascript" src="videocall.js?version=5"></script>
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
@@ -42,7 +43,7 @@
 
 
 <!-- Large modal -->
-<div id="marker-modal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div id="marker-modal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg marker-modal-dialog" role="document">
       <div class="modal-content marker-modal-content">
         <div class="modal-header desc">
@@ -79,6 +80,99 @@
       </div>
     </div>
   </div>
+
+
+  <div id="marker-info-modal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg marker-modal-dialog" role="document">
+      <div class="modal-content marker-modal-content">
+        <div class="modal-header desc">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="icon-close a" aria-hidden="true"></span>
+          </button>
+          <h5 class="modal-title" id="exampleModalLabel"><div class="big">TOPIC</div>
+            <div class="small"> Vamshi - 17 Aug 2017 8:25 PM </div>
+          </h5>
+          <button type="button" class="close hide" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body marker-modal-body marker-info-modal-body">
+          <div class="marked-description">
+          </div>
+        </div>
+
+
+        <div class="modal-body marker-info-body">
+           <div class="el-speaker-read">
+
+                <div class="el-nav-tabs--wrap">
+                  <ul class="nav nav-tabs el-nav-tabs" role="tablist">
+                    <li class="nav-item el-nav-tabs--item">
+                      <a class="btn el-nav-tabs--item-inactive" href="#profile" role="tab" data-toggle="tab">
+                        <span class="icon-read clearfix "></span>
+                        <span class="small">Read</span>
+                      </a>
+                    </li>
+                    <li class="nav-item el-nav-tabs--item">
+                      <a class="btn el-nav-tabs--item-inactive" href="#buzz" role="tab" data-toggle="tab">
+                        <span class="clearfix icon-watch"></span>
+                        <span class="small">Watch</span>
+                      </a>
+                    </li>
+                    <li class="nav-item el-nav-tabs--item">
+                      <a class="btn el-nav-tabs--item-inactive" href="#references" role="tab" data-toggle="tab">
+                        <span class="clearfix icon-listen"></span>
+                        <span class="small">Listen</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Tab panes -->
+                <div class="tab-content hide">
+                  <div role="tabpanel" class="tab-pane in active" id="profile">
+
+                    <div class="el-speaker-read--item">
+                      <div class="el-speaker-read--item-details">
+                        <span class="el-speaker-read--item-details-avatar"><img class="el-speaker-read--item-details-avatar-img rounded-circle" src="#"/> </span>
+                        <span class="el-speaker-read--item-details-name">Attendees Name</samp>
+                      </div>
+                      <div class="el-speaker-read--item-cont">Scelerisque eget at purus.
+                      </div>
+                    </div><!-- item-start -->
+                    <div class="el-speaker-read--item">
+                      <div class="el-speaker-read--item-details">
+                        <span class="el-speaker-read--item-details-avatar"><img class="el-speaker-read--item-details-avatar-img rounded-circle" src="#"/> </span>
+                        <span class="el-speaker-read--item-details-name">Attendees Name</samp>
+                      </div>
+                      <div class="el-speaker-read--item-cont"> Lorem ipsum dolor sit amet
+                      </div>
+                    </div><!-- item-start -->
+
+                  </div> <!-- read -->
+                  <div role="tabpanel" class="tab-pane fade" id="buzz"><h2> The watch content </h2> </div>
+                  <div role="tabpanel" class="tab-pane fade" id="references"><h1>The listen content </h1> </div>
+                </div>
+           </div> <!-- el-speaker-read -->
+        </div>
+
+
+
+
+        <div class="modal-footer marker-modal-footer hide">
+          <div class="note">
+            <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
+          </div>
+          <div class="button-list">
+            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close</button> -->
+            <!-- <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button> -->
+            <button type="button" class="el-btn-save btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close"> <i class="icon-save clearfix"></i> Mark</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <body class="ether-chat-body">
     <nav class="el-navbar">
@@ -223,5 +317,5 @@
      </div> <!-- el-rightBar--participans -->
 
   </body>
-  <script type="text/javascript" src="marker.js?version=3" ></script>
+  <script type="text/javascript" src="marker.js?version=5" ></script>
 </html>
