@@ -88,6 +88,15 @@ $(document).ready(function() {
 		$("#registernow").click(handleJanusCall);
 		$(".bootbox .btn-primary").click(function(){window.location.replace(window.location.origin)})
 	}});
+
+	$('#recordingVideo').on({
+		seeking: function(){
+			$("#spinner").addClass("loader")
+		},
+		canplay: function(){
+			$("#spinner").removeClass("loader")
+		}
+	});
 });
 
 function getCurrentMeetingInfo(){
@@ -143,12 +152,12 @@ function toggleRecordingPlay(){
 	recording= $('#recordingVideo')[0]
 	if(recording.paused){
 		recording.play()
-		$(".icon-playback-play").addClass("hide")
-		$(".icon-playback-pause").removeClass('hide')
-	}else{
-		recording.pause()
 		$(".icon-playback-pause").addClass("hide")
 		$(".icon-playback-play").removeClass('hide')
+	}else{
+		recording.pause()
+		$(".icon-playback-play").addClass("hide")
+		$(".icon-playback-pause").removeClass('hide')
 	}
 }
 
