@@ -50,5 +50,25 @@
 }
 
 .el-marker-pending .label-txt {
-    color: #cf641c
+    color: #cf641c;
+    padding: 5px;
+}
+
+.el-marker--item--active .el-marker--item-icon {
+  border: 2px #cf641c solid;
+  position: relative;
+  z-index: 1049;
+}
+.el-marker--item--active .el-marker--item-icon::after {
+  content: "";
+  display: inline-block;
+  background: #cf641c;
+  width: 2px;
+  height: 138px;
+  position: absolute;
+  top: 36px;
+  left: 18px;
+}
+.el-marker--item--active .el-marker--item-title {
+  visibility: hidden;
 }

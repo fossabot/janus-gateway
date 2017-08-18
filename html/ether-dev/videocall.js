@@ -193,7 +193,8 @@ function populateMeetingFields(currentMeetingInfo){
 		initProgressbar(currentCallTime)
 		refreshTime(true)
 		setInterval(progressTheBar, progressbarRefreshInterval*1000)
-		setInterval(refreshTime, timeLapsedRefreshInterval*1000)	
+		setInterval(refreshTime, timeLapsedRefreshInterval*1000)
+		$('#progress-bar').removeAttr("onclick")
 	}
 }
 
@@ -607,9 +608,9 @@ function toggleVideo() {
 		sfutest.muteVideo();
 	muted = sfutest.isVideoMuted()
 	if (muted) {
-		$('#camera').addClass('icon-active')
+		$('#camera').addClass('icon-active').addClass('icon-video-mute').removeClass('icon-video')
 	}else {
-		$('#camera').removeClass('icon-active')
+		$('#camera').removeClass('icon-active').removeClass('icon-video-mute').addClass('icon-video')
 	}
 }
 

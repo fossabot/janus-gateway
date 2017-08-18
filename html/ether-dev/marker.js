@@ -23,15 +23,20 @@ $('#marker-modal').on('show.bs.modal', function(e) {
 	}else{
 		setPendingMarkerOnProgressBar(timestamp, e.relatedTarget.dataset.type)
 	}
+});
 
-	setTimeout(function (){
-		$('#marker-description').focus();
-	}, 500)
+$('#marker-modal').on('shown.bs.modal', function(e) {
+	$(e.relatedTarget).addClass('el-marker--item--active')
+	$('#marker-description').focus();
 });
 
 $('#marker-modal').on('hidden.bs.modal', function(e) {
 	$('#progress-bar .el-marker-pending').remove()
 	$("#marker-form").trigger('reset')
+});
+
+$('#marker-modal').on('hide.bs.modal', function(e) {
+	$('.el-marker--item--active').removeClass('el-marker--item--active')
 });
 
 function mark(){
