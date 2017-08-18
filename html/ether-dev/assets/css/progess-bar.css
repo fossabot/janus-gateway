@@ -13,7 +13,19 @@
   height: 26px;
   width: 26px;
   border-radius: 30px;
+  cursor: context-menu;
 }
+.bar-step.el-marker-pending {
+    left: 84.26356779006672%;
+    border: 2px #cf641c solid;
+    background: #343434;
+    z-index: 1049;
+}
+
+.bar-step .label-txt:hover{
+  color: #cf641c
+}
+
 .label-txt {
   float: left;
   padding: 7px;
