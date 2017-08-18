@@ -505,11 +505,35 @@ function getFromQueryParams(searchKey) {
 function parseQueryParams(){
 	meetingId = getFromQueryParams("meetingId")
 	userId = getFromQueryParams("userId")
+	userId == null ? userId = getFromCookie("etherUserId") : setCookie("etherUserId", userId, 180)
 	myusername = getFromQueryParams("userName")
+	myusername == null ? myusername = getFromCookie("etherUserName") : setCookie("etherUserName", myusername, 180)
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
 	videoOffset = getFromQueryParams("offset")
 	// history.pushState("changing url after param extraction", "url", window.location.origin)
+}
+
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getFromCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
 
 function registerUsername() {
