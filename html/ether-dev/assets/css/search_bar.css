@@ -1,7 +1,10 @@
 .el-playback-searchbox {
   width: 600px;
   padding-bottom: 40px;
-  
+}
+.input-group.mb-2.mr-sm-2.mb-sm-0{
+    display: inline-flex;
+    width: 100%;
 }
 .el-playback-searchbox--form-control,
 .el-playback-searchbox--form-control:focus,

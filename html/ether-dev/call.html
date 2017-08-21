@@ -266,7 +266,7 @@
       </div>
     </div><!-- el-participants -->
 
-    <ul class="el-chat-controller">
+    <ul class="el-chat-controller hide">
       <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="">  </button>
       <button class="btn el-chat-controller--item el-chat-controller--mute icon-microphone tooltip-bottom" id="mic" title="">  </button>
       <!-- <button class="btn el-chat-controller--item icon-microphone-slash tooltip-bottom" title="Turn on ">  </button> -->
@@ -276,14 +276,7 @@
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" id="hangup" title=""></button>
     </ul>
 
-<div class="container el-playback-searchbox">
-  <div class="input-group mb-2 mr-sm-2 mb-sm-0 hide">
-    <input type="text" class="form-control el-playback-searchbox--form-control" id="inlineFormInputGroup" placeholder="Enter Text To Search">
-      <div class="input-group-addon el-playback-searchbox--input-group-addon">
-      <span class="icon-search"></span>
-      </div>
- </div>
-</div>
+
 
     <div class="el-rightBar-selfie">
       <span class="el-rightBar-selfie--item hide" id="videolocal_side">
@@ -315,6 +308,15 @@
         <button type="button" class="btn btn-primary btn-sm btn-block"> More </button>
       </div>
      </div> <!-- el-rightBar--participans -->
+    
+     <div class="container el-playback-searchbox hide">
+       <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+         <input type="text" class="form-control el-playback-searchbox--form-control" id="inlineFormInputGroup" placeholder="Search">
+         <div class="input-group-addon el-playback-searchbox--input-group-addon">
+           <span class="icon-search"></span>
+          </div>
+        </div>
+      </div>
 
   </body>
   <script type="text/javascript" src="marker.js?version=5" ></script>
