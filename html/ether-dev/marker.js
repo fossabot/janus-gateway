@@ -1,5 +1,7 @@
 setInterval(updateMarkerList, markerPollingInterval*1000)
 
+var clickedMarkerId
+
 var markerTypeClassMappinng = {
 		"topic": "icon-crown",
 		"action": "icon-star-o",
@@ -10,16 +12,35 @@ var markerTypeClassMappinng = {
 $('#marker-info-modal').on('shown.bs.modal', function(e) {
 	$(e.relatedTarget).parent().addClass('el-marker-pending').addClass('el-marker--item--clicked')
 	offset = $(e.relatedTarget).offset()
-	$(this).find('.modal-dialog').css("margin-top", offset.top+60+'px').css('margin-left', offset.left-50+'px')
+	leftOffset = calModalDisplayPostion(offset)
+	$(this).find('.modal-dialog').css("margin-top", offset.top+60+'px').css('margin-left', offset.left-leftOffset+'px')
 	markerInfo = $(e.relatedTarget).parent().data().info
+	clickedMarkerId = markerInfo.id
 	console.log("marker info "+markerInfo)
 	$(this).find('.big').html(markerInfo.type.toUpperCase())
 	$(this).find('.modal-title .small').empty().html(markerInfo.user.name+" - "+(new Date(markerInfo.timestamp)).toString().split(' ', 5).join(' '))
 	$(this).find('.marked-description').html(decorateDescription(markerInfo.description))
 });
 
-function decorateDescription(description){
+function decorateDescription(description) {
 	return description.replace(/@\w+/g, function decorate(ref) { return '<span style="color: dodgerblue;">'+ref+'</span>' })
+}
+
+function calModalDisplayPostion(offset) {
+	progressBarOffsetRange = parseInt($("#progress-bar").css("width")) +$("#progress-bar").offset().left
+	oneThirdOfProgressBar = progressBarOffsetRange/3
+	if(offset.left>oneThirdOfProgressBar && offset.left<(progressBarOffsetRange - oneThirdOfProgressBar)){
+		return ($(".modal-content.marker-modal-content").parent().width() - 300)
+	}if(offset.left>(progressBarOffsetRange - oneThirdOfProgressBar) && offset.left<progressBarOffsetRange){
+		return ($(".modal-content.marker-modal-content").parent().width() - 90)
+	}
+	else{
+		return 90
+	}
+}
+
+function postCallMarkerWatchClick(e){
+	$('#recordingVideo')[0].currentTime = $("#"+clickedMarkerId).data().info.offset
 }
 
 $('#marker-modal').on('show.bs.modal', function(e) {
@@ -116,10 +137,6 @@ function createMarker(description, timestamp, type){
 function setPostCallMarkersOnProgressBar(marker){
 	leftOffsetPerc = (marker.offset/recordingDuration)*100
 	renderMarker(leftOffsetPerc, marker)
-}
-
-function handleClickOnMarker(){
-	event.stopPropagation()
 }
 
 function setMarkerOnProgressBar(marker) {

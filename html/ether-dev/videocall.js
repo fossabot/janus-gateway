@@ -76,7 +76,7 @@ var markerPollingInterval = 10;//sec
 var currentMeetingInfo = null;
 var maxProgressPerc = 95;
 var recordingDuration = 0;
-var videoOffset=0;
+var videoOffset = 0;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -91,6 +91,12 @@ $(document).ready(function() {
 
 	$('#recordingVideo').on({
 		seeking: function(){
+			$("#spinner").addClass("loader")
+		},
+		waiting: function(){
+			$("#spinner").addClass("loader")
+		},
+		loadstart: function(){
 			$("#spinner").addClass("loader")
 		},
 		canplay: function(){
@@ -152,12 +158,12 @@ function toggleRecordingPlay(){
 	recording= $('#recordingVideo')[0]
 	if(recording.paused){
 		recording.play()
-		$(".icon-playback-pause").addClass("hide")
-		$(".icon-playback-play").removeClass('hide')
-	}else{
-		recording.pause()
 		$(".icon-playback-play").addClass("hide")
 		$(".icon-playback-pause").removeClass('hide')
+	}else{
+		recording.pause()
+		$(".icon-playback-pause").addClass("hide")
+		$(".icon-playback-play").removeClass('hide')
 	}
 }
 
@@ -168,14 +174,16 @@ function forwardRecordingVideo(){
 }
 
 function clickOnProgressBar(event){
-	var progressBarOffset = $("#progress-bar").offset();
-	var clickPosition = event.clientX - progressBarOffset.left;
-	progressBarLength = parseInt($("#progress-bar").css("width"))
-	progressBarPercentage = (clickPosition*100)/progressBarLength
-	$('#progress-bar').progressbar("value", clickPosition)
-	$('#progress-bar .progress-bar').css("width",progressBarPercentage+"%")
-	$('.el-progress .progress-bar--indicator').css("left",(progressBarPercentage-0.5)+"%")
-	$('#recordingVideo')[0].currentTime = recordingDuration*progressBarPercentage/100
+	if(event.srcElement.parentElement.className.indexOf("bar-step") == -1){
+		var progressBarOffset = $("#progress-bar").offset();
+		var clickPosition = event.clientX - progressBarOffset.left;
+		progressBarLength = parseInt($("#progress-bar").css("width"))
+		progressBarPercentage = (clickPosition*100)/progressBarLength
+		$('#progress-bar').progressbar("value", clickPosition)
+		$('#progress-bar .progress-bar').css("width",progressBarPercentage+"%")
+		$('.el-progress .progress-bar--indicator').css("left",(progressBarPercentage-0.5)+"%")
+		$('#recordingVideo')[0].currentTime = recordingDuration*progressBarPercentage/100
+	}
 }
 
 function populateMeetingFields(currentMeetingInfo){
@@ -188,6 +196,7 @@ function populateMeetingFields(currentMeetingInfo){
 		setInterval(postCallProgressTheBar, progressbarRefreshInterval*1000)
 		setInterval(postCallProgressBarRefreshTime, 1000)
 		updateMarkerList()
+		$("ul").find(".clearfix.icon-watch").parent().removeClass("el-nav-tabs--item-inactive")
 	}
 	else{
 		initProgressbar(currentCallTime)
