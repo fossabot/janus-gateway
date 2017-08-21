@@ -20,10 +20,10 @@ RUN apt-get install -y nginx
 RUN apt-get install -y vim
 
 ## Install Janus Dependencies
-RUN apt-get install -y libmicrohttpd-dev libjansson-dev libnice-dev \
+RUN apt-get install -y libmicrohttpd-dev libjansson-dev \
     libssl-dev libsrtp-dev libsofia-sip-ua-dev libglib2.0-dev \
     libopus-dev libogg-dev libcurl4-openssl-dev libavutil-dev libavcodec-dev libavformat-dev \
-    pkg-config gengetopt libtool automake wget make git
+    pkg-config gengetopt libtool automake wget make git gtk-doc-tools
 
 
 ## Configure Nginx for HTTPS port 443
@@ -48,6 +48,17 @@ RUN  cd $ETHER_HOME && \
      cd libsrtp-1.5.4  && \
      ./configure --prefix=/usr --enable-openssl && \
      make shared_library && make install
+
+## Install LibNice
+RUN  apt-get purge -y libnice-dev
+RUN  cd $ETHER_HOME && \
+     git clone https://github.com/libnice/libnice &&  \
+     cd libnice && \
+     git reset --hard dbaf8f5ccd76089e340883887c7e08e6c04de80a && \
+     ./autogen.sh && \
+     ./configure --prefix=/usr && \
+     make && make install
+
 
 ## ADD Janus code, shouldn't it be clone from gitlab ?
 ADD .      $JANUS_HOME/
@@ -78,4 +89,7 @@ RUN chmod +x $JANUS_HOME/scripts/run_janus.sh
 CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 
 EXPOSE 80 443
+EXPOSE 0:65535/udp
+
+
 

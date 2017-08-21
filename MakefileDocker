@@ -1,0 +1,20 @@
+default_tag=staging
+image_name=registry.gitlab.com/etherlabs/janus-gateway
+
+build: ; 
+    # GOOS=linux GOARCH=amd64 go build -v -o ./bin/directorsvc gitlab.com/etherlabs/janus-director/cmd/directorsvc
+
+staging: clean
+	docker build -t ${image_name}:${default_tag} .
+	docker push ${image_name}:${default_tag}
+
+production: clean 
+	rev=$(git rev-parse HEAD)
+	docker build -t ${image_name}:${rev} .
+	docker push ${image_name}:${rev}
+	docker tag ${image_name}:${rev} ${image_name}:latest 
+	docker push ${image_name}
+
+clean:
+	rm -rf ./bin/
+	docker system prune -f
