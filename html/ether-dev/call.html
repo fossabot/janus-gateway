@@ -8,17 +8,20 @@
     <link rel="icon" href="../favicon.png">
     <title>ether labs</title>
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet"  href="assets/css/bootstrap.css" type="text/css">
-    <link rel="stylesheet" href="assets/css/costom.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/chat-controller.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/playback-controller.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/icons.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/marker.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/progess-bar.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/room.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/side-bar.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/marker-modal.css" type="text/css" >
-    <link rel="stylesheet" href="assets/css/bootstrap.model.css" type="text/css" >
+    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=5" type="text/css">
+    <link rel="stylesheet" href="assets/css/costom.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/playback-controller.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/spinner.css?version=5" type="text/css" >
+    <!-- <link rel="stylesheet" href="assets/css/icons.css" type="text/css" > -->
+    <link rel="stylesheet" href="assets/css/marker.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/nav.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/search_bar.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker-modal.css?version=5" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=5" type="text/css" >
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
@@ -28,7 +31,7 @@
     <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="janus.js" ></script>
     <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
-    <script type="text/javascript" src="videocall.js?version=2"></script>
+    <script type="text/javascript" src="videocall.js?version=5"></script>
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
@@ -40,10 +43,13 @@
 
 
 <!-- Large modal -->
-<div id="marker-modal" class="modal bd-example-modal-lg fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div id="marker-modal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg marker-modal-dialog" role="document">
       <div class="modal-content marker-modal-content">
         <div class="modal-header desc">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="icon-close a" aria-hidden="true"></span>
+          </button>
           <h5 class="modal-title" id="exampleModalLabel"><div class="big"></div>
             <div class="small"> Leave your mark! You can mention folks in the message - and we’ll notify and route the marker to them - like magic! </div>
           </h5>
@@ -57,7 +63,7 @@
               <input type="text" class="form-control hide" id="marker-topic" placeholder="Enter Topic for Marker" aria-describedby="sizing-addon1">
             </div>
             <div class="form-group">
-              <textarea class="form-control" placeholder="Marker Description" id="marker-description" required></textarea>
+              <textarea id="marker-description" class="form-control" placeholder="Marker Description"></textarea>
             </div>
           </form>
         </div>
@@ -66,13 +72,107 @@
             <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
           </div>
           <div class="button-list">
-            <button type="button" class="btn btn-secondary" onclick="resetMarkerForm()" data-dismiss="modal" aria-label="Close">Close</button>
-            <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button>
+            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close</button> -->
+            <!-- <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button> -->
+            <button type="button" class="el-btn-save btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close"> <i class="icon-save clearfix"></i> Mark</button>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+
+  <div id="marker-info-modal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg marker-modal-dialog" role="document">
+      <div class="modal-content marker-modal-content">
+        <div class="modal-header desc">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="icon-close a" aria-hidden="true"></span>
+          </button>
+          <h5 class="modal-title" id="exampleModalLabel"><div class="big">TOPIC</div>
+            <div class="small"> Vamshi - 17 Aug 2017 8:25 PM </div>
+          </h5>
+          <button type="button" class="close hide" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body marker-modal-body marker-info-modal-body">
+          <div class="marked-description">
+          </div>
+        </div>
+
+
+        <div class="modal-body marker-info-body">
+           <div class="el-speaker-read">
+
+                <div class="el-nav-tabs--wrap">
+                  <ul class="nav nav-tabs el-nav-tabs" role="tablist">
+                    <li class="nav-item el-nav-tabs--item">
+                      <a class="btn el-nav-tabs--item-inactive" href="#profile" role="tab" data-toggle="tab">
+                        <span class="icon-read clearfix "></span>
+                        <span class="small">Read</span>
+                      </a>
+                    </li>
+                    <li class="nav-item el-nav-tabs--item">
+                      <a onclick="postCallMarkerWatchClick(event)" data-dismiss="modal" class="btn el-nav-tabs--item-inactive" href="#buzz" role="tab" data-toggle="tab">
+                        <span class="clearfix icon-watch"></span>
+                        <span class="small">Watch</span>
+                      </a>
+                    </li>
+                    <li class="nav-item el-nav-tabs--item">
+                      <a class="btn el-nav-tabs--item-inactive" href="#references" role="tab" data-toggle="tab">
+                        <span class="clearfix icon-listen"></span>
+                        <span class="small">Listen</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Tab panes -->
+                <div class="tab-content hide">
+                  <div role="tabpanel" class="tab-pane in active" id="profile">
+
+                    <div class="el-speaker-read--item">
+                      <div class="el-speaker-read--item-details">
+                        <span class="el-speaker-read--item-details-avatar"><img class="el-speaker-read--item-details-avatar-img rounded-circle" src="#"/> </span>
+                        <span class="el-speaker-read--item-details-name">Attendees Name</samp>
+                      </div>
+                      <div class="el-speaker-read--item-cont">Scelerisque eget at purus.
+                      </div>
+                    </div><!-- item-start -->
+                    <div class="el-speaker-read--item">
+                      <div class="el-speaker-read--item-details">
+                        <span class="el-speaker-read--item-details-avatar"><img class="el-speaker-read--item-details-avatar-img rounded-circle" src="#"/> </span>
+                        <span class="el-speaker-read--item-details-name">Attendees Name</samp>
+                      </div>
+                      <div class="el-speaker-read--item-cont"> Lorem ipsum dolor sit amet
+                      </div>
+                    </div><!-- item-start -->
+
+                  </div> <!-- read -->
+                  <div role="tabpanel" class="tab-pane fade" id="buzz"><h2> The watch content </h2> </div>
+                  <div role="tabpanel" class="tab-pane fade" id="references"><h1>The listen content </h1> </div>
+                </div>
+           </div> <!-- el-speaker-read -->
+        </div>
+
+
+
+
+        <div class="modal-footer marker-modal-footer hide">
+          <div class="note">
+            <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
+          </div>
+          <div class="button-list">
+            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close</button> -->
+            <!-- <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button> -->
+            <button type="button" class="el-btn-save btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close"> <i class="icon-save clearfix"></i> Mark</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <body class="ether-chat-body">
     <nav class="el-navbar">
@@ -84,7 +184,7 @@
     </nav>
 
     <div class="el-progress">
-      <div class="progress" id="progress-bar">
+       <div id="progress-bar" class="progress" onclick="clickOnProgressBar(event)">
         <img class="progress-bar--indicator" src="assets/images/elipse.png">
       </div>
       <span class="progress-bar--time"> <i>00:00</i> </span>
@@ -93,7 +193,7 @@
     <ul class="el-marker">
       <div class="el-marker--item-block-title"> Markers </div>
       <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="topic">
-        <span class="el-marker--item-icon icon-crown" id="mark-topic"> </span>
+        <span class="el-marker--item-icon icon-crown"> </span>
         <span class="el-marker--item-title"> Topic </span>
       </button>
       <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="action" data-title="set an action marker">
@@ -116,22 +216,23 @@
 
     <div class="container" id="videos">
       <div class="el-participants-wrap">
-        
         <div class="el-participants--item-video">
           <div class="el-participants--item-video el-participants--item-active hide" id="postCallVideo" >
+           <div id="spinner"></div>
             <video
-              src="https://s3.amazonaws.com/io.etherlabs.ether.recordings/e1cafece6843466b8feaed92c17a7fbe%2Fe1cafece6843466b8feaed92c17a7fbe.mp4"
+            src="#"
               type="video/mp4"
               id="recordingVideo"
               preload="metadata"
+              autoplay="true"
               />
             </div>
            <span>
               <ul class="el-playback-controller hide">
                 <button onclick="rewindRecordingVideo()" class="btn el-playback-controller--item icon-playback-rewind tooltip-bottom" title="">  </button>
-                <button onclick="playRecordingVideo()" class="btn el-playback-controller--item icon-playback-play tooltip-bottom" title="">  </button>
-                <button onclick="forwardRecordingVideo()" class="btn el-playback-controller--item icon-playback-fast-forward tooltip-bottom" title=""></button>
-                <button onclick="pauseRecordingVideo()" class="btn el-playback-controller--item icon-playback-pause tooltip-bottom" title=""></button>
+                <button onclick="toggleRecordingPlay()" class="btn el-playback-controller--item icon-playback-play tooltip-bottom hide" title="">  </button>
+                <button onclick="toggleRecordingPlay()" class="btn el-playback-controller--item icon-playback-pause tooltip-bottom " title=""></button>
+                <button onclick="forwardRecordingVideo()" class="btn el-playback-controller--item icon-playback-fast-forward tooltip-bottom " title=""></button>
               </ul>
            </span>
         </div>  
@@ -173,8 +274,16 @@
       <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="">  </button>
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title=""></button>
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" id="hangup" title=""></button>
-
     </ul>
+
+<div class="container el-playback-searchbox">
+  <div class="input-group mb-2 mr-sm-2 mb-sm-0 hide">
+    <input type="text" class="form-control el-playback-searchbox--form-control" id="inlineFormInputGroup" placeholder="Enter Text To Search">
+      <div class="input-group-addon el-playback-searchbox--input-group-addon">
+      <span class="icon-search"></span>
+      </div>
+ </div>
+</div>
 
     <div class="el-rightBar-selfie">
       <span class="el-rightBar-selfie--item hide" id="videolocal_side">
@@ -206,6 +315,7 @@
         <button type="button" class="btn btn-primary btn-sm btn-block"> More </button>
       </div>
      </div> <!-- el-rightBar--participans -->
+
   </body>
-  <script type="text/javascript" src="marker.js?version=2" ></script>
+  <script type="text/javascript" src="marker.js?version=5" ></script>
 </html>

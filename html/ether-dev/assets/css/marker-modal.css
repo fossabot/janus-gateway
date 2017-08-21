@@ -1,8 +1,4 @@
-.modal-dialog {
-  margin-top: 5%
-}
 .modal-content.marker-modal-content {
-  width: 75%;
   border: 3px #cf641c solid
 }
 .modal-title {
@@ -11,7 +7,8 @@
 
 .modal-header.desc {
   padding: 8px;
-  padding-bottom: 0px;
+  padding-bottom: 6px;
+  padding-left: 18px;
 }
 
 .modal-footer .button-list {
@@ -26,7 +23,7 @@
 }
 
 .modal-footer .button-list {
-  margin-top: -20px;
+  margin-top: -35px;
 }
 
 .modal-footer .note {
@@ -36,6 +33,7 @@
 #marker-description {
   height: 75px;
   font-size: 1.1rem;
+  background: #efebeb;
 }
 
 .modal-body.marker-modal-body {
@@ -43,10 +41,97 @@
   padding-bottom: 5px;
 }
 
+
+.modal-body.marker-info-body {
+  padding-top: 30px;
+  padding-bottom: 0px;
+}
+
 .modal-footer .btn {
   line-height: 0.65;
 }
 
 .modal-dialog.marker-modal-dialog {
-  width: 675px
+  width: 575px;
+  margin-top: 170px
+}
+.marker-info-modal-body .marked-description {
+  color: black;
+  font-size: 12px;
+}
+
+.el-btn-save {
+  background: none;
+  border: none;
+  color: #049ec1;
+  font-size: 12px;
+}
+
+.el-btn-save i {
+  font-size: 20px;
+  line-height: 0;
+}
+
+.el-btn-save .icon-save:before {
+  content: "\42";
+  padding-bottom: 5px;
+  padding-left: 5px;
+  transform: rotateZ(10Deg);
+}
+
+.el-btn-save:hover {
+  background: none;
+  border: none;
+  color: #049ec1;
+}
+
+.el-speaker-read--item {
+  padding-bottom: 30px;
+}
+.el-speaker-read--item-details {
+  padding-bottom: 10px;
+}
+.el-speaker-read--item-details-avatar-img {
+  width: 45px;
+  height: 45px;
+  margin-right: 10px;
+}
+.el-speaker-read--item-details-name {
+  font-size: 22px;
+  color: #cf641c;
+}
+.el-nav-tabs--wrap {
+  border-top:2px #cf641c solid;
+  padding-bottom: 38px;
+}
+.el-nav-tabs {
+  float: right;
+  background: #fff;
+  position: relative;
+  top: -32px;
+  right: 15px;
+  border: none;
+}
+.el-nav-tabs--item {
+  padding: 0 4px;
+  text-align: center;
+}
+.el-nav-tabs--item span:before {
+  font-size: 22px;
+}
+.el-nav-tabs--item-active {
+  color: #cf641c;
+}
+.el-nav-tabs--item-inactive{
+  color: lightgrey;
+  cursor: default;
+}
+.nav-item .icon-read:before {
+    content: "\76";
+}
+.nav-item .icon-watch:before {
+    content: "\77";
+}
+.nav-item .icon-listen:before {
+    content: "\78";
 }

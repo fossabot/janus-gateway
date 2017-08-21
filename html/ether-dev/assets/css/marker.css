@@ -34,9 +34,44 @@
   font-weight: 400;
   letter-spacing: 0px;
 }
+
 .el-marker--item-block-title {
   -webkit-transform: rotate(-90deg);
   border-bottom: 2px solid #fff;
   display: inline-block;
   font-size: 12px;
+}
+
+.el-marker-pending .label-txt {
+    color: #cf641c;
+    padding: 5px;
+}
+
+.el-marker--item--active .el-marker--item-icon {
+  border: 2px #cf641c solid;
+  position: relative;
+  z-index: 1049;
+}
+.el-marker--item--active .el-marker--item-icon::after {
+  content: "";
+  display: inline-block;
+  background: #cf641c;
+  width: 2px;
+  height: 138px;
+  position: absolute;
+  top: 36px;
+  left: 18px;
+}
+.el-marker--item--active .el-marker--item-title {
+  visibility: hidden;
+}
+.el-marker--item--clicked::before {
+  content: "";
+  display: inline-block;
+  background: #cf641c;
+  width: 2px;
+  height: 100px;
+  position: absolute;
+  top: 24px;
+  left: 9px;
 }
