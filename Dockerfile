@@ -5,15 +5,26 @@
 #  Check if size of docker image can be reduced in production image, only binaries of janus ? no code ?? 
 
 # set base image debian jessie
-FROM debian:jessie
+FROM ubuntu:16.04
 ENV  ETHER_HOME /usr/local/ether
 ENV  JANUS_HOME $ETHER_HOME/janus-gateway
-RUN  mkdir -p $JANUS_HOME
+
+RUN mkdir -p $JANUS_HOME
 
 RUN apt-get update
 
 ## Install Nginx
 RUN apt-get install -y nginx
+
+## Install tools
+RUN apt-get install -y vim
+
+## Install Janus Dependencies
+RUN apt-get install -y libmicrohttpd-dev libjansson-dev \
+    libssl-dev libsrtp-dev libsofia-sip-ua-dev libglib2.0-dev \
+    libopus-dev libogg-dev libcurl4-openssl-dev libavutil-dev libavcodec-dev libavformat-dev \
+    pkg-config gengetopt libtool automake wget make git gtk-doc-tools
+
 
 ## Configure Nginx for HTTPS port 443
 RUN sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default
@@ -23,17 +34,11 @@ RUN sed -i "26i\\\tssl_certificate_key $JANUS_HOME\/certs\/mycert.key;" /etc/ngi
 
 ## Configure Nginx for Janus request redirection and static file serving
 RUN sed -i '45i\\tlocation \/janus-meet {\n\t\trewrite \^\/janus-meet(\.\*) \$1 break;\n\t\tproxy_pass http:\/\/127.0.0.1:8088;\n\t }' \
-           /etc/nginx/sites-available/default 
+           /etc/nginx/sites-available/default
+RUN sed -i '54i\\tlocation \/recordings {\n\t\tautoindex on;\n\t }' \
+           /etc/nginx/sites-available/default
 RUN sed -i "s@root \/var\/www\/html@root $JANUS_HOME\/html@g" /etc/nginx/sites-available/default
 
-## Install tools
-RUN apt-get install -y vim
-
-## Install Janus Dependencies
-RUN apt-get install -y libmicrohttpd-dev libjansson-dev libnice-dev \
-    libssl-dev libsrtp-dev libsofia-sip-ua-dev libglib2.0-dev \
-    libopus-dev libogg-dev libcurl4-openssl-dev pkg-config gengetopt \
-    libtool automake wget make git
 
 ## Install LibSRTP
 RUN  apt-get purge -y libsrtp0 libsrtp0-dev
@@ -43,6 +48,17 @@ RUN  cd $ETHER_HOME && \
      cd libsrtp-1.5.4  && \
      ./configure --prefix=/usr --enable-openssl && \
      make shared_library && make install
+
+## Install LibNice
+RUN  apt-get purge -y libnice-dev
+RUN  cd $ETHER_HOME && \
+     git clone https://github.com/libnice/libnice &&  \
+     cd libnice && \
+     git reset --hard dbaf8f5ccd76089e340883887c7e08e6c04de80a && \
+     ./autogen.sh && \
+     ./configure --prefix=/usr && \
+     make && make install
+
 
 ## ADD Janus code, shouldn't it be clone from gitlab ?
 ADD .      $JANUS_HOME/
@@ -58,6 +74,12 @@ RUN  cd $JANUS_HOME && \
 RUN sed -i 's/***REMOVED***/stun_server = stun.l.google.com/g' \
      /usr/local/etc/janus/janus.cfg
 RUN sed -i 's/***REMOVED***/stun_port = 19302/g' /usr/local/etc/janus/janus.cfg
+RUN sed -i 's/;debug_timestamps = yes/debug_timestamps = yes/g' /usr/local/etc/janus/janus.cfg
+RUN sed -i 's/***REMOVED***/broadcast = yes/g' /usr/local/etc/janus/janus.cfg
+RUN sed -i 's/enabled = no/enabled = yes/g' /usr/local/etc/janus/janus.eventhandler.sampleevh.cfg
+RUN sed -i 's/events = all/events = plugins/g' /usr/local/etc/janus/janus.eventhandler.sampleevh.cfg
+RUN ln  -s /recordings /usr/local/ether/janus-gateway/html/recordings
+
 #RUN sed -i 's/https = no/https = yes/g' /usr/local/etc/janus/janus.transport.http.cfg
 #RUN sed -i 's/;secure_port = 8089/secure_port = 8089/g' /usr/local/etc/janus/janus.transport.http.cfg
 
@@ -67,4 +89,7 @@ RUN chmod +x $JANUS_HOME/scripts/run_janus.sh
 CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 
 EXPOSE 80 443
+EXPOSE 0:65535/udp
+
+
 
