@@ -126,6 +126,11 @@
   color: lightgrey;
   cursor: default;
 }
+.el-nav-tabs--item-inactive:hover,
+.el-nav-tabs--item-inactive:focus{
+  color: lightgrey;
+  cursor: default;
+}
 .nav-item .icon-read:before {
     content: "\76";
 }
