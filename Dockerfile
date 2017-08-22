@@ -12,7 +12,7 @@ RUN apt-get update
 RUN apt-get install -y nginx
 
 ## Install tools
-RUN apt-get install -y cron
+RUN apt-get install -y cron vim
 
 ## Install Janus Dependencies
 RUN apt-get install -y libmicrohttpd-dev libjansson-dev libnice-dev \
