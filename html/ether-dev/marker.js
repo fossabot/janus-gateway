@@ -29,13 +29,13 @@ function decorateDescription(description) {
 function calModalDisplayPostion(offset) {
 	progressBarOffsetRange = parseInt($("#progress-bar").css("width")) +$("#progress-bar").offset().left
 	oneThirdOfProgressBar = progressBarOffsetRange/3
-	if(offset.left>oneThirdOfProgressBar && offset.left<(progressBarOffsetRange - oneThirdOfProgressBar)){
+	if(offset.left>oneThirdOfProgressBar && offset.left<(progressBarOffsetRange*75/100)){
 		return ($(".modal-content.marker-modal-content").parent().width() - 300)
 	}if(offset.left>(progressBarOffsetRange - oneThirdOfProgressBar) && offset.left<progressBarOffsetRange){
-		return ($(".modal-content.marker-modal-content").parent().width() - 90)
+		return ($(".modal-content.marker-modal-content").parent().width() - 95)
 	}
 	else{
-		return 90
+		return 70
 	}
 }
 

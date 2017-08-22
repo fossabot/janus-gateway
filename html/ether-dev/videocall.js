@@ -84,8 +84,6 @@ $(document).ready(function() {
 		// Use a button to start the demo
 		parseQueryParams()
 		getCurrentMeetingInfo()
-		window.onload = handleJanusCall;
-		$("#registernow").click(handleJanusCall);
 		$(".bootbox .btn-primary").click(function(){window.location.replace(window.location.origin)})
 	}});
 
@@ -196,7 +194,8 @@ function populateMeetingFields(currentMeetingInfo){
 		setInterval(postCallProgressTheBar, progressbarRefreshInterval*1000)
 		setInterval(postCallProgressBarRefreshTime, 1000)
 		updateMarkerList()
-		$("ul").find(".clearfix.icon-watch").parent().removeClass("el-nav-tabs--item-inactive")
+		$(".container.el-playback-searchbox").removeClass('hide')
+		$(".marker-info-body").find(".clearfix.icon-watch").parent().removeClass("el-nav-tabs--item-inactive")
 	}
 	else{
 		initProgressbar(currentCallTime)
@@ -204,6 +203,10 @@ function populateMeetingFields(currentMeetingInfo){
 		setInterval(progressTheBar, progressbarRefreshInterval*1000)
 		setInterval(refreshTime, timeLapsedRefreshInterval*1000)
 		$('#progress-bar').removeAttr("onclick")
+		$(".marker-info-body").find(".clearfix.icon-watch").parent().removeAttr("onclick")
+		$(".el-chat-controller").removeClass('hide')
+		window.onload = handleJanusCall;
+		$("#registernow").click(handleJanusCall);
 	}
 }
 
