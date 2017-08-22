@@ -1,8 +1,8 @@
 .el-progress {
   position: absolute;
   top: 46px;
-  right: 168px;
-  left: 110px;
+  right: 16%;
+  left: 16%;
 }
 .bar-step {
   position: absolute;
