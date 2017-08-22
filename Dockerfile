@@ -6,26 +6,27 @@
 
 # set base image debian jessie
 FROM ubuntu:16.04
-ARG  CERT_PATH
-ENV  ETHER_HOME /usr/local/ether
-ENV  JANUS_HOME $ETHER_HOME/janus-gateway
-
-RUN mkdir -p $JANUS_HOME
-
 RUN apt-get update
 
 ## Install Nginx
 RUN apt-get install -y nginx
 
 ## Install tools
-RUN apt-get install -y vim
+RUN apt-get install -y cron
 
 ## Install Janus Dependencies
-RUN apt-get install -y libmicrohttpd-dev libjansson-dev \
+RUN apt-get install -y libmicrohttpd-dev libjansson-dev libnice-dev \
     libssl-dev libsrtp-dev libsofia-sip-ua-dev libglib2.0-dev \
     libopus-dev libogg-dev libcurl4-openssl-dev libavutil-dev libavcodec-dev libavformat-dev \
-    pkg-config gengetopt libtool automake wget make git gtk-doc-tools
+    pkg-config gengetopt libtool automake wget make git
 
+## Will this help in avoiding reinstalling of above dependencies every build ?
+ARG  CERT_PATH
+ARG  RECORDING_PATH
+ARG  ETHER_HOME
+ENV  JANUS_HOME $ETHER_HOME/janus-gateway
+RUN mkdir -p $JANUS_HOME
+    
 
 ## Configure Nginx for HTTPS port 443
 RUN sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default
@@ -50,17 +51,6 @@ RUN  cd $ETHER_HOME && \
      ./configure --prefix=/usr --enable-openssl && \
      make shared_library && make install
 
-## Install LibNice
-RUN  apt-get purge -y libnice-dev
-RUN  cd $ETHER_HOME && \
-     git clone https://github.com/libnice/libnice &&  \
-     cd libnice && \
-     git reset --hard dbaf8f5ccd76089e340883887c7e08e6c04de80a && \
-     ./autogen.sh && \
-     ./configure --prefix=/usr && \
-     make && make install
-
-
 ## ADD Janus code, shouldn't it be clone from gitlab ?
 ADD .      $JANUS_HOME/
 
@@ -79,13 +69,15 @@ RUN sed -i 's/;debug_timestamps = yes/debug_timestamps = yes/g' /usr/local/etc/j
 RUN sed -i 's/***REMOVED***/broadcast = yes/g' /usr/local/etc/janus/janus.cfg
 RUN sed -i 's/enabled = no/enabled = yes/g' /usr/local/etc/janus/janus.eventhandler.sampleevh.cfg
 RUN sed -i 's/events = all/events = plugins/g' /usr/local/etc/janus/janus.eventhandler.sampleevh.cfg
-RUN ln  -s /recordings /usr/local/ether/janus-gateway/html/recordings
+RUN ln  -s $RECORDING_PATH $ETHER_HOME/janus-gateway/html/recordings
 
 #RUN sed -i 's/https = no/https = yes/g' /usr/local/etc/janus/janus.transport.http.cfg
 #RUN sed -i 's/;secure_port = 8089/secure_port = 8089/g' /usr/local/etc/janus/janus.transport.http.cfg
 
+## Delete the files which are more than 10 hours old 
+RUN echo "0  0-23/5 * * * root    find $RECORDING_PATH/ -type f -mmin +600 -delete" >> /etc/crontab
 
-## Run Nginx and Janus
+## Run Nginx and Janus and Cron
 RUN chmod +x $JANUS_HOME/scripts/run_janus.sh
 CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 

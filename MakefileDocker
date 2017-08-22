@@ -4,12 +4,12 @@ image_name=registry.gitlab.com/etherlabs/janus-gateway
 build: ; 
 
 staging: clean
-	docker build -t ${image_name}:${default_tag} --build-arg CERT_PATH=${CERT_PATH} .
+	docker build -t ${image_name}:${default_tag} --build-arg ETHER_HOME=${ETHER_HOME} --build-arg CERT_PATH=${CERT_PATH} --build-arg RECORDING_PATH=${RECORDING_PATH} .
 	docker push ${image_name}:${default_tag}
 
 production: clean 
 	rev=$(git rev-parse HEAD)
-	docker build -t ${image_name}:${rev} --build-arg CERT_PATH=${CERT_PATH} .
+	docker build -t ${image_name}:${rev} --build-arg ETHER_HOME=${ETHER_HOME} --build-arg CERT_PATH=${CERT_PATH} --build-arg RECORDING_PATH=${RECORDING_PATH} .
 	docker push ${image_name}:${rev}
 	docker tag ${image_name}:${rev} ${image_name}:latest 
 	docker push ${image_name}
