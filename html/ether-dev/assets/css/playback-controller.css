@@ -25,8 +25,8 @@
 }
 .el-playback-controller--item::before {
   position: relative;
-  left: -3px;
-  top: -2px;
+  left: -3.5px;
+  top: -2.5px;
 }
 .el-playback-controller--item:hover,
 .el-playback-controller--item:focus,
