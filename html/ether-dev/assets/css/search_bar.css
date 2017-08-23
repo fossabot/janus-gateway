@@ -12,8 +12,12 @@
 .el-playback-searchbox--input-group-addon:focus {
   background-color: rgba(0, 0, 0, 0.62);
   border: 1px solid rgba(255, 255, 255, 0.42);
+  font-size: 1.3rem;
 }
 .el-playback-searchbox--input-group-addon {
-  padding: 0 18px;
+  width: 12%;
+  display: inline-flex;
+  padding: 7px 18px;
   color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
 }

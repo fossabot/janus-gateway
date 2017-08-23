@@ -5,6 +5,8 @@
 }
 .el-marker--item  {
   background: none;
+  width: 70px;
+  height: 70px;
   cursor: pointer;
   &:focus {
     z-index: 1060;
@@ -19,7 +21,9 @@
   border-radius: 36px;
   border: 2px #fff solid;
   display: inline-block;
-  font-size: 19px;
+  font-size: 28px;
+  padding-left: 1.1px;
+  padding-top: 0.9px;
   &:hover, &:focus {
     border: 2px #cf641c solid;
     color: #cf641c;
@@ -43,8 +47,9 @@
 }
 
 .el-marker-pending .label-txt {
-    color: #cf641c;
-    padding: 5px;
+  color: #cf641c;
+  padding-top: 1px;
+  padding-left: 1.7px;
 }
 
 .el-marker--item--active .el-marker--item-icon {
