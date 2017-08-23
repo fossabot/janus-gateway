@@ -8,7 +8,7 @@
   position: absolute;
   margin-top: -11px;
   z-index: 1;
-  font-size: 12px;
+  font-size: 19px;
   background: #fff;
   height: 26px;
   width: 26px;
@@ -28,7 +28,8 @@
 
 .label-txt {
   float: left;
-  padding: 7px;
+  padding-top: 2.5px;
+  padding-left: 3.5px;
   font-weight: 900;
   color: #000;
 }
