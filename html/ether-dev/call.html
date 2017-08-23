@@ -8,20 +8,20 @@
     <link rel="icon" href="../favicon.png">
     <title>ether labs</title>
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=8" type="text/css">
-    <link rel="stylesheet" href="assets/css/costom.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/chat-controller.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/playback-controller.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/spinner.css?version=8" type="text/css" >
+    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=9" type="text/css">
+    <link rel="stylesheet" href="assets/css/costom.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/playback-controller.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/spinner.css?version=9" type="text/css" >
     <!-- <link rel="stylesheet" href="assets/css/icons.css" type="text/css" > -->
-    <link rel="stylesheet" href="assets/css/marker.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/nav.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/progess-bar.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/room.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/search_bar.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/side-bar.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/marker-modal.css?version=8" type="text/css" >
-    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=8" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/nav.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/search_bar.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker-modal.css?version=9" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=9" type="text/css" >
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="janus.js" ></script>
     <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
-    <script type="text/javascript" src="videocall.js?version=8"></script>
+    <script type="text/javascript" src="videocall.js?version=9"></script>
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
@@ -218,57 +218,38 @@
       </button>
     </ul> <!-- / el-marker -->
 
-    <div class="container" id="videos">
-      <div class="el-participants-wrap">
-        <div class="el-participants--item-video">
-          <div class="el-participants--item-video el-participants--item-active hide" id="postCallVideo" >
-           <div id="spinner"></div>
-            <video
-            src="#"
-              type="video/mp4"
-              id="recordingVideo"
-              preload="metadata"
-              autoplay="true"
-              />
-            </div>
-           <span>
-              <ul class="el-playback-controller hide">
-                <button onclick="rewindRecordingVideo()" class="btn el-playback-controller--item icon-playback-rewind tooltip-bottom" title="">  </button>
-                <button onclick="toggleRecordingPlay()" class="btn el-playback-controller--item icon-playback-play tooltip-bottom hide" title="">  </button>
-                <button onclick="toggleRecordingPlay()" class="btn el-playback-controller--item icon-playback-pause tooltip-bottom " title=""></button>
-                <button onclick="forwardRecordingVideo()" class="btn el-playback-controller--item icon-playback-fast-forward tooltip-bottom " title=""></button>
-              </ul>
-           </span>
-        </div>  
-
-        <div class="el-participants flex row">
-            <div class="el-participants--item col-md-6 hide">
-              <span class="el-participants--item-video el-participants--item-active" id="videolocal">
-                <span class="el-participants--item-name"></span>
-              </span>
-            </div>
-
-            <div class="el-participants--item  col-md-6 hide">
-              <span class="el-participants--item-video el-participants--item-active" id="videoremote2">
-                <span class="el-participants--item-name"></span>
-              </span>
-            </div>
-        </div>
-
-        <div class="el-participants flex row">
-            <div class="el-participants--item col-md-6 hide">
-              <span class="el-participants--item-video el-participants--item-active" id="videoremote3">
-                <span class="el-participants--item-name"></span>
-              </span>
-            </div>
-            <div class="el-participants--item col-md-6 hide">
-              <span class="el-participants--item-video el-participants--item-active" id="videoremote4">
-                <span class="el-participants--item-name"></span>
-              </span>
-            </div>
+    <div class="container" id="videos" style="zoom: 1;">
+      <div class="container el-participants">
+        <div class="el-participants-wrap">
+          <div class="el-participants--item-video">
+            <div class="el-participants--item-video el-participants--item-active hide" id="postCallVideo" >
+             <div id="spinner"></div>
+              <video
+              src="#"
+                type="video/mp4"
+                id="recordingVideo"
+                preload="metadata"
+                autoplay="true"
+                />
+              </div>
+             <span>
+                <ul class="el-playback-controller hide">
+                  <button onclick="rewindRecordingVideo()" class="btn el-playback-controller--item icon-playback-rewind tooltip-bottom" title="">  </button>
+                  <button onclick="toggleRecordingPlay()" class="btn el-playback-controller--item icon-playback-play tooltip-bottom " title="">  </button>
+                  <button onclick="toggleRecordingPlay()" class="btn el-playback-controller--item icon-playback-pause tooltip-bottom hide" title=""></button>
+                  <button onclick="forwardRecordingVideo()" class="btn el-playback-controller--item icon-playback-fast-forward tooltip-bottom " title=""></button>
+                </ul>
+             </span>
+          </div>
+          <div class="el-participants--item hide">
+            <span class="el-participants--item-video el-participants--item-active" id="videolocal">
+              <span class="el-participants--item-name"></span>
+            </span>
+          </div>
         </div>
       </div>
-    </div><!-- el-participants -->
+    </div>
+
 
     <ul class="el-chat-controller hide">
       <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="">  </button>
@@ -324,5 +305,5 @@
       </div>
 
   </body>
-  <script type="text/javascript" src="marker.js?version=8" ></script>
+  <script type="text/javascript" src="marker.js?version=9" ></script>
 </html>

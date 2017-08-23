@@ -179,7 +179,13 @@ function forwardRecordingVideo(){
 	recording.currentTime = recording.currentTime + 10;
 	postCallProgressBarRefreshTime()
 }
-
+function feedsLength(feeds){
+	return feeds.reduce(function(len, feed){
+		if (feed != null && feeds != undefined)
+			len++
+		return len
+	}, 0)
+}
 function clickOnProgressBar(event){
 	if(event.srcElement.parentElement.className.indexOf("bar-step") == -1){
 		var progressBarOffset = $("#progress-bar").offset();
@@ -272,6 +278,27 @@ function formattedTime(hr, min){
 	return hr+":"+min
 }
 
+function onParticipantLeft(){
+	participantsCountChanged(feedsLength(feeds))
+}
+
+function onParticipantJoined(){
+	participantsCountChanged(feedsLength(feeds))
+}
+
+function participantsCountChanged(currentNumberofParticipants){
+	$(".container .el-participants").attr("class","").addClass("el-attendees-"+currentNumberofParticipants).addClass("container el-participants")
+	switch (currentNumberofParticipants){
+		case 0:
+			$('#videolocal_side').addClass('hide')
+			$('#videolocal').parent().removeClass('hide').show()
+			break
+		case 1:
+			$('#videolocal_side').removeClass('hide')
+			$('#videolocal').parent().addClass('hide')
+			break
+	}
+}
 function handleJanusCall() {
 	if(started)
 		return;
@@ -380,7 +407,7 @@ function handleJanusCall() {
 										var leaving = msg["leaving"];
 										Janus.log("Publisher left: " + leaving);
 										var remoteFeed = null;
-										for(var i=1; i<6; i++) {
+										for(var i=1; i<20; i++) {
 											if(feeds[i] != null && feeds[i] != undefined && feeds[i].rfid == leaving) {
 												remoteFeed = feeds[i];
 												break;
@@ -388,8 +415,7 @@ function handleJanusCall() {
 										}
 										if(remoteFeed != null) {
 											Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
-											$('#remote'+remoteFeed.rfindex).empty().hide();
-											$('#videoremote'+remoteFeed.rfindex).parent().addClass('hide')
+											$('#videoremote'+remoteFeed.rfindex).parent().remove()
 											feeds[remoteFeed.rfindex] = null;
 											remoteFeed.detach();
 										}
@@ -403,7 +429,7 @@ function handleJanusCall() {
 											return;
 										}
 										var remoteFeed = null;
-										for(var i=1; i<6; i++) {
+										for(var i=1; i<20; i++) {
 											if(feeds[i] != null && feeds[i] != undefined && feeds[i].rfid == unpublished) {
 												remoteFeed = feeds[i];
 												break;
@@ -411,8 +437,7 @@ function handleJanusCall() {
 										}
 										if(remoteFeed != null) {
 											Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
-											$('#remote'+remoteFeed.rfindex).empty().hide();
-											$('#videoremote'+remoteFeed.rfindex).parent().empty();
+											$('#videoremote'+remoteFeed.rfindex).parent().remove();
 											feeds[remoteFeed.rfindex] = null;
 											remoteFeed.detach();
 										}
@@ -603,6 +628,9 @@ function registerUsername() {
 	}
 }
 
+function getVideoHtml(id){
+    return '<div class="el-participants--item hide"><span class="el-participants--item-video el-participants--item-active" id="videoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
+}
 function updateMeetingAttendees(meetingId, userId){
 	$.ajax({
 		type: "POST",
@@ -730,10 +758,6 @@ function adjustMarkerPosition(){
 		$(marker).css("left", (parseInt($(marker).css("left"))/$(marker).parent().width())*100 - perc+"%")
 	})
 }
-function onFirstParticipantJoin(){
-	$('#videolocal_side').removeClass('hide')
-	$('#videolocal').empty().attr("id", "videoremote1").html('<span class="el-participants--item-name"></span>')
-}
 
 function unpublishOwnFeed() {
 	// Unpublish our stream
@@ -769,7 +793,7 @@ function newRemoteFeed(id, display) {
 				if(event != undefined && event != null) {
 					if(event === "attached") {
 						// Subscriber created and attached
-						for(var i=1;i<6;i++) {
+						for(var i=1;i<20;i++) {
 							if(feeds[i] === undefined || feeds[i] === null) {
 								feeds[i] = remoteFeed;
 								remoteFeed.rfindex = i;
@@ -779,16 +803,14 @@ function newRemoteFeed(id, display) {
 						remoteFeed.rfid = msg["id"];
 						remoteFeed.rfdisplay = msg["display"];
 						if(remoteFeed.spinner === undefined || remoteFeed.spinner === null) {
+							onParticipantJoined()
+							$('#videos .el-participants-wrap').append(getVideoHtml(remoteFeed.rfindex))
 							var target = document.getElementById('videoremote'+remoteFeed.rfindex);
 							remoteFeed.spinner = new Spinner({top:100}).spin(target);
 						} else {
 							remoteFeed.spinner.spin();
 						}
 						Janus.log("Successfully attached to feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") in room " + msg["room"]);
-						// $('#videoremote'+remoteFeed.rfindex).removeClass('hide').html(remoteFeed.rfdisplay).show();
-						if (remoteFeed.rfindex === 1){
-							onFirstParticipantJoin()
-						}
 						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
 					} else if(msg["error"] !== undefined && msg["error"] !== null) {
 						bootbox.alert(msg["error"]);
@@ -832,9 +854,9 @@ function newRemoteFeed(id, display) {
 					$('#videoremote'+remoteFeed.rfindex).append('<video class="rounded centered" id="waitingvideo' + remoteFeed.rfindex + '" width=320 height=240 />');
 					$('#videoremote'+remoteFeed.rfindex).append('<video class="rounded centered relative hide" id="remotevideo' + remoteFeed.rfindex + '" width="100%" height="100%" autoplay/>');
 				}
-				$('#videoremote'+remoteFeed.rfindex).append(
-					'<span class="label label-primary hide" id="curres'+remoteFeed.rfindex+'" style="position: absolute; bottom: 0px; left: 0px; margin: 15px;"></span>' +
-					'<span class="label label-info hide" id="curbitrate'+remoteFeed.rfindex+'" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;"></span>');
+				// $('#videoremote'+remoteFeed.rfindex).append(
+				// 	'<span class="label label-primary hide" id="curres'+remoteFeed.rfindex+'" style="position: absolute; bottom: 0px; left: 0px; margin: 15px;"></span>' +
+				// 	'<span class="label label-info hide" id="curbitrate'+remoteFeed.rfindex+'" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;"></span>');
 				// Show the video, hide the spinner and show the resolution when we get a playing event
 				$("#remotevideo"+remoteFeed.rfindex).bind("playing", function () {
 					if(remoteFeed.spinner !== undefined && remoteFeed.spinner !== null)
@@ -875,6 +897,7 @@ function newRemoteFeed(id, display) {
 				}
 			},
 			oncleanup: function() {
+				onParticipantLeft()
 				Janus.log(" ::: Got a cleanup notification (remote feed " + id + ") :::");
 				if(remoteFeed.spinner !== undefined && remoteFeed.spinner !== null)
 					remoteFeed.spinner.stop();
