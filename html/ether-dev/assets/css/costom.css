@@ -31,7 +31,9 @@ img {
   max-width: 100%;
 }
 .container {
-  max-width: 860px;
+  width: 90%;
+  max-width: 90%;
+  margin-top: -10px;
 }
 .el-navbar {
   font-size: 20px;
