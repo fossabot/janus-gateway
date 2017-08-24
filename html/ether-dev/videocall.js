@@ -114,6 +114,15 @@ function getCurrentMeetingInfo(){
 				currentMeetingInfo = res
 				console.log(currentMeetingInfo)
 				populateMeetingFields(currentMeetingInfo)
+			},
+			error: function(xhr,status,error){
+				//handles permanant rooms like 1234
+				if (xhr.status == 404) {
+					$('#progress-bar').removeAttr("onclick")
+					$(".marker-info-body").find(".clearfix.icon-watch").parent().removeAttr("onclick")
+					$(".el-chat-controller").removeClass('hide')
+					handleJanusCall();
+				}
 			}
 		})
 	}
@@ -221,8 +230,7 @@ function populateMeetingFields(currentMeetingInfo){
 		$('#progress-bar').removeAttr("onclick")
 		$(".marker-info-body").find(".clearfix.icon-watch").parent().removeAttr("onclick")
 		$(".el-chat-controller").removeClass('hide')
-		window.onload = handleJanusCall;
-		$("#registernow").click(handleJanusCall);
+		handleJanusCall();
 	}
 }
 

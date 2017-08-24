@@ -7,6 +7,7 @@ var markerTypeClassMappinng = {
 		"action": "icon-star-o",
 		"decision": "icon-arrow-swap",
 		"priority": "icon-alert",
+		"fyi": "icon-alert",
 		"personal": "icon-user-outline"
 	}
 $('#marker-info-modal').on('shown.bs.modal', function(e) {
