@@ -42,6 +42,9 @@ function calModalDisplayPostion(offset) {
 
 function postCallMarkerWatchClick(e){
 	$('#recordingVideo')[0].currentTime = $("#"+clickedMarkerId).data().info.offset
+	$('#recordingVideo')[0].play()
+	$(".icon-playback-play").addClass("hide")
+	$(".icon-playback-pause").removeClass('hide')
 }
 
 $('#marker-modal').on('show.bs.modal', function(e) {
@@ -77,6 +80,16 @@ $('#marker-info-modal').on('hidden.bs.modal', function(e) {
 
 $('#marker-modal').on('hide.bs.modal', function(e) {
 	$('.el-marker--item--active').removeClass('el-marker--item--active')
+});
+
+$("#marker-description").on('focus keyup', function() {
+		description = $("#marker-description").val()
+		if (description === ""){
+			$("#markButton").prop("disabled","true")
+			$(".btn-primary").css("background-color","rgba(255, 255, 255, 0)")
+		}else{
+			$("#markButton").removeAttr("disabled")
+			}
 });
 
 function mark(){

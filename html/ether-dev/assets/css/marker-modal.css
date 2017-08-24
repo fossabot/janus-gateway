@@ -101,7 +101,7 @@
   color: #cf641c;
 }
 .el-nav-tabs--wrap {
-  border-top:2px #cf641c solid;
+  /* border-top:2px #cf641c solid; */
   padding-bottom: 38px;
 }
 .el-nav-tabs {
