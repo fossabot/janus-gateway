@@ -99,6 +99,10 @@ $(document).ready(function() {
 		},
 		canplay: function(){
 			$("#spinner").removeClass("loader")
+		},
+		ended: function(){
+			$(".icon-playback-pause").addClass("hide")
+			$(".icon-playback-play").removeClass('hide')
 		}
 	});
 });
@@ -199,20 +203,6 @@ function clickOnProgressBar(event){
 	}
 }
 
-$( window ).resize(function() {
-	currentMeetingInfo.status === "recording-available" ? resetContainer() : "";
-});
-
-function resetContainer(){
-	browserWidth = $(window).width()
-	containerWidth= browserWidth - (.2*browserWidth)
-	$(".container").css("width",containerWidth)
-	$(".container").css("max-width",containerWidth)
-	$(".el-participants-wrap").css("width",containerWidth)
-	$(".container").css("margin-left","10%")
-	$(".container").css("display","inline-flex")
-}
-
 function populateMeetingFields(currentMeetingInfo){
 	currentCallTime = getCurrentCallTime()
 	if (currentMeetingInfo.status === "recording-available"){
@@ -223,10 +213,10 @@ function populateMeetingFields(currentMeetingInfo){
 		setInterval(postCallProgressTheBar, progressbarRefreshInterval*1000)
 		setInterval(postCallProgressBarRefreshTime, 1000)
 		updateMarkerList()
-		$(".container.el-playback-searchbox").removeClass('hide')
+		$(".el-playback-searchbox").removeClass('hide')
 		$(".marker-info-body").find(".clearfix.icon-watch").parent().removeClass("el-nav-tabs--item-inactive").addClass("el-nav-tabs--item-active")
 		$(".marker-info-body").find(".clearfix.icon-watch").parent().attr("data-dismiss","modal")
-		resetContainer()
+		$(".container.el-participants").css("width","90%")
 	}
 	else{
 		initProgressbar(currentCallTime)
@@ -234,6 +224,7 @@ function populateMeetingFields(currentMeetingInfo){
 		setInterval(progressTheBar, progressbarRefreshInterval*1000)
 		setInterval(refreshTime, timeLapsedRefreshInterval*1000)
 		$('#progress-bar').removeAttr("onclick")
+		$(".container").css("margin-top", "-10px")
 		$(".marker-info-body").find(".clearfix.icon-watch").parent().removeAttr("onclick")
 		$(".el-chat-controller").removeClass('hide')
 		handleJanusCall();

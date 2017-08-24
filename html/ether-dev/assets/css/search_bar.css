@@ -1,10 +1,13 @@
 .el-playback-searchbox {
-  width: 600px;
+  margin-left: 18%;
+  width: 70%;
+  padding-left: 1%;
+  padding-top: 20px;
   padding-bottom: 40px;
 }
 .input-group.mb-2.mr-sm-2.mb-sm-0{
-    display: inline-flex;
-    width: 100%;
+  display: inline-flex; 
+  width: 90%;
 }
 .el-playback-searchbox--form-control,
 .el-playback-searchbox--form-control:focus,
@@ -15,8 +18,7 @@
   font-size: 1.3rem;
 }
 .el-playback-searchbox--input-group-addon {
-  width: 12%;
-  display: inline-flex;
+  width: 15%;
   padding: 7px 18px;
   color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
