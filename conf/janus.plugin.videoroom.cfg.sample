@@ -32,7 +32,20 @@
 [1234]
 description = Demo Room
 secret = adminpwd
-publishers = 6
+publishers = 24
+bitrate = 128000
+fir_freq = 10
+;audiocodec = opus
+;videocodec = vp8
+record = false
+;rec_dir = /path/to/recordings-folder
+recordmix = false
+;recordmix_file = /home/ashwini/recordings/video-room-1234.wav
+
+[3456]
+description = Demo Room
+secret = adminpwd
+publishers = 24
 bitrate = 128000
 fir_freq = 10
 ;audiocodec = opus
