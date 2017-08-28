@@ -30,7 +30,7 @@ ADD . $JANUS_HOME/
 RUN  make -f MakefileDeployment install-ether ETHERMEET_HOME=$ETHERMEET_HOME  JANUS_HOME=$JANUS_HOME CERT_PATH=$CERT_PATH RECORDING_PATH=$RECORDING_PATH
 
 ## Configure Janus and dependencies
-RUN  make -f MakefileDeployment config JANUS_HOME=$JANUS_HOME
+RUN  make -f MakefileDeployment config RECORDING_PATH=$RECORDING_PATH JANUS_HOME=$JANUS_HOME
 
 CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 

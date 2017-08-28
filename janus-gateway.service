@@ -1,0 +1,10 @@
+[Unit]
+Description=Janus-Gateway
+
+[Service]
+Environment=ACTIVE_ENV=staging
+ExecStart=/bin/sh -c '/usr/local/bin/janus >> /var/log/janus-gateway/logs.log 2>&1'
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
