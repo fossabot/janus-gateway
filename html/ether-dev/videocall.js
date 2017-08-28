@@ -563,7 +563,7 @@ function parseQueryParams(){
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
 	videoOffset = getFromQueryParams("offset")
-	// history.pushState("changing url after param extraction", "url", window.location.origin)
+	history.pushState("changing url after param extraction", "url", window.location.origin)
 }
 
 function setCookie(cname, cvalue, exdays) {
