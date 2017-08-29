@@ -19,6 +19,7 @@ RUN  make -f MakefileDeployment install-dep
 ARG  CERT_PATH
 ARG  RECORDING_PATH
 ARG  ETHERMEET_HOME
+ARG  ACTIVE_ENV
 ENV  JANUS_HOME $ETHERMEET_HOME/janus-gateway
 
 ## ADD Janus Code, shouldn't it be clone from gitlab ?
@@ -27,10 +28,10 @@ RUN   mkdir -p $JANUS_HOME
 ADD . $JANUS_HOME/
 
 ## Build and Install Janus
-RUN  make -f MakefileDeployment install-ether ETHERMEET_HOME=$ETHERMEET_HOME  JANUS_HOME=$JANUS_HOME CERT_PATH=$CERT_PATH RECORDING_PATH=$RECORDING_PATH
+RUN  make -f MakefileDeployment install-ether ETHERMEET_HOME=$ETHERMEET_HOME JANUS_HOME=$JANUS_HOME 
 
 ## Configure Janus and dependencies
-RUN  make -f MakefileDeployment config RECORDING_PATH=$RECORDING_PATH JANUS_HOME=$JANUS_HOME
+RUN  make -f MakefileDeployment config ACTIVE_ENV=$ACTIVE_ENV JANUS_HOME=$JANUS_HOME CERT_PATH=$CERT_PATH RECORDING_PATH=$RECORDING_PATH 
 
 CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 
