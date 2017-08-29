@@ -44,9 +44,10 @@
 //
 var server = null;
 if(window.location.protocol === 'http:')
-	server = "http://" + "ethermeet.etherlabs.io"+ "/janus-meet/janus";
+	server = "http://" + window.location.host+ "/janus-meet/janus";
 else
-	server = "https://" + "ethermeet.etherlabs.io" + "/janus-meet/janus";
+	server = "https://" + window.location.host + "/janus-meet/janus";
+var etherHost = window.location.host == "etherbridge.etherlabs.io " ? "ethermain.etherlabs.io:8080" : "hive.etherlabs.io:8080"
 
 var janus = null;
 var sfutest = null;
@@ -111,8 +112,7 @@ function getCurrentMeetingInfo(){
 	if (currentMeetingInfo === null){
 		$.ajax({
 			type: "GET",
-			url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId,
-			// url: "http://localhost:8080/v1/meetings/"+meetingId,
+			url: "https://"+etherHost+"/v1/meetings/"+meetingId,
 			crossDomain: true,
 			success: function(res){
 				currentMeetingInfo = res
@@ -136,7 +136,7 @@ function getCurrentMeetingInfo(){
 function setVideoDetails(meeting){
 	$.ajax({
 			type: "GET",
-			url: "https://hive.etherlabs.io:8080/v1/recordings/"+meeting.recordingId,
+			url: "https://"+etherHost+"/v1/recordings/"+meeting.recordingId,
 			crossDomain: true,
 			success: function(results){
 				$('#recordingVideo').attr("src",results.url)
@@ -628,8 +628,7 @@ function updateMeetingAttendees(meetingId, userId){
 		data: JSON.stringify({
 			"userId": userId
 		}),
-		url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/attendees",
-		// url: "http://localhost:8080/v1/meetings/"+meetingId+"/attendees",
+		url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/attendees",
 		crossDomain: true,
 		success: function(res){
 			console.log("updated meeting attendees")
