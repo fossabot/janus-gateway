@@ -44,9 +44,10 @@
 //
 var server = null;
 if(window.location.protocol === 'http:')
-	server = "http://" + "ethermeet.etherlabs.io"+ "/janus-meet/janus";
+	server = "http://" + window.location.host+ "/janus-meet/janus";
 else
-	server = "https://" + "ethermeet.etherlabs.io" + "/janus-meet/janus";
+	server = "https://" + window.location.host + "/janus-meet/janus";
+var etherHost = window.location.host == "etherbridge.etherlabs.io" ? "ethermain.etherlabs.io:8080" : "hive.etherlabs.io:8080"
 
 var janus = null;
 var sfutest = null;
@@ -111,8 +112,7 @@ function getCurrentMeetingInfo(){
 	if (currentMeetingInfo === null){
 		$.ajax({
 			type: "GET",
-			url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId,
-			// url: "http://localhost:8080/v1/meetings/"+meetingId,
+			url: "https://"+etherHost+"/v1/meetings/"+meetingId,
 			crossDomain: true,
 			success: function(res){
 				currentMeetingInfo = res
@@ -136,7 +136,7 @@ function getCurrentMeetingInfo(){
 function setVideoDetails(meeting){
 	$.ajax({
 			type: "GET",
-			url: "https://hive.etherlabs.io:8080/v1/recordings/"+meeting.recordingId,
+			url: "https://"+etherHost+"/v1/recordings/"+meeting.recordingId,
 			crossDomain: true,
 			success: function(results){
 				$('#recordingVideo').attr("src",results.url)
@@ -248,7 +248,8 @@ function refreshTime(init = false){
 		currentCallTime += timeLapsedRefreshInterval/60
 	hr = Math.floor(currentCallTime/60)
 	min = Math.floor(currentCallTime%60)
-	$('.el-progress .progress-bar--time').html(formattedTime(hr,min))
+	sec = Math.floor((currentCallTime*60)%60)
+	$('.el-progress .progress-bar--time').html(formattedTime(hr, min, sec))
 }
 
 function postCallProgressBarRefreshTime(init = false){
@@ -257,16 +258,19 @@ function postCallProgressBarRefreshTime(init = false){
 		postCallVideoTime = recording.currentTime
 		hr = Math.floor(postCallVideoTime/3600)
 		min = Math.floor(postCallVideoTime/60)
-		$('.el-progress .progress-bar--time').html(formattedTime(hr,min))
+		sec = Math.floor(postCallVideoTime)
+		$('.el-progress .progress-bar--time').html(formattedTime(hr, min, sec))
 	}
 }
 
-function formattedTime(hr, min){
+function formattedTime(hr, min, sec){
+	if (sec < 10)
+		sec = "0"+sec
 	if (hr < 10)
 		hr = "0"+hr
 	if (min < 10)
 		min = "0"+min
-	return hr+":"+min
+	return hr < 1 ? min+":"+sec : hr+":"+min+":"+sec
 }
 
 function onParticipantLeft(){
@@ -463,7 +467,6 @@ function handleJanusCall() {
 								$('#unpublish').click(unpublishOwnFeed);
 								$('#videolocal').parent().removeClass('hide').show()
 								$('#videolocal .el-participants--item-name').html(myusername)
-								$('#videolocal_side .el-participants--item-name').html(myusername)
 							}
 							Janus.attachMediaStream($('.myvideo').get(0), stream);
 							Janus.attachMediaStream($('.myvideo').get(1), stream);
@@ -563,7 +566,7 @@ function parseQueryParams(){
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
 	videoOffset = getFromQueryParams("offset")
-	// history.pushState("changing url after param extraction", "url", window.location.origin)
+	history.pushState("changing url after param extraction", "url", window.location.origin)
 }
 
 function setCookie(cname, cvalue, exdays) {
@@ -628,8 +631,7 @@ function updateMeetingAttendees(meetingId, userId){
 		data: JSON.stringify({
 			"userId": userId
 		}),
-		url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/attendees",
-		// url: "http://localhost:8080/v1/meetings/"+meetingId+"/attendees",
+		url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/attendees",
 		crossDomain: true,
 		success: function(res){
 			console.log("updated meeting attendees")

@@ -108,8 +108,7 @@
   float: right;
   background: #fff;
   position: relative;
-  top: -32px;
-  right: 15px;
+  top: -16px;
   border: none;
 }
 .el-nav-tabs--item {
@@ -120,8 +119,12 @@
   font-size: 22px;
 }
 .el-nav-tabs--item-active {
-  color: #cf641c;
+  color: #049fc2;
 }
+.el-nav-tabs--item-active:hover,
+.el-nav-tabs--item-active:focus{
+  color: #cf641c;
+} 
 .el-nav-tabs--item-inactive{
   color: lightgrey;
   cursor: default;
