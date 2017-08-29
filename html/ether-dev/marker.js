@@ -117,8 +117,7 @@ function createPostCallMarker(description, offset, type){
 	}
 	$.ajax({
 	  type: "POST",
-	  // url: "http://localhost:8080/v1/meetings/"+meetingId+"/markers",
-	  url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/markers",
+	  url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/markers",
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
@@ -138,8 +137,7 @@ function createMarker(description, timestamp, type){
 	}
 	$.ajax({
 	  type: "POST",
-	  // url: "http://localhost:8080/v1/meetings/"+meetingId+"/markers",
-	  url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/markers",
+	  url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/markers",
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
@@ -194,8 +192,7 @@ function calcMarkerOffsetMins(timestamp){
 function updateMarkerList(){
 	$.ajax({
 	  type: "GET",
-	  // url: "http://localhost:8080/v1/meetings/"+meetingId+"/markers",
-	  url: "https://hive.etherlabs.io:8080/v1/meetings/"+meetingId+"/markers",
+	  url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/markers",
 	  crossDomain: true,
 	  success: function(res){
 	  	renderMarkerList(res)
