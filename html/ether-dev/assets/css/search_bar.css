@@ -10,6 +10,10 @@
   width: 90%;
 }
 .el-playback-searchbox--form-control,
+.el-playback-searchbox--form-control:focus{
+border-radius: .35rem 0px 0px .35rem;
+}
+.el-playback-searchbox--form-control,
 .el-playback-searchbox--form-control:focus,
 .el-playback-searchbox--input-group-addon,
 .el-playback-searchbox--input-group-addon:focus {
@@ -18,8 +22,9 @@
   font-size: 1.3rem;
 }
 .el-playback-searchbox--input-group-addon {
-  width: 15%;
+  border-left: 0px;
   padding: 7px 18px;
   color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
+  border-radius: 0px .35rem .35rem 0px;
 }
