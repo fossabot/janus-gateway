@@ -47,7 +47,7 @@ if(window.location.protocol === 'http:')
 	server = "http://" + window.location.host+ "/janus-meet/janus";
 else
 	server = "https://" + window.location.host + "/janus-meet/janus";
-var etherHost = window.location.host == "etherbridge.etherlabs.io " ? "ethermain.etherlabs.io:8080" : "hive.etherlabs.io:8080"
+var etherHost = window.location.host == "etherbridge.etherlabs.io" ? "ethermain.etherlabs.io:8080" : "hive.etherlabs.io:8080"
 
 var janus = null;
 var sfutest = null;
@@ -248,7 +248,8 @@ function refreshTime(init = false){
 		currentCallTime += timeLapsedRefreshInterval/60
 	hr = Math.floor(currentCallTime/60)
 	min = Math.floor(currentCallTime%60)
-	$('.el-progress .progress-bar--time').html(formattedTime(hr,min))
+	sec = Math.floor((currentCallTime*60)%60)
+	$('.el-progress .progress-bar--time').html(formattedTime(hr, min, sec))
 }
 
 function postCallProgressBarRefreshTime(init = false){
@@ -257,16 +258,19 @@ function postCallProgressBarRefreshTime(init = false){
 		postCallVideoTime = recording.currentTime
 		hr = Math.floor(postCallVideoTime/3600)
 		min = Math.floor(postCallVideoTime/60)
-		$('.el-progress .progress-bar--time').html(formattedTime(hr,min))
+		sec = Math.floor(postCallVideoTime)
+		$('.el-progress .progress-bar--time').html(formattedTime(hr, min, sec))
 	}
 }
 
-function formattedTime(hr, min){
+function formattedTime(hr, min, sec){
+	if (sec < 10)
+		sec = "0"+sec
 	if (hr < 10)
 		hr = "0"+hr
 	if (min < 10)
 		min = "0"+min
-	return hr+":"+min
+	return hr < 1 ? min+":"+sec : hr+":"+min+":"+sec
 }
 
 function onParticipantLeft(){
@@ -463,7 +467,6 @@ function handleJanusCall() {
 								$('#unpublish').click(unpublishOwnFeed);
 								$('#videolocal').parent().removeClass('hide').show()
 								$('#videolocal .el-participants--item-name').html(myusername)
-								$('#videolocal_side .el-participants--item-name').html(myusername)
 							}
 							Janus.attachMediaStream($('.myvideo').get(0), stream);
 							Janus.attachMediaStream($('.myvideo').get(1), stream);
