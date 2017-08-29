@@ -8,20 +8,20 @@
     <link rel="icon" href="../favicon.png">
     <title>ether labs</title>
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=10" type="text/css">
-    <link rel="stylesheet" href="assets/css/costom.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/chat-controller.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/playback-controller.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/spinner.css?version=10" type="text/css" >
+    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=11" type="text/css">
+    <link rel="stylesheet" href="assets/css/costom.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/playback-controller.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/spinner.css?version=11" type="text/css" >
     <!-- <link rel="stylesheet" href="assets/css/icons.css" type="text/css" > -->
-    <link rel="stylesheet" href="assets/css/marker.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/nav.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/progess-bar.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/room.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/search_bar.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/side-bar.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/marker-modal.css?version=10" type="text/css" >
-    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=10" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/nav.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/search_bar.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker-modal.css?version=11" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=11" type="text/css" >
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="janus.js" ></script>
     <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
-    <script type="text/javascript" src="videocall.js?version=10"></script>
+    <script type="text/javascript" src="videocall.js?version=11"></script>
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
@@ -89,8 +89,8 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span class="icon-close a" aria-hidden="true"></span>
           </button>
-          <h5 class="modal-title" id="exampleModalLabel"><div class="big">TOPIC</div>
-            <div class="small"> Vamshi - 17 Aug 2017 8:25 PM </div>
+          <h5 class="modal-title" id="exampleModalLabel"><div class="big"></div>
+            <div class="small"></div>
           </h5>
           <button type="button" class="close hide" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -192,15 +192,15 @@
 
     <ul class="el-marker">
       <div class="el-marker--item-block-title"> Markers </div>
-      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="topic">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="topic" data-title="set a topic marker" data-description="Mark an Agenda Item or Topic change for the call!  @mention folks in the message - and we'll notify and route the marker to them!">
         <span class="el-marker--item-icon icon-crown"> </span>
         <span class="el-marker--item-title"> Topic </span>
       </button>
-      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="action" data-title="set an action marker">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="action" data-title="set an action item" data-description="Action Item? Mark it! You can mention folks in the message - and we'll notify and route the marker to them!">
         <span class="el-marker--item-icon icon-star-o "> </span>
         <span class="el-marker--item-title"> Action Item </span>
       </button>
-      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="decision">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="decision" data-title="mark a key decision that was made" data-description="Memorialize a decision for others to come back to.  @mention folks in the message - and we'll notify and route the marker to them!">
         <span class="el-marker--item-icon icon-arrow-swap"> </span>
         <span class="el-marker--item-title"> Decision </span>
       </button>
@@ -208,11 +208,11 @@
         <span class="el-marker--item-icon icon-alert"> </span>
         <span class="el-marker--item-title"> Priority </span>
       </button>
-      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="fyi" data-title="set an FYI marker">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="fyi" data-title="give someone(s) a heads up" data-description="Give someone a shoutout to see the context of a certain part of the call. Be sure to @mention them!">
         <span class="el-marker--item-icon icon-alert"> </span>
         <span class="el-marker--item-title"> FYI </span>
       </button>
-      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="personal">
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="personal" data-title="set your own private personal marker" data-description=" Didn't quite follow part of the discussion but don't want to slow down the meeting?  Set a personal marker to go back and watch/listen.">
         <span class="el-marker--item-icon icon-user-outline"> </span>
         <span class="el-marker--item-title"> Personal </span>
       </button>
@@ -299,5 +299,5 @@
       </div>
 
   </body>
-  <script type="text/javascript" src="marker.js?version=10" ></script>
+  <script type="text/javascript" src="marker.js?version=11" ></script>
 </html>

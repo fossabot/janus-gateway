@@ -56,7 +56,9 @@ $('#marker-modal').on('show.bs.modal', function(e) {
 
 	title = e.relatedTarget.dataset.title == null ? 'set a '+markerType+' marker': e.relatedTarget.dataset.title
 	$(this).find('.big').html(title.toUpperCase())
-
+	description = e.relatedTarget.dataset.description
+	if (description != null)
+		$(this).find('.small').empty().html(description)
 	if (currentMeetingInfo.status === "recording-available"){
 		setPostCallPendingMarkerOnProgressBar($(this).data().videoPlaybackOffset, e.relatedTarget.dataset.type)
 	}else{
