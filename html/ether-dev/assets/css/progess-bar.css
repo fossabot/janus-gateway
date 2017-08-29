@@ -46,6 +46,7 @@
 }
 .progress-bar--time {
   float: right;
+  padding-top: 7px;
 }
 .progress-bar--time i {
   position: absolute;
