@@ -84,11 +84,13 @@ $('#marker-modal').on('hide.bs.modal', function(e) {
 
 $("#marker-description").on('focus keyup', function() {
 		description = $("#marker-description").val()
-		if (description === ""){
+		if ($.trim(description) == ""){
 			$("#markButton").prop("disabled","true")
 			$(".btn-primary").css("background-color","rgba(255, 255, 255, 0)")
+			$(".el-btn-save").css("color","rgba(58, 58, 58, 1)");
 		}else{
 			$("#markButton").removeAttr("disabled")
+			$(".el-btn-save").css("color","rgba(4,158,193, 1)");
 			}
 });
 
