@@ -25,11 +25,29 @@
 }
 .el-playback-controller--item::before {
   position: relative;
-  left: -3.5px;
-  top: -2.5px;
 }
 .el-playback-controller--item:hover,
 .el-playback-controller--item:focus,
 .el-playback-controller--item-active {
   color: #cf641c;
+}
+.icon-playback-play:before {
+  content: "\72";
+  left: -2px;
+  top: -1.5px;
+}
+.icon-playback-fast-forward:before {
+  content: "\62";
+  left: -2px;
+  top: -2px;
+}
+.icon-playback-pause:before {
+  content: "\73";
+  left: -3.5px;
+  top: -1.5px;
+}
+.icon-playback-rewind:before {
+  content: "\74";
+  left: -5px;
+  top: -2px;
 }
