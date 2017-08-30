@@ -185,7 +185,7 @@ function forwardRecordingVideo(){
 }
 function feedsLength(feeds){
 	return feeds.reduce(function(len, feed){
-		if (feed != null && feeds != undefined)
+		if (feed != null && feed != undefined)
 			len++
 		return len
 	}, 0)
