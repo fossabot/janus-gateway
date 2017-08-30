@@ -258,7 +258,7 @@ function postCallProgressBarRefreshTime(init = false){
 		postCallVideoTime = recording.currentTime
 		hr = Math.floor(postCallVideoTime/3600)
 		min = Math.floor(postCallVideoTime/60)
-		sec = Math.floor(postCallVideoTime)
+		sec = Math.floor((postCallVideoTime*60)%60)
 		$('.el-progress .progress-bar--time').html(formattedTime(hr, min, sec))
 	}
 }
@@ -652,6 +652,7 @@ function publishOwnFeed(useAudio) {
 				var publish = { "request": "configure", "audio": useAudio, "video": true };
 				sfutest.send({"message": publish, "jsep": jsep});
 				updateMeetingAttendees(meetingId, userId)
+				onParticipantJoined()
 			},
 			error: function(error) {
 				Janus.error("WebRTC error:", error);
@@ -796,7 +797,6 @@ function newRemoteFeed(id, display) {
 						remoteFeed.rfid = msg["id"];
 						remoteFeed.rfdisplay = msg["display"];
 						if(remoteFeed.spinner === undefined || remoteFeed.spinner === null) {
-							onParticipantJoined()
 							$('#videos .el-participants-wrap').append(getVideoHtml(remoteFeed.rfindex))
 							var target = document.getElementById('videoremote'+remoteFeed.rfindex);
 							remoteFeed.spinner = new Spinner({top:100}).spin(target);
@@ -805,6 +805,7 @@ function newRemoteFeed(id, display) {
 						}
 						Janus.log("Successfully attached to feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") in room " + msg["room"]);
 						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+						onParticipantJoined()
 					} else if(msg["error"] !== undefined && msg["error"] !== null) {
 						bootbox.alert(msg["error"]);
 					} else {
