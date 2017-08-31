@@ -847,6 +847,7 @@ function newRemoteFeed(id, display) {
 					// No remote video yet
 					$('#videoremote'+remoteFeed.rfindex).append('<video class="rounded centered" id="waitingvideo' + remoteFeed.rfindex + '" width=320 height=240 />');
 					$('#videoremote'+remoteFeed.rfindex).append('<video class="rounded centered relative hide" id="remotevideo' + remoteFeed.rfindex + '" width="100%" height="100%" autoplay/>');
+					$(".spinner").css("top","50%")
 				}
 				// $('#videoremote'+remoteFeed.rfindex).append(
 				// 	'<span class="label label-primary hide" id="curres'+remoteFeed.rfindex+'" style="position: absolute; bottom: 0px; left: 0px; margin: 15px;"></span>' +

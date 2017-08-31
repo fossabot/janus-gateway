@@ -22,6 +22,8 @@
   width: 100%;
 }
 .el-participants--item-active {
+  width:100%;
+  height: 100%;
   border-color: #cf641c;
   border-width: 3px;
   border-style: solid;
