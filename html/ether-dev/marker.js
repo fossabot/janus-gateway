@@ -198,6 +198,8 @@ function updateMarkerList(){
 	  crossDomain: true,
 	  success: function(res){
 	  	renderMarkerList(res)
+	  },
+	  error: function(xhr, res, status){
 	  }
 	});
 }
@@ -205,8 +207,9 @@ function updateMarkerList(){
 function renderMarkerList(res){
 	$('.bar-step:not(.el-marker-pending)').remove()
 	markerRenderMethod = currentMeetingInfo.status === "recording-available" ? setPostCallMarkersOnProgressBar : setMarkerOnProgressBar
-	res.forEach(function(summary, index){
-		markerRenderMethod(summary)
-	})
-
+	if (res != null) {
+		res.forEach(function(summary, index){
+			markerRenderMethod(summary)
+		})
+	}
 }
