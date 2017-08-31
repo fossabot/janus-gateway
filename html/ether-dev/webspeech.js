@@ -41,44 +41,44 @@ recognition.onresult = function(event) {
 }
 
 recognition.onerror = function(event) {
-  // diagnostic.textContent = 'Error occurred in recognition: ' + event.error;
+  console.debug('Error occurred in recognition: ' + event.error);
 }
 
 recognition.onaudiostart = function() {
-  console.log("Audio start received ")
+  console.debug("Audio start received ")
 }
 
 recognition.onaudioend = function() {
-  console.log("Audio end received ")
+  console.debug("Audio end received ")
 }
 
 recognition.onsoundstart = function() {
-  console.log("Sound start received ")
+  console.debug("Sound start received ")
 }
 
 recognition.onsoundend = function() {
-  console.log("Sound end received ")
+  console.debug("Sound end received ")
 }
 
 recognition.onspeechstart = function() {
-  console.log("Speech start received ")
+  console.debug("Speech start received ")
   var start = new Date();
   startutc = start.toISOString().split('.')[0]+"Z";
 }
 
 recognition.onspeechend = function() {
-  console.log("Speech end received ")
+  console.debug("Speech end received ")
 }
 
 recognition.onstart = function() {
-  console.log("Recognition start received ")
+  console.debug("Recognition start received ")
 }
 
 recognition.onend = function() {
-  console.log("Recognition end received ")
+  console.debug("Recognition end received ")
   recognition.start();
 }
 
 recognition.onnomatch = function() {
-  console.log("No match received ")
+  console.debug("No match received ")
 }
