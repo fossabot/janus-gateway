@@ -119,11 +119,14 @@
   font-size: 22px;
 }
 .el-nav-tabs--item-active {
-  color: #049fc2;
+  color: #049fc2; 
+}
+.el-nav-tabs--item-active .selected{
+  color: #cf641c; 
 }
 .el-nav-tabs--item-active:hover,
 .el-nav-tabs--item-active:focus{
-  color: #cf641c;
+  color: #cf641c; 
 } 
 .el-nav-tabs--item-inactive{
   color: lightgrey;
