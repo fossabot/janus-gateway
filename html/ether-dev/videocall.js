@@ -258,7 +258,7 @@ function postCallProgressBarRefreshTime(init = false){
 		postCallVideoTime = recording.currentTime
 		hr = Math.floor(postCallVideoTime/3600)
 		min = Math.floor(postCallVideoTime/60)
-		sec = Math.floor((postCallVideoTime*60)%60)
+		sec = Math.floor(postCallVideoTime%60)
 		$('.el-progress .progress-bar--time').html(formattedTime(hr, min, sec))
 	}
 }
