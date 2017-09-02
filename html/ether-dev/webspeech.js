@@ -15,8 +15,10 @@ recognition.grammars = speechRecognitionList;
 recognition.lang = 'en-US';
 recognition.maxAlternatives = 1;
 
-recognition.start();
-console.log('Ready to capture speech and send to tlet server.');
+function startRecognition() {
+  recognition.start();
+  console.log('Ready to capture speech');
+}
 
 recognition.onresult = function(event) {
 
@@ -29,19 +31,29 @@ recognition.onresult = function(event) {
   var confidence = event.results[last][0].confidence
 
   var data = {}
-  data["meeting"] = meetingId;
-  data["startutc"] = startutc;
-  data["endutc"] = endutc;
-  data["speaker"] = myusername;
+  data["meetingId"] = meetingId;
+  data["startTime"] = startutc;
+  data["endTime"] = endutc;
+  data["SpokenBy"] = userId;
   data["text"] = transcriptReceived;
   data["confidence"] = confidence;
+  data["recordingId"] = recordingId;
   console.log(data)
-
-
+  $.ajax({
+    type: "POST",
+    url: "https://"+etherHost+"/v1/transcriptions/segments",
+    data: JSON.stringify(data),
+    crossDomain: true,
+    async: true,
+    success: function(res) {
+    }
+  });
 }
 
 recognition.onerror = function(event) {
   console.debug('Error occurred in recognition: ' + event.error);
+  setTimeout(function(){recognition.stop()}, 1000)
+  setTimeout(function(){recognition.start()}, 1000)
 }
 
 recognition.onaudiostart = function() {
