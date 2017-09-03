@@ -65,6 +65,7 @@ var mypvtid = null;
 var feeds = [];
 var bitrateTimer = [];
 var meetingId = null;
+var recordingId = null;
 var userId	= null;
 var startTime = null;
 var currentProgressbarValue = null;
@@ -117,6 +118,7 @@ function getCurrentMeetingInfo(){
 			success: function(res){
 				currentMeetingInfo = res
 				console.log(currentMeetingInfo)
+				recordingId = currentMeetingInfo.recordingId
 				populateMeetingFields(currentMeetingInfo)
 			},
 			error: function(xhr,status,error){
@@ -217,8 +219,11 @@ function populateMeetingFields(currentMeetingInfo){
 		$(".marker-info-body").find(".clearfix.icon-watch").parent().removeClass("el-nav-tabs--item-inactive").addClass("el-nav-tabs--item-active")
 		$(".marker-info-body").find(".clearfix.icon-watch").parent().attr("data-dismiss","modal")
 		$(".container.el-participants").css("width","90%")
-	}
-	else{
+	} else if(currentMeetingInfo.status === "ended") {
+		bootbox.alert("This meeting has ended and the recording is being processed. Please visit once the Summary is available", function() {
+			window.close()
+		});
+	} else {
 		initProgressbar(currentCallTime)
 		refreshTime(true)
 		setInterval(progressTheBar, progressbarRefreshInterval*1000)
@@ -228,6 +233,7 @@ function populateMeetingFields(currentMeetingInfo){
 		$(".marker-info-body").find(".clearfix.icon-watch").parent().removeAttr("onclick")
 		$(".el-chat-controller").removeClass('hide')
 		handleJanusCall();
+		startRecognition();
 	}
 }
 
