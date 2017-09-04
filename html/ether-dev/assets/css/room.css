@@ -20,6 +20,7 @@
 .el-participants--item-video img,
 .el-participants--item-video video {
   width: 100%;
+  line-height: 0.929;
 }
 .el-participants--item-active {
   width:100%;
