@@ -1,20 +1,20 @@
 
 .el-playback-searchbox-wrap {
   width: 100%;
-  position: absolute;
+  position: fixed;
   left:0;
   bottom:0px;
-  /* background: rgba(65, 60, 60, 0.96); */
+   background: rgba(65, 60, 60, 0.96); 
   padding: 10px;
   margin: 0;
   text-align: center;
 }
 .el-playback-searchbox {
   position: relative;
-  margin-left: 18%;
+  margin-left: 15%;
   width: 70%;
   padding-left: 1%;
-  padding-top: 20px;
+  padding-top: 10px;
   padding-bottom: 40px;
 }
 .input-group.mb-2.mr-sm-2.mb-sm-0{
@@ -50,13 +50,13 @@ border-radius: .35rem 0px 0px .35rem;
 .el-playback-search--result {
   overflow: scroll;
   height: 250px;
-  width: 90%;
+  width: 88.5%;
   background: #fff;
   min-height: 200px;
   position: absolute;
-  bottom: 72px;
-  left: 6px;
-  right: 0px;
+  bottom: 85px;
+  /* left: 6px; */
+  right: 5.3%;
 }
 .el-playback-search--result-item {
   position: relative;
@@ -68,16 +68,17 @@ border-radius: .35rem 0px 0px .35rem;
   line-height: 6px;
 }
 .el-playback-search--result-item-dic a {
-  color: #049ec1!important;
+  color: #413c3c!important;
+  font-size: 85%;
 }
 .el-playback-search--result-item-icon {
   position: absolute;
   left: 15px;
   top: 12px;
-  padding: 3px 0 0 6px;
+  padding: 0.4px 0 0 2.5px;
   width: 36px;
   height: 36px;
-  font-size: 22px;
+  font-size: 28px;
   border: 2px #049ec1 solid;
   color: #049ec1;
   border-radius: 50%;
@@ -85,8 +86,8 @@ border-radius: .35rem 0px 0px .35rem;
 }
 .divider-dot {
   font-weight: 400;
-  color: #666;
-  font-size: 12px;
+  color: #413c3c;
+  font-size: 13px;
 }
 .divider-dot::before {
   display: block;
@@ -97,7 +98,7 @@ border-radius: .35rem 0px 0px .35rem;
   text-align: left;
   display: block;
   padding: 16px 0 4px 16px;
-  font-size: 14px;
+  font-size: 16px;
   color: #cf641c;
 }
 

@@ -8,6 +8,7 @@
     <link rel="icon" href="../favicon.png">
     <title>ETHER</title>
     <!-- Bootstrap core CSS -->
+<<<<<<< HEAD
     <link rel="stylesheet"  href="assets/css/bootstrap.css?version=18" type="text/css">
     <link rel="stylesheet" href="assets/css/costom.css?version=18" type="text/css" >
     <link rel="stylesheet" href="assets/css/chat-controller.css?version=18" type="text/css" >
@@ -22,6 +23,22 @@
     <link rel="stylesheet" href="assets/css/side-bar.css?version=18" type="text/css" >
     <link rel="stylesheet" href="assets/css/marker-modal.css?version=18" type="text/css" >
     <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=18" type="text/css" >
+=======
+    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=19" type="text/css">
+    <link rel="stylesheet" href="assets/css/costom.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/playback-controller.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/spinner.css?version=19" type="text/css" >
+    <!-- <link rel="stylesheet" href="assets/css/icons.css" type="text/css" > -->
+    <link rel="stylesheet" href="assets/css/marker.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/nav.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/search_bar.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker-modal.css?version=19" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=19" type="text/css" >
+>>>>>>> Search Bar changes
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
@@ -29,10 +46,17 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.1.0/bootbox.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<<<<<<< HEAD
     <script type="text/javascript" src="webspeech.js?version=18"></script>
     <script type="text/javascript" src="janus.js" ></script>
     <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
     <script type="text/javascript" src="videocall.js?version=18"></script>
+=======
+    <script type="text/javascript" src="webspeech.js?version=19"></script>
+    <script type="text/javascript" src="janus.js" ></script>
+    <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
+    <script type="text/javascript" src="videocall.js?version=19"></script>
+>>>>>>> Search Bar changes
     <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
@@ -293,39 +317,29 @@
       </div>
      </div> <!-- el-rightBar--participans -->
     
-     <div class="el-playback-searchbox hide">
-       <div class="input-group mb-2 mr-sm-2 mb-sm-0">
-         <input type="text" class="form-control el-playback-searchbox--form-control" id="inlineFormInputGroup" placeholder="Search Call">
-         <div class="input-group-addon el-playback-searchbox--input-group-addon">
+<div class=" el-playback-searchbox-wrap ">
+  <div class="el-playback-searchbox hide">
+      <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+        <input type="text" class="form-control el-playback-searchbox--form-control" id="inlineFormInputGroup" placeholder="Search Call">
+        <div class="input-group-addon el-playback-searchbox--input-group-addon">
           <span class="icon-search"></span>
-          </div>
         </div>
       </div>
-
-<div class=" el-playback-searchbox-wrap hide">
-  <div class="el-playback-searchbox hide">
-    <form>
-
-      <!-- <div class="input-group mb-2 mr-sm-2 mb-sm-0">
-          <input type="text" class="form-control el-playback-searchbox--form-control" id="inlineFormInputGroup" placeholder="Username">
-          <div class="input-group-addon el-playback-searchbox--input-group-addon">
-          <span class="icon-search"></span>
+      <form>
+        <div class="el-playback-search--result hide">
+          <div class="el-results-head"> Markers</div>
+          <div id="searchResults"></div>
         </div>
-      </div> search filed  -->
-
-      <div class="el-playback-search--result ">
-        <div class="el-results-head"> Marker's Search Result</div>
-        <div class="el-results-footer">
-          <!-- <div class="el-results-head">Search Result </div>
-          <a class="u-block"> Memory leak <small> (4 mentions) </small></a>
-          <a class="u-block">Memory leak <small>(4 mentions) </small></a> -->
-        </div>  <!-- search footer -->
-      </div> <!-- search result -->
-    </form>
- </div>
+      <!-- </div>  search result  -->
+      </form>
+  </div>
 </div><!-- el-participants -->
 
 
   </body>
+<<<<<<< HEAD
   <script type="text/javascript" src="marker.js?version=18" ></script>
+=======
+  <script type="text/javascript" src="marker.js?version=19" ></script>
+>>>>>>> Search Bar changes
 </html>
