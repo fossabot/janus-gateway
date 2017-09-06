@@ -491,6 +491,7 @@ typedef struct janus_videoroom {
 
 	// Added for tracking meeting start and endtime
 	gboolean first_joined;
+	gboolean last_left;
 } janus_videoroom;
 
 static GHashTable *rooms;
@@ -1001,6 +1002,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 
 			videoroom->destroyed = 0;
 			videoroom->first_joined = FALSE;
+			videoroom->last_left = FALSE;
 			janus_mutex_init(&videoroom->participants_mutex);
 			videoroom->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
 			videoroom->private_ids = g_hash_table_new(NULL, NULL);
@@ -1240,11 +1242,12 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 		/* Send event to event handler */
 		if(notify_events && gateway->events_is_enabled() && session->participant) {
 			janus_videoroom *videoroom = ((janus_videoroom_participant *)session->participant)->room;
-			if(0 == g_hash_table_size(videoroom->participants)) {
+			if(0 == g_hash_table_size(videoroom->participants) && (!videoroom->last_left)) {
 				json_t *info = json_object();
 				json_object_set_new(info, "event", json_string("last-left"));
 				json_object_set_new(info, "room", json_integer(videoroom->room_id));
 				gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
+				videoroom->last_left = TRUE;
 			}
 		}			
 	}
@@ -1654,6 +1657,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 
 		videoroom->destroyed = 0;
 		videoroom->first_joined = FALSE;
+		videoroom->last_left = FALSE;
 		janus_mutex_init(&videoroom->participants_mutex);
 		videoroom->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
 		videoroom->private_ids = g_hash_table_new(NULL, NULL);
