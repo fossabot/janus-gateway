@@ -1,4 +1,16 @@
+
+.el-playback-searchbox-wrap {
+  width: 100%;
+  position: absolute;
+  left:0;
+  bottom:0px;
+  /* background: rgba(65, 60, 60, 0.96); */
+  padding: 10px;
+  margin: 0;
+  text-align: center;
+}
 .el-playback-searchbox {
+  position: relative;
   margin-left: 18%;
   width: 70%;
   padding-left: 1%;
@@ -23,8 +35,81 @@ border-radius: .35rem 0px 0px .35rem;
 }
 .el-playback-searchbox--input-group-addon {
   border-left: 0px;
-  padding: 7px 18px;
+  padding: 9px 18px 5px;
   color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
   border-radius: 0px .35rem .35rem 0px;
+}
+
+.icon-search:before {
+    content: "\71";
+    font-size: 1.5rem;
+}
+/* ----- Result ----- */
+
+.el-playback-search--result {
+  overflow: scroll;
+  height: 250px;
+  width: 90%;
+  background: #fff;
+  min-height: 200px;
+  position: absolute;
+  bottom: 72px;
+  left: 6px;
+  right: 0px;
+}
+.el-playback-search--result-item {
+  position: relative;
+  text-align: left;
+  padding: 16px;
+  padding-left: 62px
+}
+.el-playback-search--result-item .h6 {
+  line-height: 6px;
+}
+.el-playback-search--result-item-dic a {
+  color: #049ec1!important;
+}
+.el-playback-search--result-item-icon {
+  position: absolute;
+  left: 15px;
+  top: 12px;
+  padding: 3px 0 0 6px;
+  width: 36px;
+  height: 36px;
+  font-size: 22px;
+  border: 2px #049ec1 solid;
+  color: #049ec1;
+  border-radius: 50%;
+  display: inline-block;
+}
+.divider-dot {
+  font-weight: 400;
+  color: #666;
+  font-size: 12px;
+}
+.divider-dot::before {
+  display: block;
+  padding: 3px;
+  background: #444;
+}
+.el-results-head {
+  text-align: left;
+  display: block;
+  padding: 16px 0 4px 16px;
+  font-size: 14px;
+  color: #cf641c;
+}
+
+/* ----------- */
+.el-results-footer {
+  text-align: left;
+  border-top: 1px #f1f1f1 solid;
+  padding-bottom: 16px;
+}
+.el-results-footer a {
+  padding: 0px 16px;
+  text-align: left;
+  color: #049ec1!important;
+  font-size: 13px;
 }

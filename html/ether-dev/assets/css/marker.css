@@ -30,6 +30,27 @@
   }
 }
 
+.alert{
+  padding-left:  3.88px;
+  padding-top: 0.1px;
+}
+.userOutline{
+  padding-left: 0.6px;
+  padding-top: 0.5px;
+}
+.arrowSwap{
+  padding-left: 3.5px;
+  padding-top: 1px;
+}
+.star{
+  padding-left: 1.15px;
+  padding-top: 0.8px;
+}
+.crown{
+  padding-left: 1.3px;
+  padding-top: 1.5px;
+}
+
 .el-marker--item-title {
   color: #fff;
   display: block;
