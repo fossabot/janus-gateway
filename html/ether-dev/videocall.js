@@ -101,13 +101,25 @@ $(document).ready(function() {
 		},
 		canplay: function(){
 			$("#spinner").removeClass("loader")
-            recordingDuration = $('#recordingVideo')[0].duration
-        },
+			recordingDuration = $('#recordingVideo')[0].duration
+		},
 		ended: function(){
 			$(".icon-playback-pause").addClass("hide")
 			$(".icon-playback-play").removeClass('hide')
 		}
 	});
+
+	$("#inlineFormInputGroup").on({
+		focus:function(){
+			$(".el-playback-searchbox-wrap").removeClass("hide")
+		},
+		click:function(){
+			$(".el-playback-searchbox-wrap").removeClass("hide")
+		},
+		focusout:function(){
+			$(".el-playback-searchbox-wrap").addClass("hide")
+		}
+	})
 });
 
 function getCurrentMeetingInfo(){

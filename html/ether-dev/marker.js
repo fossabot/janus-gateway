@@ -1,6 +1,7 @@
 setInterval(updateMarkerList, markerPollingInterval*1000)
 
 var clickedMarkerId
+var numOfMarkers = 0;
 
 var markerTypeClassMappinng = {
 		"topic": "icon-crown",
@@ -197,11 +198,22 @@ function updateMarkerList(){
 	  url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/markers",
 	  crossDomain: true,
 	  success: function(res){
-	  	renderMarkerList(res)
-	  },
+		renderMarkerList(res)
+		searchBarSetMarkers(res)
+		},
 	  error: function(xhr, res, status){
 	  }
 	});
+}
+
+function searchBarSetMarkers(res){
+	receivedNumOfMarkers = res.length
+	if(receivedNumOfMarkers !== numOfMarkers){
+		for(marker=0;marker<(res.length - numOfMarkers);marker++){
+		$(".el-results-head").append('<div class="el-playback-search--result-item"><i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'"></i><span class="el-playback-search--result-item-title"><h6 class="h6"><span class="divider-dot">'+res[marker].user.name+' </span><span class="divider-dot">&bull; '+ Date(res[marker].timeStamp)+' </span></h6><small class="el-playback-search--result-item-dic"> <a></a> '+res[marker].description+' </small></div>')
+	}
+	numOfMarkers = res.length
+	}
 }
 
 function renderMarkerList(res){
