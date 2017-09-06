@@ -25,7 +25,7 @@ $('#marker-info-modal').on('shown.bs.modal', function(e) {
 });
 
 function decorateDescription(description) {
-	return description.replace(/@\w+/g, function decorate(ref) { return '<span style="color: dodgerblue;">'+ref+'</span>' })
+	return description.replace(/@\w+/g, function decorate(ref) { return '<span style="font-weight: bold;">'+ref+'</span>' })
 }
 
 function calModalDisplayPostion(offset) {
@@ -209,10 +209,18 @@ function updateMarkerList(){
 function searchBarSetMarkers(res){
 	receivedNumOfMarkers = res.length
 	if(receivedNumOfMarkers !== numOfMarkers){
-		for(marker=0;marker<(res.length - numOfMarkers);marker++){
-		$(".el-results-head").append('<div class="el-playback-search--result-item"><i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'"></i><span class="el-playback-search--result-item-title"><h6 class="h6"><span class="divider-dot">'+res[marker].user.name+' </span><span class="divider-dot">&bull; '+ Date(res[marker].timeStamp)+' </span></h6><small class="el-playback-search--result-item-dic"> <a></a> '+res[marker].description+' </small></div>')
-	}
-	numOfMarkers = res.length
+		$("#searchResults").empty()
+		for(marker=0;marker<res.length;marker++){
+			description = decorateDescription(res[marker].description)
+			$("#searchResults").append('<div class="el-playback-search--result-item">\
+			<i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'">\
+			</i><span class="el-playback-search--result-item-title">\
+			<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+"\ - "
+			+(Date(res[marker].timestamp)).toString().split(' ', 5).join(' ')+' </span>\
+			</h6><small class="el-playback-search--result-item-dic"> \
+			<a>'+description+'</a></small></div>')
+		}
+		numOfMarkers = res.length
 	}
 }
 

@@ -111,13 +111,13 @@ $(document).ready(function() {
 
 	$("#inlineFormInputGroup").on({
 		focus:function(){
-			$(".el-playback-searchbox-wrap").removeClass("hide")
+			$(".el-playback-search--result").removeClass("hide")
 		},
 		click:function(){
-			$(".el-playback-searchbox-wrap").removeClass("hide")
+			$(".el-playback-search--result").removeClass("hide")
 		},
 		focusout:function(){
-			$(".el-playback-searchbox-wrap").addClass("hide")
+			$(".el-playback-search--result").addClass("hide")
 		}
 	})
 });
