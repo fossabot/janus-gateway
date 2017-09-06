@@ -234,7 +234,7 @@ function populateMeetingFields(currentMeetingInfo){
 		$(".container.el-participants").css("width","90%")
 	} else if(currentMeetingInfo.status === "ended") {
 		bootbox.alert("This meeting has ended and the recording is being processed. Please visit once the Summary is available", function() {
-			window.close()
+			window.location.replace(window.location.origin)
 		});
 	} else {
 		initProgressbar(currentCallTime)
@@ -585,7 +585,16 @@ function parseQueryParams(){
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
 	videoOffset = getFromQueryParams("offset")
+	$('#meetingLink').html(window.location.href)
 	history.pushState("changing url after param extraction", "url", window.location.origin)
+}
+
+function copyToClipboard(element) {
+	var $temp = $("<input>");
+	$("body").append($temp);
+	$temp.val($(element).text()).select();
+	document.execCommand("copy");
+	$temp.remove();
 }
 
 function setCookie(cname, cvalue, exdays) {
