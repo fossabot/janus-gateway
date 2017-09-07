@@ -25,7 +25,8 @@ $('#marker-info-modal').on('shown.bs.modal', function(e) {
 });
 
 function decorateDescription(description) {
-	return description.replace(/@\w+/g, function decorate(ref) { return '<span style="font-weight: bold;">'+ref+'</span>' })
+	description = description.replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g, function(ref) { return '<a target="_blank" href="'+ref+'"><span class="link">'+ref+'</span></a>'})
+	return description.replace(/@\w+/g, function decorate(ref) { return '<span style="font-weight: bold;">'+ref+'</span>' }).replace(/\n/g, "<br />")
 }
 
 function calModalDisplayPostion(offset) {
