@@ -30,25 +30,25 @@
   }
 }
 
-.alert{
-  padding-left:  3.88px;
-  padding-top: 0.1px;
+.alertIcon{
+  padding-left: 4%;
+  padding-top: 0%;
 }
 .userOutline{
-  padding-left: 0.6px;
-  padding-top: 0.5px;
+  padding-left: 4%;
+  padding-top: 0%;
 }
 .arrowSwap{
-  padding-left: 3.5px;
-  padding-top: 1px;
+  padding-left: 5%;
+  padding-top: 0%;
 }
 .star{
-  padding-left: 1.15px;
-  padding-top: 0.8px;
+  padding-left: 3%;
+  padding-top: 0%;
 }
 .crown{
-  padding-left: 1.3px;
-  padding-top: 1.5px;
+  padding-left: 3%;
+  padding-top: 1%;
 }
 
 .el-marker--item-title {
