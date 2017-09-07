@@ -153,6 +153,13 @@ function createMarker(description, timestamp, type){
 
 function setPostCallMarkersOnProgressBar(marker){
 	leftOffsetPerc = (marker.offset/recordingDuration)*100
+	console.log(leftOffsetPerc)
+	if(leftOffsetPerc < 0){
+		leftOffsetPerc = 0;
+	}
+	else if(leftOffsetPerc > 100){
+		leftOffsetPerc = 100;
+	}
 	renderMarker(leftOffsetPerc, marker)
 }
 
@@ -215,8 +222,7 @@ function searchBarSetMarkers(res){
 			$("#searchResults").append('<div class="el-playback-search--result-item">\
 			<i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'">\
 			</i><span class="el-playback-search--result-item-title">\
-			<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+"\ - "
-			+(Date(res[marker].timestamp)).toString().split(' ', 5).join(' ')+' </span>\
+			<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+'</span>\
 			</h6><small class="el-playback-search--result-item-dic"> \
 			<a>'+description+'</a></small></div>')
 		}
