@@ -33,8 +33,8 @@
 }
 .icon-playback-play:before {
   content: "\72";
-  left: -2px;
-  top: -1.5px;
+  left: -2.15px;
+  top: -2px;
 }
 .icon-playback-fast-forward:before {
   content: "\62";
@@ -43,8 +43,8 @@
 }
 .icon-playback-pause:before {
   content: "\73";
-  left: -3.5px;
-  top: -1.5px;
+  left: -4px;
+  top: -2px;
 }
 .icon-playback-rewind:before {
   content: "\74";

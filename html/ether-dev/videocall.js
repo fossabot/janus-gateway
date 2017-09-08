@@ -110,16 +110,19 @@ $(document).ready(function() {
 	});
 
 	$("#inlineFormInputGroup").on({
-		focus:function(){
+		focus:function(event){
+			event.stopPropagation();
 			$(".el-playback-search--result").removeClass("hide")
 		},
-		click:function(){
-			$(".el-playback-search--result").removeClass("hide")
-		},
-		focusout:function(){
-			$(".el-playback-search--result").addClass("hide")
-		}
 	})
+
+	$(document).click(function(event) {
+		if(!$(event.target).closest('.el-playback-search--result').length && !$(event.target).closest('#inlineFormInputGroup').length ) {
+			if($('.el-playback-search--result').is(":visible")) {
+				$('.el-playback-search--result').addClass("hide")
+			}
+		}
+	});
 });
 
 function getCurrentMeetingInfo(){

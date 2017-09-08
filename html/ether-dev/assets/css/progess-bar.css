@@ -13,7 +13,7 @@
   height: 26px;
   width: 26px;
   border-radius: 30px;
-  cursor: context-menu;
+  cursor: pointer;
 }
 .bar-step.el-marker-pending {
     left: 84.26356779006672%;
@@ -63,7 +63,7 @@
 }
 
 .el-progress .label-txt.icon-crown{
-  padding-left: 2.8px;
+  padding-left: 3.7px;
   padding-top: 3.7px
 }
 
