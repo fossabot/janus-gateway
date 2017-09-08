@@ -223,12 +223,22 @@ function searchBarSetMarkers(res){
 			$("#searchResults").append('<div class="el-playback-search--result-item">\
 			<i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'">\
 			</i><span class="el-playback-search--result-item-title">\
-			<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+'</span>\
+			<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+' &bull; \
+			'+(new Date(res[marker].timestamp)).toString().split(' ', 5)[4]+' &bull; \
+			</span><span class="el-playback-search--result-item-watch" onclick=postCallSearchBarWatchClick('+res[marker].offset+')>Watch</span>\
 			</h6><small class="el-playback-search--result-item-dic"> \
 			<a>'+description+'</a></small></div>')
 		}
 		numOfMarkers = res.length
 	}
+}
+
+function postCallSearchBarWatchClick(offset){
+	$('#recordingVideo')[0].currentTime = offset
+	$('#recordingVideo')[0].play()
+	$(".icon-playback-play").addClass("hide")
+	$(".icon-playback-pause").removeClass('hide')
+	$(".el-playback-search--result").addClass("hide")
 }
 
 function renderMarkerList(res){
