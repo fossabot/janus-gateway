@@ -187,7 +187,7 @@ function setPostCallPendingMarkerOnProgressBar(offset, type){
 }
 
 function renderMarker(leftOffsetPerc, marker){
-	$("#progress-bar").append('<div id="'+marker.id+'"class="bar-step" style="left: '+(leftOffsetPerc-1)+'%"><div data-toggle="modal" data-target="#marker-info-modal" class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
+	$("#progress-bar").append('<div id="'+marker.id+'"class="bar-step '+ ( marker.isSuggested ? "el-marker-suggested" : "" )+' " style="left: '+(leftOffsetPerc-1)+'%"><div data-toggle="modal" data-target="#marker-info-modal" class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
 	$("#"+marker.id).data("info", marker)
 }
 

@@ -62,7 +62,7 @@
 }
 
 .el-marker-pending .label-txt {
-  color: #cf641c;
+  color: #cf641c !important;
   padding-top: 1px;
   padding-left: 1.7px;
 }
@@ -79,8 +79,8 @@
   width: 2px;
   height: 138px;
   position: absolute;
-  top: 36px;
-  left: 18px;
+  top: 40px;
+  left: 19px;
 }
 .el-marker--item--active .el-marker--item-title {
   visibility: hidden;
@@ -93,5 +93,5 @@
   height: 100px;
   position: absolute;
   top: 24px;
-  left: 9px;
+  left: 10px;
 }

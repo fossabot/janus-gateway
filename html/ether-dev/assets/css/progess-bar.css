@@ -18,7 +18,7 @@
 .bar-step.el-marker-pending {
     left: 84.26356779006672%;
     border: 2px #cf641c solid;
-    background: #343434;
+    background: #343434 !important;
     z-index: 1049;
 }
 
@@ -85,4 +85,15 @@
 }
 .el-progress .el-marker-pending .label-txt.icon-arrow-swap{
   padding-left: 2px;
+}
+.el-progress .el-marker-suggested {
+  background: #049fc2;
+}
+
+.el-progress .el-marker-suggested .label-txt {
+  color: #fff;
+}
+
+.bar-step.el-marker-suggested .label-txt:hover{
+  color: #000;
 }
