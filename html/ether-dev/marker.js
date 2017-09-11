@@ -25,7 +25,13 @@ $('#marker-info-modal').on('shown.bs.modal', function(e) {
 });
 
 function decorateDescription(description) {
-	description = description.replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g, function(ref) { return '<a target="_blank" href="'+ref+'"><span class="link">'+ref+'</span></a>'})
+	description = description.replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g, function(ref) {
+		refName = ref
+		 if (ref.indexOf("etherlabs.atlassian.net") != -1){
+	        refName = ref.split("/").splice(-1)[0]
+        }
+		return '<a target="_blank" href="'+ref+'"><span class="link">'+refName+'</span></a>'
+	})
 	return description.replace(/@\w+/g, function decorate(ref) { return '<span style="font-weight: bold;">'+ref+'</span>' }).replace(/\n/g, "<br />")
 }
 
