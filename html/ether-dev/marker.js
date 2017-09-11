@@ -154,7 +154,6 @@ function createMarker(description, timestamp, type){
 
 function setPostCallMarkersOnProgressBar(marker){
 	leftOffsetPerc = (marker.offset/recordingDuration)*100
-	console.log(leftOffsetPerc)
 	if(leftOffsetPerc < 0){
 		leftOffsetPerc = 0;
 	}
@@ -216,6 +215,14 @@ function updateMarkerList(){
 
 function searchBarSetMarkers(res){
 	receivedNumOfMarkers = res.length
+	for(var k=1; k < res.length; k++){
+		for(var i=k; i > 0 && new Date(res[i].createdAt)<new Date(res[i-1].createdAt); i--){
+			var tmpFile = res[i];
+			res[i] = res[i-1];
+			res[i-1] = tmpFile;
+		}
+	}
+
 	if(receivedNumOfMarkers !== numOfMarkers){
 		$("#searchResults").empty()
 		for(marker=0;marker<res.length;marker++){
@@ -226,8 +233,8 @@ function searchBarSetMarkers(res){
 			<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+' &bull; \
 			'+(new Date(res[marker].timestamp)).toString().split(' ', 5)[4]+' &bull; \
 			</span><span class="el-playback-search--result-item-watch" onclick=postCallSearchBarWatchClick('+res[marker].offset+')>Watch</span>\
-			</h6><small class="el-playback-search--result-item-dic"> \
-			<a>'+description+'</a></small></div>')
+			</h6><span class="el-playback-search--result-item-dic"> \
+			<a>'+description+'</a></span></div>')
 		}
 		numOfMarkers = res.length
 	}
@@ -239,6 +246,14 @@ function postCallSearchBarWatchClick(offset){
 	$(".icon-playback-play").addClass("hide")
 	$(".icon-playback-pause").removeClass('hide')
 	$(".el-playback-search--result").addClass("hide")
+}
+
+function postCallSearchBarClose(event){
+	if($(event.target).closest('.el-playback-search--result').length) {
+		if($('.el-playback-search--result').is(":visible")) {
+			$('.el-playback-search--result').addClass("hide")
+		}
+	}
 }
 
 function renderMarkerList(res){

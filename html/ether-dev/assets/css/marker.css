@@ -13,23 +13,17 @@
     position: relative;
   } 
 }
-.el-marker--item-icon  {
-  color: #fff;
-  width: 40px;
-  height: 40px;
-  line-height: 41px;
-  border-radius: 36px;
-  border: 2px #fff solid;
-  display: inline-block;
-  font-size: 28px;
-  padding-left: 1.1px;
-  padding-top: 0.9px;
-  &:hover, &:focus {
-    border: 2px #cf641c solid;
-    color: #cf641c;
-  }
+.el-marker--item-icon {
+    color: #fff;
+    width: 44px;
+    padding-left: 2px;
+    height: 44px;
+    line-height: 46px;
+    border-radius: 36px;
+    border: 2px #fff solid;
+    display: inline-block;
+    font-size: 28px;
 }
-
 .alertIcon{
   padding-left: 2%;
   padding-top: 0%;
