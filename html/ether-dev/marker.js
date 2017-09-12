@@ -2,6 +2,7 @@ setInterval(updateMarkerList, markerPollingInterval*1000)
 
 var clickedMarkerId
 var numOfMarkers = 0;
+var cachedSuggestedMarkers = [];
 
 var markerTypeClassMappinng = {
 		"topic": "icon-crown",
@@ -191,7 +192,7 @@ function setPostCallPendingMarkerOnProgressBar(offset, type){
 }
 
 function renderMarker(leftOffsetPerc, marker){
-	$("#progress-bar").append('<div id="'+marker.id+'"class="bar-step '+ ( marker.isSuggested ? "el-marker-suggested" : "" )+' " style="left: '+(leftOffsetPerc-1)+'%"><div data-toggle="modal" data-target="#marker-info-modal" class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
+	$("#progress-bar").append('<div id="'+marker.id+'"class="bar-step" style="left: '+(leftOffsetPerc-1)+'%"><div data-toggle="modal" data-target="#marker-info-modal" class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
 	$("#"+marker.id).data("info", marker)
 }
 
@@ -244,7 +245,8 @@ function searchBarSetMarkers(res){
 			'+(new Date(res[marker].timestamp)).toString().split(' ', 5)[4]+' &bull; \
 			</span><span class="el-playback-search--result-item-watch" onclick=postCallSearchBarWatchClick('+res[marker].offset+')>Watch</span>\
 			</h6><span class="el-playback-search--result-item-dic"> \
-			<a>'+description+'</a></span></div>')
+			<a>'+description+'</a></span>\
+			<hr class="markerLine"></div>')
 		}
 		numOfMarkers = res.length
 	}
@@ -266,12 +268,29 @@ function postCallSearchBarClose(event){
 	}
 }
 
+function highlightSuggested(marker){
+	$(".el-marker--item-icon."+markerTypeClassMappinng[marker.type]).addClass('el-marker-highlight')
+	setTimeout(function(){ $(".el-marker--item-icon."+markerTypeClassMappinng[marker.type]).removeClass('el-marker-highlight') }, 5000);
+
+}
+
+
 function renderMarkerList(res){
 	$('.bar-step:not(.el-marker-pending)').remove()
+	newSuggestedMarkers = []
 	markerRenderMethod = currentMeetingInfo.status === "recording-available" ? setPostCallMarkersOnProgressBar : setMarkerOnProgressBar
 	if (res != null) {
 		res.forEach(function(summary, index){
-			markerRenderMethod(summary)
+			if (summary.isSuggested && cachedSuggestedMarkers.indexOf(summary.id) == -1 && currentMeetingInfo.status == 'started' && (new Date(summary.createdAt) - currentUserJoinTime) > 0 ){
+				cachedSuggestedMarkers.push(summary.id)
+				newSuggestedMarkers.push(summary)
+			}
+			if (!summary.isSuggested) {
+				markerRenderMethod(summary)
+			}
 		})
 	}
+	newSuggestedMarkers.forEach(function(marker, index) {
+		highlightSuggested(marker)
+	})
 }
