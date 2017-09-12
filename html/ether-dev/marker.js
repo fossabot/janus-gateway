@@ -81,7 +81,6 @@ $('#marker-modal').on('shown.bs.modal', function(e) {
 
 $('#marker-modal').on('hidden.bs.modal', function(e) {
 	$('#progress-bar .el-marker-pending').remove()
-	$("#marker-form").trigger('reset')
 });
 
 $('#marker-info-modal').on('hidden.bs.modal', function(e) {
@@ -104,6 +103,10 @@ $("#marker-description").on('focus keyup', function() {
 			}
 });
 
+function clearMarkerForm(){
+	$("#marker-form").trigger('reset')
+}
+
 function mark(){
 	description = $("#marker-description").val()
 	type = $('#marker-modal').data().type
@@ -115,6 +118,7 @@ function mark(){
 		timestamp = $("#marker-modal").data().markerTimestamp
 		createMarker(description, timestamp, type)
 	}
+	$("#marker-form").trigger('reset')
 }
 
 function createPostCallMarker(description, offset, type){
