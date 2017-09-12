@@ -79,6 +79,7 @@ var currentMeetingInfo = null;
 var maxProgressPerc = 95;
 var recordingDuration = 0;
 var videoOffset = 0;
+var currentUserJoinTime = 0;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -240,6 +241,7 @@ function populateMeetingFields(currentMeetingInfo){
 			window.location.replace(window.location.origin)
 		});
 	} else {
+		currentUserJoinTime = Date.now()
 		initProgressbar(currentCallTime)
 		refreshTime(true)
 		setInterval(progressTheBar, progressbarRefreshInterval*1000)
