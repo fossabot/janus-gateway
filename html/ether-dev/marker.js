@@ -283,7 +283,7 @@ function renderMarkerList(res){
 	markerRenderMethod = currentMeetingInfo.status === "recording-available" ? setPostCallMarkersOnProgressBar : setMarkerOnProgressBar
 	if (res != null) {
 		res.forEach(function(summary, index){
-			if (summary.isSuggested && cachedSuggestedMarkers.indexOf(summary.id) == -1 && (currentMeetingInfo.status != 'ended' || currentMeetingInfo.status != 'recording-available') && (new Date(summary.createdAt) - currentUserJoinTime) > 0 ){
+			if (summary.isSuggested && cachedSuggestedMarkers.indexOf(summary.id) == -1 && (currentMeetingInfo.status != 'ended' && currentMeetingInfo.status != 'recording-available') && (new Date(summary.createdAt) - currentUserJoinTime) > 0 ){
 				cachedSuggestedMarkers.push(summary.id)
 				newSuggestedMarkers.push(summary)
 			}
