@@ -2,7 +2,7 @@ var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition
 var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList
 var SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent
 
-var markers = [ 'action' , 'action item', 'agenda' , 'follow up', 'decision', 'decide', 'priority', 'personal',  'Stride', 'Hipchat', 'Jira', 'Confluence', 'Atlassian', 'Slack', 'database','microservice','golang','gokit','Kinesis','Amazon','Microsoft','Video','Audio','Collaboration','Communication','Deep learning','Neural networks','recurrent','reinforcement','Cullen','Sai','Sri','Steve','chat','marker','boomerang','Austin','Bangalore', 'Call part', 'annotation', 'persistence', 'conversation', 'synchronous', 'asynchronous'];
+var markers = [ 'action' , 'action item', 'agenda' , 'follow up', 'decision', 'decide', 'priority', 'personal',  'Stride', 'Hipchat', 'Jira', 'Confluence', 'Atlassian', 'Slack', 'database','microservice','golang','gokit','Kinesis','Amazon','Microsoft','Video','Audio','Collaboration','Communication','Deep learning','Neural networks','recurrent','reinforcement','Cullen','Sai','Sri','Steve','chat','marker','boomerang','Austin','Bangalore', 'Call part', 'annotation', 'persistence', 'conversation', 'synchronous', 'asynchronous', 'zoom', 'jitsi'];
 var grammar = '#JSGF V1.0; grammar colors; public <color> = ' + markers.join(' | ') + ' ;'
 
 var startutc = "";
