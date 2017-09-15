@@ -2,6 +2,7 @@ setInterval(updateMarkerList, markerPollingInterval*1000)
 
 var clickedMarkerId
 var numOfMarkers = 0;
+var cachedSuggestedMarkers = [];
 
 var markerTypeClassMappinng = {
 		"topic": "icon-crown",
@@ -25,7 +26,13 @@ $('#marker-info-modal').on('shown.bs.modal', function(e) {
 });
 
 function decorateDescription(description) {
-	description = description.replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g, function(ref) { return '<a target="_blank" href="'+ref+'"><span class="link">'+ref+'</span></a>'})
+	description = description.replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g, function(ref) {
+		refName = ref
+		 if (ref.indexOf("etherlabs.atlassian.net") != -1){
+	        refName = ref.split("/").splice(-1)[0]
+        }
+		return '<a target="_blank" href="'+ref+'"><span class="link">'+refName+'</span></a>'
+	})
 	return description.replace(/@\w+/g, function decorate(ref) { return '<span style="font-weight: bold;">'+ref+'</span>' }).replace(/\n/g, "<br />")
 }
 
@@ -75,7 +82,6 @@ $('#marker-modal').on('shown.bs.modal', function(e) {
 
 $('#marker-modal').on('hidden.bs.modal', function(e) {
 	$('#progress-bar .el-marker-pending').remove()
-	$("#marker-form").trigger('reset')
 });
 
 $('#marker-info-modal').on('hidden.bs.modal', function(e) {
@@ -98,6 +104,10 @@ $("#marker-description").on('focus keyup', function() {
 			}
 });
 
+function clearMarkerForm(){
+	$("#marker-form").trigger('reset')
+}
+
 function mark(){
 	description = $("#marker-description").val()
 	type = $('#marker-modal').data().type
@@ -109,6 +119,7 @@ function mark(){
 		timestamp = $("#marker-modal").data().markerTimestamp
 		createMarker(description, timestamp, type)
 	}
+	$("#marker-form").trigger('reset')
 }
 
 function createPostCallMarker(description, offset, type){
@@ -154,7 +165,6 @@ function createMarker(description, timestamp, type){
 
 function setPostCallMarkersOnProgressBar(marker){
 	leftOffsetPerc = (marker.offset/recordingDuration)*100
-	console.log(leftOffsetPerc)
 	if(leftOffsetPerc < 0){
 		leftOffsetPerc = 0;
 	}
@@ -216,27 +226,73 @@ function updateMarkerList(){
 
 function searchBarSetMarkers(res){
 	receivedNumOfMarkers = res.length
+	for(var k=1; k < res.length; k++){
+		for(var i=k; i > 0 && new Date(res[i].createdAt)<new Date(res[i-1].createdAt); i--){
+			var tmpFile = res[i];
+			res[i] = res[i-1];
+			res[i-1] = tmpFile;
+		}
+	}
+
 	if(receivedNumOfMarkers !== numOfMarkers){
 		$("#searchResults").empty()
 		for(marker=0;marker<res.length;marker++){
-			description = decorateDescription(res[marker].description)
-			$("#searchResults").append('<div class="el-playback-search--result-item">\
-			<i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'">\
-			</i><span class="el-playback-search--result-item-title">\
-			<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+'</span>\
-			</h6><small class="el-playback-search--result-item-dic"> \
-			<a>'+description+'</a></small></div>')
+			if (!res[marker].isSuggested) {
+				description = decorateDescription(res[marker].description)
+				$("#searchResults").append('<div class="el-playback-search--result-item">\
+				<i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'">\
+				</i><span class="el-playback-search--result-item-title">\
+				<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+' &bull; \
+				'+(new Date(res[marker].timestamp)).toString().split(' ', 5)[4]+' &bull; \
+				</span><span class="el-playback-search--result-item-watch" onclick=postCallSearchBarWatchClick('+res[marker].offset+')>Watch</span>\
+				</h6><span class="el-playback-search--result-item-dic"> \
+				<a>'+description+'</a></span>\
+				<hr class="markerLine"></div>')
+			}
 		}
 		numOfMarkers = res.length
 	}
 }
 
+function postCallSearchBarWatchClick(offset){
+	$('#recordingVideo')[0].currentTime = offset
+	$('#recordingVideo')[0].play()
+	$(".icon-playback-play").addClass("hide")
+	$(".icon-playback-pause").removeClass('hide')
+	$(".el-playback-search--result").addClass("hide")
+}
+
+function postCallSearchBarClose(event){
+	if($(event.target).closest('.el-playback-search--result').length) {
+		if($('.el-playback-search--result').is(":visible")) {
+			$('.el-playback-search--result').addClass("hide")
+		}
+	}
+}
+
+function highlightSuggested(marker){
+	$(".el-marker--item-icon."+markerTypeClassMappinng[marker.type]).addClass('el-marker-highlight')
+	setTimeout(function(){ $(".el-marker--item-icon."+markerTypeClassMappinng[marker.type]).removeClass('el-marker-highlight') }, 5000);
+
+}
+
+
 function renderMarkerList(res){
 	$('.bar-step:not(.el-marker-pending)').remove()
+	newSuggestedMarkers = []
 	markerRenderMethod = currentMeetingInfo.status === "recording-available" ? setPostCallMarkersOnProgressBar : setMarkerOnProgressBar
 	if (res != null) {
 		res.forEach(function(summary, index){
-			markerRenderMethod(summary)
+			if (summary.isSuggested && cachedSuggestedMarkers.indexOf(summary.id) == -1 && (currentMeetingInfo.status != 'ended' && currentMeetingInfo.status != 'recording-available') && (new Date(summary.createdAt) - currentUserJoinTime) > 0 ){
+				cachedSuggestedMarkers.push(summary.id)
+				newSuggestedMarkers.push(summary)
+			}
+			if (!summary.isSuggested) {
+				markerRenderMethod(summary)
+			}
 		})
 	}
+	newSuggestedMarkers.forEach(function(marker, index) {
+		highlightSuggested(marker)
+	})
 }

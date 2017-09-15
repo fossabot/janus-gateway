@@ -74,11 +74,12 @@ var progressbarMaxVal = 720;
 var maxCallTime = 30;
 var progressbarRefreshInterval = 1;//sec
 var timeLapsedRefreshInterval = 1;//sec
-var markerPollingInterval = 10;//sec
+var markerPollingInterval = 5;//sec
 var currentMeetingInfo = null;
 var maxProgressPerc = 95;
 var recordingDuration = 0;
 var videoOffset = 0;
+var currentUserJoinTime = 0;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -110,16 +111,19 @@ $(document).ready(function() {
 	});
 
 	$("#inlineFormInputGroup").on({
-		focus:function(){
+		focus:function(event){
+			event.stopPropagation();
 			$(".el-playback-search--result").removeClass("hide")
 		},
-		click:function(){
-			$(".el-playback-search--result").removeClass("hide")
-		},
-		focusout:function(){
-			$(".el-playback-search--result").addClass("hide")
-		}
 	})
+
+	$(document).click(function(event) {
+		if(!$(event.target).closest('.el-playback-search--result').length && !$(event.target).closest('#inlineFormInputGroup').length ) {
+			if($('.el-playback-search--result').is(":visible")) {
+				$('.el-playback-search--result').addClass("hide")
+			}
+		}
+	});
 });
 
 function getCurrentMeetingInfo(){
@@ -237,6 +241,7 @@ function populateMeetingFields(currentMeetingInfo){
 			window.location.replace(window.location.origin)
 		});
 	} else {
+		currentUserJoinTime = Date.now()
 		initProgressbar(currentCallTime)
 		refreshTime(true)
 		setInterval(progressTheBar, progressbarRefreshInterval*1000)
@@ -276,7 +281,7 @@ function postCallProgressBarRefreshTime(init = false){
 	if (!init){
 		postCallVideoTime = recording.currentTime
 		hr = Math.floor(postCallVideoTime/3600)
-		min = Math.floor(postCallVideoTime/60)
+		min = Math.floor((postCallVideoTime/60)%60)
 		sec = Math.floor(postCallVideoTime%60)
 		$('.el-progress .progress-bar--time').html(formattedTime(hr, min, sec))
 	}

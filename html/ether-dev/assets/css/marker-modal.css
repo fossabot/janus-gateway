@@ -143,7 +143,9 @@
 }
 .nav-item .icon-watch:before {
     content: "\77";
+    padding-left: 2.5px;
 }
 .nav-item .icon-listen:before {
     content: "\78";
+    padding-left: 2.5px;
 }
