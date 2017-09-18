@@ -225,32 +225,34 @@ function updateMarkerList(){
 }
 
 function searchBarSetMarkers(res){
-	receivedNumOfMarkers = res.length
-	for(var k=1; k < res.length; k++){
-		for(var i=k; i > 0 && new Date(res[i].createdAt)<new Date(res[i-1].createdAt); i--){
-			var tmpFile = res[i];
-			res[i] = res[i-1];
-			res[i-1] = tmpFile;
-		}
-	}
-
-	if(receivedNumOfMarkers !== numOfMarkers){
-		$("#searchResults").empty()
-		for(marker=0;marker<res.length;marker++){
-			if (!res[marker].isSuggested) {
-				description = decorateDescription(res[marker].description)
-				$("#searchResults").append('<div class="el-playback-search--result-item">\
-				<i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'">\
-				</i><span class="el-playback-search--result-item-title">\
-				<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+' &bull; \
-				'+(new Date(res[marker].timestamp)).toString().split(' ', 5)[4]+' &bull; \
-				</span><span class="el-playback-search--result-item-watch" onclick=postCallSearchBarWatchClick('+res[marker].offset+')>Watch</span>\
-				</h6><span class="el-playback-search--result-item-dic"> \
-				<a>'+description+'</a></span>\
-				<hr class="markerLine"></div>')
+	if (currentMeetingInfo.status === "recording-available" && res !=null){
+		receivedNumOfMarkers = res.length
+		for(var k=1; k < res.length; k++){
+			for(var i=k; i > 0 && new Date(res[i].createdAt)<new Date(res[i-1].createdAt); i--){
+				var tmpFile = res[i];
+				res[i] = res[i-1];
+				res[i-1] = tmpFile;
 			}
 		}
-		numOfMarkers = res.length
+
+		if(receivedNumOfMarkers !== numOfMarkers){
+			$("#searchResults").empty()
+			for(marker=0;marker<res.length;marker++){
+				if (!res[marker].isSuggested) {
+					description = decorateDescription(res[marker].description)
+					$("#searchResults").append('<div class="el-playback-search--result-item">\
+					<i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'">\
+					</i><span class="el-playback-search--result-item-title">\
+					<h6 class="h6"><span class="divider-dot">'+res[marker].type.toUpperCase()+' &bull; '+res[marker].user.name+' &bull; \
+					'+(new Date(res[marker].timestamp)).toString().split(' ', 5)[4]+' &bull; \
+					</span><span class="el-playback-search--result-item-watch" onclick=postCallSearchBarWatchClick('+res[marker].offset+')>Watch</span>\
+					</h6><span class="el-playback-search--result-item-dic"> \
+					<a>'+description+'</a></span>\
+					<hr class="markerLine"></div>')
+				}
+			}
+			numOfMarkers = res.length
+		}
 	}
 }
 
