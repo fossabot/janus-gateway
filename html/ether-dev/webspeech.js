@@ -14,6 +14,8 @@ speechRecognitionList.addFromString(grammar, 1);
 recognition.grammars = speechRecognitionList;
 recognition.lang = 'en-US';
 recognition.maxAlternatives = 1;
+recognition.continuous = true;
+recognition.interimResults = false;
 
 function startRecognition() {
   recognition.start();
