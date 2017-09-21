@@ -16,7 +16,6 @@ RUN  make -f MakefileDeployment install-dep
 
 ## Keep the commands which don't change above this, will save time in container build
 ## Accessing the variables at later stage will avoid redoing constant steps defined above
-ARG  CERT_PATH
 ARG  RECORDING_PATH
 ARG  ETHERMEET_HOME
 ARG  ACTIVE_ENV
@@ -31,7 +30,7 @@ ADD . $JANUS_HOME/
 RUN  make -f MakefileDeployment install-ether ETHERMEET_HOME=$ETHERMEET_HOME JANUS_HOME=$JANUS_HOME 
 
 ## Configure Janus and dependencies
-RUN  make -f MakefileDeployment config ACTIVE_ENV=$ACTIVE_ENV JANUS_HOME=$JANUS_HOME CERT_PATH=$CERT_PATH RECORDING_PATH=$RECORDING_PATH 
+RUN  make -f MakefileDeployment config ACTIVE_ENV=$ACTIVE_ENV JANUS_HOME=$JANUS_HOME RECORDING_PATH=$RECORDING_PATH 
 
 CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 
