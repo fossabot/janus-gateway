@@ -583,15 +583,37 @@ function getFromQueryParams(searchKey) {
 
 function parseQueryParams(){
 	meetingId = getFromQueryParams("meetingId")
+	etherAuth = getFromQueryParams("auth")
+	if (etherAuth != null) {
+		populateEtherAuthFields(etherAuth)
+	}
 	userId = getFromQueryParams("userId")
-	userId == null ? userId = getFromCookie("etherUserId") : setCookie("etherUserId", userId, 180)
+	userId == null ? userId = getFromCookie("eth_slk_uid") : setCookie("eth_slk_uid", userId, 180)
+	if (userId == "") {
+		refUrl = window.location.href
+		refUrl = window.encodeURIComponent(refUrl)
+		window.location = "https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id=154090774151.242075835267&state="+refUrl
+	}
+
 	myusername = getFromQueryParams("userName")
-	myusername == null ? myusername = getFromCookie("etherUserName") : setCookie("etherUserName", myusername, 180)
+	myusername == null ? myusername = getFromCookie("eth_slk_uname") : setCookie("eth_slk_uname", myusername, 180)
+	myemail = getFromQueryParams("userEmail")
+	myemail == null ? myemail = getFromCookie("eth_slk_uemail") : setCookie("eth_slk_uemail", myusername, 180)
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
 	videoOffset = getFromQueryParams("offset")
+
 	$('#meetingLink').html(window.location.href)
 	history.pushState("changing url after param extraction", "url", window.location.origin)
+}
+
+function populateEtherAuthFields(etherAuthToken){
+	etherAuthToken = window.atob(etherAuth)
+	tokens = etherAuthToken.split(';')
+	tokens.forEach(function(token, index) {
+		values = token.split('=')
+		setCookie(values[0],values[1],180)
+	})
 }
 
 function copyToClipboard(element) {
