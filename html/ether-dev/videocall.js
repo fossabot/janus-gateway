@@ -133,7 +133,7 @@ function getCurrentMeetingInfo(){
 			url: "https://"+etherHost+"/v1/meetings/"+meetingId,
 			crossDomain: true,
 			success: function(res){
-				currentMeetingInfo = res
+				currentMeetingInfo = res.meeting
 				console.log(currentMeetingInfo)
 				recordingId = currentMeetingInfo.recordingId
 				populateMeetingFields(currentMeetingInfo)
@@ -158,8 +158,8 @@ function setVideoDetails(meeting){
 			url: "https://"+etherHost+"/v1/recordings/"+meeting.recordingId,
 			crossDomain: true,
 			success: function(results){
-				$('#recordingVideo').attr("src",results.url)
-				recordingDuration = results.duration
+				$('#recordingVideo').attr("src",results.recording.url)
+				recordingDuration = results.recording.duration
 				if(videoOffset !== null){
 					$('#recordingVideo')[0].currentTime = videoOffset
 				}else{

@@ -216,8 +216,8 @@ function updateMarkerList(){
 	  url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/markers",
 	  crossDomain: true,
 	  success: function(res){
-		renderMarkerList(res)
-		searchBarSetMarkers(res)
+		renderMarkerList(res.markers)
+		searchBarSetMarkers(res.marker)
 		},
 	  error: function(xhr, res, status){
 	  }
