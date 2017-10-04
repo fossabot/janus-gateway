@@ -136,8 +136,8 @@ function createPostCallMarker(description, offset, type){
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
-		res.user.name = myusername
-		setPostCallMarkersOnProgressBar(res)
+		res.marker.user.name = myusername
+		setPostCallMarkersOnProgressBar(res.marker)
 	  }
 	});
 }
@@ -156,8 +156,8 @@ function createMarker(description, timestamp, type){
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
-		res.user.name = myusername
-		setMarkerOnProgressBar(res)
+		res.marker.user.name = myusername
+		setMarkerOnProgressBar(res.marker)
 	  }
 	});
 }
