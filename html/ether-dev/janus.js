@@ -1589,6 +1589,8 @@ function Janus(gatewayCallbacks) {
 								var error = new Error('NavigatorUserMediaError');
 								error.name = 'You cancelled the request for permission, giving up...';
 								pluginHandle.consentDialog(false);
+								janus_one.destroy();
+								$('#screenShare').removeClass("icon-active")
 								callbacks.error(error);
 							} else {
 								constraints = {

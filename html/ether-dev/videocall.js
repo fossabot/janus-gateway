@@ -46,7 +46,7 @@ var server = null;
 if(window.location.protocol === 'http:')
 	server = "http://" + window.location.host+ "/janus-meet/janus";
 else
-	server = "https://" + window.location.host + "/janus-meet/janus";
+	server = "https://" + window.location.host+ "/janus-meet/janus";
 var etherHost = window.location.host == "etherbridge.etherlabs.io" ? "ethermain.etherlabs.io:8080" : "hive.etherlabs.io:8080"
 
 var janus = null;
