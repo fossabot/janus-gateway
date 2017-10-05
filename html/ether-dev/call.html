@@ -42,7 +42,7 @@
     <script src="assets/js/tooltip-viewport.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="assets/js/ie10-viewport-bug-workaround.js"></script>
-
+    <script type="text/javascript" src="screensharing.js"></script>
   </head>
 
 
@@ -262,7 +262,7 @@
       <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="">  </button>
       <button class="btn el-chat-controller--item el-chat-controller--mute icon-microphone tooltip-bottom" id="mic" title="">  </button>
       <!-- <button class="btn el-chat-controller--item icon-microphone-slash tooltip-bottom" title="Turn on ">  </button> -->
-      <button class="btn el-chat-controller--item icon-computer-imac tooltip-bottom" title="">  </button> <!--el-chat-controller--turn-on -->
+      <button class="btn el-chat-controller--item icon-computer-imac tooltip-bottom" id="screenShare" title="">  </button> <!--el-chat-controller--turn-on -->
       <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="">  </button>
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title=""></button>
       <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" id="hangup" title=""></button>
@@ -316,6 +316,36 @@
       </form>
   </div>
 </div><!-- el-participants -->
+
+
+<div class="container">
+	<div class="row">
+		<div class="col-md-12">
+
+      <div class="container hide" id="screenmenu">
+				<div class="row">
+					<div class="input-group margin-bottom-md hide" id="createnow">
+						<span class="input-group-addon"><i class="fa fa-users fa-1"></i></span>
+						<input class="form-control" type="text" placeholder="Insert a title for the session" autocomplete="off" id="desc" onkeypress="return checkEnterShare(this, event);"></input>
+						<span class="input-group-btn">
+							<button class="btn btn-success" autocomplete="off" id="create">Share your screen</button>
+						</span>
+					</div>
+				</div>
+			<div class="container hide" id="room">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title">Screen Capture <span class="label label-info" id="title"></span> <span class="label label-success" id="session"></span></h3>
+							</div>
+							<div class="panel-body" id="screencapture"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
 
   </body>
