@@ -47,7 +47,7 @@ if(window.location.protocol === 'http:')
 	server = "http://" + window.location.host+ "/janus-meet/janus";
 else
 	server = "https://" + window.location.host+ "/janus-meet/janus";
-	
+
 var etherHost = window.location.host == "etherbridge.etherlabs.io" ? "ethermain.etherlabs.io:8080" : "hive.etherlabs.io:8080"
 
 var janus_one = null;
@@ -122,6 +122,8 @@ $(document).ready(function() {
 											// $(this).attr('disabled', true);
 											screentest.webrtcStuff.myStream.getTracks().forEach(track => track.stop())
 											janus_one.destroy();
+											$("#postCallVideo").parent().removeClass("hide")
+											$(".el-participants-wrap").removeClass("screen-wrap")										
 											$('#screenShare').removeClass("icon-active")
 										});
 								},
@@ -151,6 +153,8 @@ $(document).ready(function() {
 									$("#screencapture").parent().unblock();
 									screentest.webrtcStuff.myStream.getVideoTracks()[0].onended = function () {
 										janus_one.destroy()
+										$(".el-participants-wrap").removeClass("screen-wrap")
+										$("#postCallVideo").parent().removeClass("hide")
 										$('#screenShare').removeClass("icon-active")
 									}
 									// bootbox.alert("Your screen sharing session just started: pass the <b>" + room + "</b> session identifier to those who want to attend.");
@@ -366,7 +370,7 @@ function shareScreen() {
 			// Our own screen sharing session has been created, join it
 			room = myroom
 			Janus.log("Screen sharing session created: " + myroom);
-			myusername_ss = randomString(12);
+			myusername_ss = myusername+"'s Screen";
 			var register = { "request": "join", "room": myroom, "ptype": "publisher", "display": myusername_ss };
 			screentest.send({"message": register});
 		}

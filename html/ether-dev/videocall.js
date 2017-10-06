@@ -47,6 +47,7 @@ if(window.location.protocol === 'http:')
 	server = "http://" + window.location.host+ "/janus-meet/janus";
 else
 	server = "https://" + window.location.host+ "/janus-meet/janus";
+
 var etherHost = window.location.host == "etherbridge.etherlabs.io" ? "ethermain.etherlabs.io:8080" : "hive.etherlabs.io:8080"
 
 var janus = null;
@@ -309,7 +310,15 @@ function onParticipantJoined(){
 }
 
 function participantsCountChanged(currentNumberofParticipants){
+
 	$(".container .el-participants").attr("class","").addClass("el-attendees-"+currentNumberofParticipants).addClass("container el-participants")
+	
+	if($("div:contains('s Screen')").length>0)
+	{
+		$(".container .el-participants").attr("class","").addClass("screen").addClass("container el-participants")
+		$(".el-participants-wrap").addClass("screen-wrap")
+		$("#postCallVideo").parent().addClass("hide")
+	}
 	switch (currentNumberofParticipants){
 		case 0:
 			$('#videolocal_side').addClass('hide')
@@ -864,7 +873,12 @@ function newRemoteFeed(id, display) {
 						remoteFeed.rfid = msg["id"];
 						remoteFeed.rfdisplay = msg["display"];
 						if(remoteFeed.spinner === undefined || remoteFeed.spinner === null) {
-							$('#videos .el-participants-wrap').append(getVideoHtml(remoteFeed.rfindex))
+							if(remoteFeed.rfdisplay.includes("Screen")){
+								$('.el-participants-wrap-screen').append(getVideoHtml(remoteFeed.rfindex))
+							}
+								else{
+								$('#videos .el-participants-wrap').append(getVideoHtml(remoteFeed.rfindex))
+							}
 							var target = document.getElementById('videoremote'+remoteFeed.rfindex);
 							remoteFeed.spinner = new Spinner({top:100}).spin(target);
 						} else {
@@ -872,6 +886,7 @@ function newRemoteFeed(id, display) {
 						}
 						Janus.log("Successfully attached to feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") in room " + msg["room"]);
 						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-screen-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
 						onParticipantJoined()
 					} else if(msg["error"] !== undefined && msg["error"] !== null) {
 						bootbox.alert(msg["error"]);
@@ -938,7 +953,12 @@ function newRemoteFeed(id, display) {
 						}, 2000);
 					}
 				});
-				Janus.attachMediaStream($('#remotevideo'+remoteFeed.rfindex).get(0), stream);
+				if(remoteFeed.rfdisplay.includes("Screen")){
+					Janus.attachMediaStream($('#remotevideo'+remoteFeed.rfindex).get(-1), stream);
+				}
+				else{
+					Janus.attachMediaStream($('#remotevideo'+remoteFeed.rfindex).get(0), stream);
+				}
 				var videoTracks = stream.getVideoTracks();
 				if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0 || videoTracks[0].muted) {
 					// No remote video
