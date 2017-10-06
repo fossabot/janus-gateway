@@ -80,6 +80,7 @@ var maxProgressPerc = 95;
 var recordingDuration = 0;
 var videoOffset = 0;
 var currentUserJoinTime = 0;
+var isRecorder = false;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -251,7 +252,9 @@ function populateMeetingFields(currentMeetingInfo){
 		$(".marker-info-body").find(".clearfix.icon-watch").parent().removeAttr("onclick")
 		$(".el-chat-controller").removeClass('hide')
 		handleJanusCall();
-		startRecognition();
+		if (!isRecorder) {
+		 startRecognition();
+		}
 	}
 }
 
@@ -561,7 +564,7 @@ function enableHangup(){
 
 
 function sendJoinMessage(){
-	var register = { "request": "join", "room": myroom, "ptype": "publisher", "display": myusername };
+	var register = { "request": "join", "room": myroom, "ptype": "publisher", "display": myusername };	
 	sfutest.send({"message": register});
 	enableHangup()
 }
@@ -582,17 +585,22 @@ function getFromQueryParams(searchKey) {
 }
 
 function parseQueryParams(){
+	isRecorder= (getFromQueryParams("isRecorder") === "true")
 	meetingId = getFromQueryParams("meetingId")
 	etherAuth = getFromQueryParams("auth")
 	if (etherAuth != null) {
 		populateEtherAuthFields(etherAuth)
 	}
-	userId = getFromQueryParams("userId")
-	userId == null ? userId = getFromCookie("eth_slk_uid") : setCookie("eth_slk_uid", userId, 180)
-	if (userId == "") {
-		refUrl = window.location.href
-		refUrl = window.encodeURIComponent(refUrl)
-		window.location = "https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id=154090774151.242075835267&state="+refUrl
+	if (isRecorder) {
+		userId = "f3de61e15b9540c18d4ed56c2325ffb0";
+	} else {
+		userId = getFromQueryParams("userId")
+		userId == null ? userId = getFromCookie("eth_slk_uid") : setCookie("eth_slk_uid", userId, 180)
+		if (userId == "") {
+			refUrl = window.location.href
+			refUrl = window.encodeURIComponent(refUrl)
+			window.location = "https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id=154090774151.242075835267&state="+refUrl
+		}
 	}
 
 	myusername = getFromQueryParams("userName")
@@ -602,7 +610,7 @@ function parseQueryParams(){
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
 	videoOffset = getFromQueryParams("offset")
-
+	
 	$('#meetingLink').html(window.location.href)
 	history.pushState("changing url after param extraction", "url", window.location.origin)
 }
@@ -696,6 +704,10 @@ function updateMeetingAttendees(meetingId, userId){
 
 function publishOwnFeed(useAudio) {
 	// Publish our stream
+	if (isRecorder) {
+		return;
+	}
+
 	$('#publish').attr('disabled', true).unbind('click');
 	sfutest.createOffer(
 		{
