@@ -139,3 +139,29 @@
 .el-attendees-10 .el-participants--item {
   flex-basis: 20%
 }
+.screen{
+  width:30%;
+}
+.screen-wrap{
+  width: 100%;
+  flex-wrap: unset;
+}
+.el-participants-screen {
+  margin-left: 14%;
+  width: 72%;
+  max-width: 90%;
+}
+.el-participants--item-screen {
+  position: relative;
+  border-color: transparent;
+  padding: 15px;
+  flex-basis: 80%;
+}
+.el-participants--item-video-screen,
+.el-participants--item-video-screen img,
+.el-participants--item-video-screen video {
+  width: 150%;
+}
+.el-participants--item-screen-active {
+  width:150%;
+}
