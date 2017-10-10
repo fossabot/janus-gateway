@@ -132,7 +132,7 @@ function createPostCallMarker(description, offset, type){
 	}
 	$.ajax({
 	  type: "POST",
-	  url: "https://"+etherHost+"/v1/markers/",
+	  url: "https://"+etherHost+"/v1/markers",
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
@@ -152,7 +152,7 @@ function createMarker(description, timestamp, type){
 	}
 	$.ajax({
 	  type: "POST",
-	  url: "https://"+etherHost+"/v1/markers/",
+	  url: "https://"+etherHost+"/v1/markers",
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
@@ -214,7 +214,7 @@ function updateMarkerList(){
 	if (recordingId != null) {
 		$.ajax({
 		  type: "GET",
-		  url: "https://"+etherHost+"/v1/markers/?recordingId="+recordingId,
+		  url: "https://"+etherHost+"/v1/markers?recordingId="+recordingId,
 		  crossDomain: true,
 		  success: function(res){
 			renderMarkerList(res.markers)
