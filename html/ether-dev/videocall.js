@@ -82,6 +82,7 @@ var recordingDuration = 0;
 var videoOffset = 0;
 var currentUserJoinTime = 0;
 var isRecorder = false;
+var markerId = null;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -597,6 +598,13 @@ function parseQueryParams(){
 	isRecorder= (getFromQueryParams("isRecorder") === "true")
 	meetingId = getFromQueryParams("meetingId")
 	etherAuth = getFromQueryParams("auth")
+	markerId = getFromQueryParams("markerId")
+	videoOffset = getFromQueryParams("offset")
+
+	if (markerId != null ) {
+		loadMarkerOffset(markerId)
+	}
+
 	if (etherAuth != null) {
 		populateEtherAuthFields(etherAuth)
 	}
@@ -618,8 +626,6 @@ function parseQueryParams(){
 	myemail == null ? myemail = getFromCookie("eth_slk_uemail") : setCookie("eth_slk_uemail", myusername, 180)
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
-	videoOffset = getFromQueryParams("offset")
-	
 	$('#meetingLink').html(window.location.href)
 	history.pushState("changing url after param extraction", "url", window.location.origin)
 }

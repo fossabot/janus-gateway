@@ -124,7 +124,7 @@ function mark(){
 
 function createPostCallMarker(description, offset, type){
 	data = {
-		"meetingId": meetingId,
+		"recordingId": recordingId,
 		"description": description,
 		"createdBy": userId,
 		"offset": offset,
@@ -132,7 +132,7 @@ function createPostCallMarker(description, offset, type){
 	}
 	$.ajax({
 	  type: "POST",
-	  url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/markers",
+	  url: "https://"+etherHost+"/v1/markers/",
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
@@ -144,7 +144,7 @@ function createPostCallMarker(description, offset, type){
 
 function createMarker(description, timestamp, type){
 	data = {
-		"meetingId": meetingId,
+		"recordingId": recordingId,
 		"description": description,
 		"createdBy": userId,
 		"timestamp": timestamp.toISOString(),
@@ -152,7 +152,7 @@ function createMarker(description, timestamp, type){
 	}
 	$.ajax({
 	  type: "POST",
-	  url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/markers",
+	  url: "https://"+etherHost+"/v1/markers/",
 	  data: JSON.stringify(data),
 	  crossDomain: true,
 	  success: function(res) {
@@ -211,17 +211,19 @@ function calcMarkerOffsetMins(timestamp){
 }
 
 function updateMarkerList(){
-	$.ajax({
-	  type: "GET",
-	  url: "https://"+etherHost+"/v1/meetings/"+meetingId+"/markers",
-	  crossDomain: true,
-	  success: function(res){
-		renderMarkerList(res.markers)
-		searchBarSetMarkers(res.marker)
-		},
-	  error: function(xhr, res, status){
-	  }
-	});
+	if (recordingId != null) {
+		$.ajax({
+		  type: "GET",
+		  url: "https://"+etherHost+"/v1/markers/?recordingId="+recordingId,
+		  crossDomain: true,
+		  success: function(res){
+			renderMarkerList(res.markers)
+			searchBarSetMarkers(res.markers)
+			},
+		  error: function(xhr, res, status){
+		  }
+		});
+	}
 }
 
 function searchBarSetMarkers(res){
@@ -297,4 +299,17 @@ function renderMarkerList(res){
 	newSuggestedMarkers.forEach(function(marker, index) {
 		highlightSuggested(marker)
 	})
+}
+
+function loadMarkerOffset(markerId){
+	$.ajax({
+	  type: "GET",
+	  url: "https://"+etherHost+"/v1/markers/"+markerId,
+	  crossDomain: true,
+	  success: function(res){
+		videoOffset = res.marker.offset
+	  },
+	  error: function(xhr, res, status){
+	  }
+	});
 }
