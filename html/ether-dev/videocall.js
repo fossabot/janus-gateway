@@ -534,6 +534,8 @@ function handleJanusCall() {
 						oncleanup: function() {
 							Janus.log(" ::: Got a cleanup notification: we are unpublished now :::");
 							mystream = null;
+							// Try to publish again, when it fails
+							publishOwnFeed(true);
 							$('#videolocal').html('<button id="publish" class="btn btn-primary">Publish</button>');
 							$('#publish').click(function() { publishOwnFeed(true); });
 							$("#videos").unblock();
