@@ -49,6 +49,7 @@ else
 	server = "https://" + window.location.host+ "/janus-meet/janus";
 
 var etherHost = window.location.host == "etherbridge.etherlabs.io" ? "ethermain.etherlabs.io:8080" : "hive.etherlabs.io:8080"
+var slackClientId = window.location.host == "etherbridge.etherlabs.io" ? "154090774151.242075835267" : "154090774151.252655196675"
 
 var janus = null;
 var sfutest = null;
@@ -83,6 +84,8 @@ var videoOffset = 0;
 var currentUserJoinTime = 0;
 var isRecorder = false;
 var markerId = null;
+var workspaceId = null;
+var teamId = null;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
@@ -602,6 +605,8 @@ function parseQueryParams(){
 	etherAuth = getFromQueryParams("auth")
 	markerId = getFromQueryParams("markerId")
 	videoOffset = getFromQueryParams("offset")
+	workspaceId = getFromQueryParams("workspaceId")
+	teamId = getFromQueryParams("teamId")
 
 	if (markerId != null ) {
 		loadMarkerOffset(markerId)
@@ -614,18 +619,19 @@ function parseQueryParams(){
 		userId = "f3de61e15b9540c18d4ed56c2325ffb0";
 	} else {
 		userId = getFromQueryParams("userId")
-		userId == null ? userId = getFromCookie("eth_slk_uid") : setCookie("eth_slk_uid", userId, 180)
-		if (userId == "") {
+		userId == null ? userId = getFromCookie("eth_slk_uid") : setCookie("eth_slk_uid", userId, 7)
+		activeWorkspaceId = getFromCookie("eth_slk_wsid")
+		if (activeWorkspaceId == "" || userId == "" || activeWorkspaceId != workspaceId){
 			refUrl = window.location.href
 			refUrl = window.encodeURIComponent(refUrl)
-			window.location = "https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id=154090774151.242075835267&state="+refUrl
+			window.location = "https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id="+slackClientId+"&state="+refUrl+"&team="+teamId
 		}
 	}
 
 	myusername = getFromQueryParams("userName")
-	myusername == null ? myusername = getFromCookie("eth_slk_uname") : setCookie("eth_slk_uname", myusername, 180)
+	myusername == null ? myusername = getFromCookie("eth_slk_uname") : setCookie("eth_slk_uname", myusername, 7)
 	myemail = getFromQueryParams("userEmail")
-	myemail == null ? myemail = getFromCookie("eth_slk_uemail") : setCookie("eth_slk_uemail", myusername, 180)
+	myemail == null ? myemail = getFromCookie("eth_slk_uemail") : setCookie("eth_slk_uemail", myusername, 7)
 	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
 	$('#meetingLink').html(window.location.href)
@@ -637,7 +643,7 @@ function populateEtherAuthFields(etherAuthToken){
 	tokens = etherAuthToken.split(';')
 	tokens.forEach(function(token, index) {
 		values = token.split('=')
-		setCookie(values[0],values[1],180)
+		setCookie(values[0],values[1],7)
 	})
 }
 
