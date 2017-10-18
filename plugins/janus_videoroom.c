@@ -155,6 +155,7 @@ rec_dir = <folder where recordings should be stored, when enabled>
 #define JANUS_VIDEOROOM_NAME			"JANUS VideoRoom plugin"
 #define JANUS_VIDEOROOM_AUTHOR			"Meetecho s.r.l."
 #define JANUS_VIDEOROOM_PACKAGE			"janus.plugin.videoroom"
+#define JANUS_RECEP_NAME				"etherrecorderep"
 
 /* Plugin methods */
 janus_plugin *create(void);
@@ -492,6 +493,7 @@ typedef struct janus_videoroom {
 	// Added for tracking meeting start and endtime
 	gboolean first_joined;
 	gboolean last_left;
+	gboolean is_recep_present;
 } janus_videoroom;
 
 static GHashTable *rooms;
@@ -1001,6 +1003,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			}
 
 			videoroom->destroyed = 0;
+			videoroom->is_recep_present = FALSE;
 			videoroom->first_joined = FALSE;
 			videoroom->last_left = FALSE;
 			janus_mutex_init(&videoroom->participants_mutex);
@@ -1231,6 +1234,11 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 			participant->video_active = FALSE;
 			participant->data_active = FALSE;
 			participant->recording_active = FALSE;
+
+			if(!strcasecmp(participant->display, JANUS_RECEP_NAME)) {
+				participant->room->is_recep_present = FALSE;
+			}
+
 			if(participant->recording_base)
 				g_free(participant->recording_base);
 			participant->recording_base = NULL;
@@ -1242,7 +1250,7 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 		/* Send event to event handler */
 		if(notify_events && gateway->events_is_enabled() && session->participant) {
 			janus_videoroom *videoroom = ((janus_videoroom_participant *)session->participant)->room;
-			if(0 == g_hash_table_size(videoroom->participants) && (!videoroom->last_left)) {
+			if(videoroom->is_recep_present == g_hash_table_size(videoroom->participants) && (!videoroom->last_left)) {
 				json_t *info = json_object();
 				json_object_set_new(info, "event", json_string("last-left"));
 				json_object_set_new(info, "room", json_integer(videoroom->room_id));
@@ -1656,6 +1664,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		}		
 
 		videoroom->destroyed = 0;
+		videoroom->is_recep_present = FALSE;
 		videoroom->first_joined = FALSE;
 		videoroom->last_left = FALSE;
 		janus_mutex_init(&videoroom->participants_mutex);
@@ -3365,6 +3374,12 @@ static void *janus_videoroom_handler(void *data) {
 				json_object_set_new(event, "id", json_integer(user_id));
 				json_object_set_new(event, "private_id", json_integer(publisher->pvt_id));
 				json_object_set_new(event, "publishers", list);
+				
+				/* check if it is recorder */
+				if(!strcasecmp(publisher->display, JANUS_RECEP_NAME)){
+					videoroom->is_recep_present = TRUE;
+				}
+
 				/* Also notify event handlers */
 				if(notify_events && gateway->events_is_enabled()) {
 					json_t *info = json_object();
