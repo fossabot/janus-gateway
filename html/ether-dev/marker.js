@@ -192,8 +192,10 @@ function setPostCallPendingMarkerOnProgressBar(offset, type){
 }
 
 function renderMarker(leftOffsetPerc, marker){
-	$("#progress-bar").append('<div id="'+marker.id+'"class="bar-step" style="left: '+(leftOffsetPerc-1)+'%"><div data-toggle="modal" data-target="#marker-info-modal" class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
-	$("#"+marker.id).data("info", marker)
+	if (shouldRenderMarker(marker, userId)){
+		$("#progress-bar").append('<div id="'+marker.id+'"class="bar-step" style="left: '+(leftOffsetPerc-1)+'%"><div data-toggle="modal" data-target="#marker-info-modal" class="label-txt '+ markerTypeClassMappinng[marker.type] +'"> </div></div>')
+		$("#"+marker.id).data("info", marker)
+	}
 }
 
 function renderPendingMarker(leftOffsetPerc, type){
@@ -226,6 +228,12 @@ function updateMarkerList(){
 	}
 }
 
+function shouldRenderMarker(marker, userId){
+	if (marker.type != "personal")
+		return true
+	return marker.createdBy == userId ? true : false
+}
+
 function searchBarSetMarkers(res){
 	if (currentMeetingInfo.status === "recording-available" && res !=null){
 		receivedNumOfMarkers = res.length
@@ -240,7 +248,7 @@ function searchBarSetMarkers(res){
 		if(receivedNumOfMarkers !== numOfMarkers){
 			$("#searchResults").empty()
 			for(marker=0;marker<res.length;marker++){
-				if (!res[marker].isSuggested) {
+				if (!res[marker].isSuggested && shouldRenderMarker(res[marker], userId)) {
 					description = decorateDescription(res[marker].description)
 					$("#searchResults").append('<div class="el-playback-search--result-item">\
 					<i class="el-playback-search--result-item-icon '+ markerTypeClassMappinng[res[marker].type]+'">\
