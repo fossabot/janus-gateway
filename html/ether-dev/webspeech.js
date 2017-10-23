@@ -18,8 +18,14 @@ recognition.continuous = false;
 recognition.interimResults = false;
 
 function startRecognition() {
+  recognition.onend = onend
   recognition.start();
   console.log('Ready to capture speech');
+}
+
+function stopRecognition() {
+  recognition.onend = null
+  recognition.stop();
 }
 
 recognition.onresult = function(event) {
@@ -88,11 +94,11 @@ recognition.onstart = function() {
   console.debug("Recognition start received ")
 }
 
-recognition.onend = function() {
-  console.debug("Recognition end received ")
-  recognition.start();
-}
-
 recognition.onnomatch = function() {
   console.debug("No match received ")
+}
+
+function onend() {
+  console.debug("Recognition end received ")
+  recognition.start();
 }
