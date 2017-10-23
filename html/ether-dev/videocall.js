@@ -766,8 +766,10 @@ function toggleMute() {
 	muted = sfutest.isAudioMuted();
 	if (muted) {
 		$('#mic').addClass('icon-active').addClass('icon-microphone-slash').removeClass('icon-microphone')
+		stopRecognition()
 	}else{
 		$('#mic').removeClass('icon-active').removeClass('icon-microphone-slash').addClass('icon-microphone')
+		startRecognition()
 	}
 }
 
