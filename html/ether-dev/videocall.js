@@ -146,7 +146,7 @@ function getCurrentMeetingInfo(){
 			},
 			error: function(xhr,status,error){
 				//handles permanant rooms like 1234
-				if (xhr.status == 404) {
+				if ((xhr.status == 404) || (xhr.status == 500)) {
 					$('#progress-bar').removeAttr("onclick")
 					$(".marker-info-body").find(".clearfix.icon-watch").parent().removeAttr("onclick")
 					$(".el-chat-controller").removeClass('hide')
@@ -600,7 +600,17 @@ function getFromQueryParams(searchKey) {
 }
 
 function parseQueryParams(){
+
+	// Parse all the parameters needed by Recorder
 	isRecorder= (getFromQueryParams("isRecorder") === "true")
+	myroom = parseInt(getFromQueryParams('room'))
+	myusername = getFromQueryParams("userName")
+
+	if (isRecorder) {
+		return
+	}
+
+	// Parse parameters needed for normal participant
 	meetingId = getFromQueryParams("meetingId")
 	etherAuth = getFromQueryParams("auth")
 	markerId = getFromQueryParams("markerId")
@@ -615,24 +625,19 @@ function parseQueryParams(){
 	if (etherAuth != null) {
 		populateEtherAuthFields(etherAuth)
 	}
-	if (isRecorder) {
-		userId = "f3de61e15b9540c18d4ed56c2325ffb0";
-	} else {
-		userId = getFromQueryParams("userId")
-		userId == null ? userId = getFromCookie("eth_slk_uid") : setCookie("eth_slk_uid", userId, 7)
-		activeWorkspaceId = getFromCookie("eth_slk_wsid")
-		if (activeWorkspaceId == "" || userId == "" || activeWorkspaceId != workspaceId){
-			refUrl = window.location.href
-			refUrl = window.encodeURIComponent(refUrl)
-			window.location = "https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id="+slackClientId+"&state="+refUrl+"&team="+teamId
-		}
+	
+	userId = getFromQueryParams("userId")
+	userId == null ? userId = getFromCookie("eth_slk_uid") : setCookie("eth_slk_uid", userId, 7)
+	activeWorkspaceId = getFromCookie("eth_slk_wsid")
+	if (activeWorkspaceId == "" || userId == "" || activeWorkspaceId != workspaceId){
+		refUrl = window.location.href
+		refUrl = window.encodeURIComponent(refUrl)
+		window.location = "https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id="+slackClientId+"&state="+refUrl+"&team="+teamId
 	}
 
-	myusername = getFromQueryParams("userName")
 	myusername == null ? myusername = getFromCookie("eth_slk_uname") : setCookie("eth_slk_uname", myusername, 7)
 	myemail = getFromQueryParams("userEmail")
 	myemail == null ? myemail = getFromCookie("eth_slk_uemail") : setCookie("eth_slk_uemail", myusername, 7)
-	myroom = parseInt(getFromQueryParams('room'))
 	startTime = getFromQueryParams("startTime")
 	$('#meetingLink').html(window.location.href)
 	history.pushState("changing url after param extraction", "url", window.location.origin)
