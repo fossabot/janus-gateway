@@ -320,8 +320,8 @@ function onParticipantJoined(){
 }
 
 function participantsCountChanged(currentNumberofParticipants){
-
 	$(".container .el-participants").attr("class","").addClass("el-attendees-"+currentNumberofParticipants).addClass("container el-participants")
+
 	
 	if($("div:contains('s Screen')").length>0)
 	{
@@ -728,8 +728,11 @@ function registerUsername() {
 	}
 }
 
-function getVideoHtml(id){	
-    return '<div class="el-participants--item hide"><span class="el-participants--item-video el-participants--item-active" id="videoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
+function getVideoHtml(id){
+	if (isRecorder) {
+		return '<div class="el-participants--item hide"><span class="el-participants--item-video" id="videoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
+	}
+	return '<div class="el-participants--item hide"><span class="el-participants--item-video el-participants--item-active" id="videoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
 }
 function getSideVideoHtml(id){	
     return '<div class="el-side-video-participants--item hide"><span class="el-side-participants--item-video el-side-participants--item-active" id="sidevideoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
@@ -921,17 +924,19 @@ function newRemoteFeed(id, display) {
 								$('#side_videos_participants').append(getSideVideoHtml(remoteFeed.rfindex))
 							}
 							var target = document.getElementById('videoremote'+remoteFeed.rfindex);
-							remoteFeed.spinner = new Spinner({top:100}).spin(target);
-
+							if(!isRecorder){
+								remoteFeed.spinner = new Spinner({top:100}).spin(target);
+							}
 						} else {
 							remoteFeed.spinner.spin();
 						}
 						Janus.log("Successfully attached to feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") in room " + msg["room"]);
-						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+						if (!isRecorder){
+							$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+						}
 						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-screen-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
-						$('#sidevideoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
-						$('#sidevideoremote'+remoteFeed.rfindex+' .el-participants--item-screen-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
-						onParticipantJoined()
+						if (!isRecorder)
+							onParticipantJoined()
 					} else if(msg["error"] !== undefined && msg["error"] !== null) {
 						bootbox.alert(msg["error"]);
 					} else {
@@ -982,6 +987,10 @@ function newRemoteFeed(id, display) {
 				// 	'<span class="label label-info hide" id="curbitrate'+remoteFeed.rfindex+'" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;"></span>');
 				// Show the video, hide the spinner and show the resolution when we get a playing event
 				$("#remotevideo"+remoteFeed.rfindex).bind("playing", function () {
+					if (isRecorder){
+						onParticipantJoined()
+						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+					}
 					if(remoteFeed.spinner !== undefined && remoteFeed.spinner !== null)
 						remoteFeed.spinner.stop();
 					remoteFeed.spinner = null;
