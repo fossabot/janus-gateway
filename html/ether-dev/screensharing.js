@@ -125,6 +125,8 @@ $(document).ready(function() {
 											$("#postCallVideo").parent().removeClass("hide")
 											$(".el-participants-wrap").removeClass("screen-wrap")										
 											$('#screenShare').removeClass("icon-active")
+											$('#side_videos_participants').addClass("hide")
+											$('#videos').removeClass("hide")
 										});
 								},
 								error: function(error) {
@@ -156,6 +158,8 @@ $(document).ready(function() {
 										$(".el-participants-wrap").removeClass("screen-wrap")
 										$("#postCallVideo").parent().removeClass("hide")
 										$('#screenShare').removeClass("icon-active")
+										$('#side_videos_participants').addClass("hide")
+										$('#videos').removeClass("hide")
 									}
 									// bootbox.alert("Your screen sharing session just started: pass the <b>" + room + "</b> session identifier to those who want to attend.");
 								},
@@ -301,12 +305,12 @@ function preShareScreen() {
 		$('#screenShare').attr('disabled', true);
 		return;
 	}
-	if(!Janus.isExtensionEnabled()) {
-		bootbox.alert("You're using a recent version of Chrome but don't have the screensharing extension installed: click <b><a href='https://chrome.google.com/webstore/detail/janus-webrtc-screensharin/hapfgfdkleiggjjpfpenajgdnfckjpaj' target='_blank'>here</a></b> to do so", function() {
-			window.location.reload();
-		});
-		return;
-	}
+	// if(!Janus.isExtensionEnabled()) {
+	// 	bootbox.alert("You're using a recent version of Chrome but don't have the screensharing extension installed: click <b><a href='https://chrome.google.com/webstore/detail/janus-webrtc-screensharin/hapfgfdkleiggjjpfpenajgdnfckjpaj' target='_blank'>here</a></b> to do so", function() {
+	// 		window.location.reload();
+	// 	});
+	// 	return;
+	// }
 	// Create a new room
 	// $('#desc').attr('disabled', true);
 	// $('#create').attr('disabled', true).unbind('click');
@@ -374,7 +378,7 @@ function shareScreen() {
 			var register = { "request": "join", "room": myroom, "ptype": "publisher", "display": myusername_ss };
 			screentest.send({"message": register});
 		}
-	// }
+	// }	 
 // }
 // );
 }
