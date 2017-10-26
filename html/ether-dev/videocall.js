@@ -330,6 +330,11 @@ function participantsCountChanged(currentNumberofParticipants){
 		$("#postCallVideo").parent().addClass("hide")
 		$('#side_videos_participants').removeClass("hide")
 		$('#videos').addClass("hide")
+	}else{
+		$("#postCallVideo").parent().removeClass("hide")
+		$(".el-participants-wrap").removeClass("screen-wrap")
+		$('#side_videos_participants').addClass("hide")
+		$('#videos').removeClass("hide")
 	}
 	switch (currentNumberofParticipants){
 		case 0:

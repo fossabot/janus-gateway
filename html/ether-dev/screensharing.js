@@ -122,11 +122,7 @@ $(document).ready(function() {
 											// $(this).attr('disabled', true);
 											screentest.webrtcStuff.myStream.getTracks().forEach(track => track.stop())
 											janus_one.destroy();
-											$("#postCallVideo").parent().removeClass("hide")
-											$(".el-participants-wrap").removeClass("screen-wrap")										
 											$('#screenShare').removeClass("icon-active")
-											$('#side_videos_participants').addClass("hide")
-											$('#videos').removeClass("hide")
 										});
 								},
 								error: function(error) {
@@ -155,11 +151,7 @@ $(document).ready(function() {
 									$("#screencapture").parent().unblock();
 									screentest.webrtcStuff.myStream.getVideoTracks()[0].onended = function () {
 										janus_one.destroy()
-										$(".el-participants-wrap").removeClass("screen-wrap")
-										$("#postCallVideo").parent().removeClass("hide")
 										$('#screenShare').removeClass("icon-active")
-										$('#side_videos_participants').addClass("hide")
-										$('#videos').removeClass("hide")
 									}
 									// bootbox.alert("Your screen sharing session just started: pass the <b>" + room + "</b> session identifier to those who want to attend.");
 								},
