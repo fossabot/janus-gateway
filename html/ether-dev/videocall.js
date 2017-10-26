@@ -230,6 +230,12 @@ function clickOnProgressBar(event){
 
 function populateMeetingFields(currentMeetingInfo){
 	currentCallTime = getCurrentCallTime()
+	if(!isRecorder && !Janus.isExtensionEnabled()) {
+		bootbox.alert("You're using a recent version of Chrome but don't have the screensharing extension installed: click <b><a href='https://chrome.google.com/webstore/detail/janus-webrtc-screensharin/hapfgfdkleiggjjpfpenajgdnfckjpaj' target='_blank'>here</a></b> to do so. Rejoin the call after installation.", function() {
+			window.location.reload();
+		});
+		return;
+	}
 	if (currentMeetingInfo.status === "recording-available"){
 		initPostCallProgressBarr()
 		postCallProgressBarRefreshTime(true)
@@ -322,6 +328,8 @@ function participantsCountChanged(currentNumberofParticipants){
 		$(".container .el-participants").attr("class","").addClass("screen").addClass("container el-participants")
 		$(".el-participants-wrap").addClass("screen-wrap")
 		$("#postCallVideo").parent().addClass("hide")
+		$('#side_videos_participants').removeClass("hide")
+		$('#videos').addClass("hide")
 	}
 	switch (currentNumberofParticipants){
 		case 0:
@@ -451,6 +459,7 @@ function handleJanusCall() {
 										if(remoteFeed != null) {
 											Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
 											$('#videoremote'+remoteFeed.rfindex).parent().remove()
+											$('#sidevideoremote'+remoteFeed.rfindex).parent().remove()
 											feeds[remoteFeed.rfindex] = null;
 											remoteFeed.detach();
 										}
@@ -473,6 +482,7 @@ function handleJanusCall() {
 										if(remoteFeed != null) {
 											Janus.debug("Feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") has left the room, detaching");
 											$('#videoremote'+remoteFeed.rfindex).parent().remove();
+											$('#sidevideoremote'+remoteFeed.rfindex).parent().remove()											
 											feeds[remoteFeed.rfindex] = null;
 											remoteFeed.detach();
 										}
@@ -713,8 +723,11 @@ function registerUsername() {
 	}
 }
 
-function getVideoHtml(id){
+function getVideoHtml(id){	
     return '<div class="el-participants--item hide"><span class="el-participants--item-video el-participants--item-active" id="videoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
+}
+function getSideVideoHtml(id){	
+    return '<div class="el-side-video-participants--item hide"><span class="el-side-participants--item-video el-side-participants--item-active" id="sidevideoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
 }
 function updateMeetingAttendees(meetingId, userId){
 	$.ajax({
@@ -896,18 +909,23 @@ function newRemoteFeed(id, display) {
 						if(remoteFeed.spinner === undefined || remoteFeed.spinner === null) {
 							if(remoteFeed.rfdisplay.includes("Screen")){
 								$('.el-participants-wrap-screen').append(getVideoHtml(remoteFeed.rfindex))
+								$('#side_videos_participants').append(getSideVideoHtml(remoteFeed.rfindex))	
 							}
 								else{
 								$('#videos .el-participants-wrap').append(getVideoHtml(remoteFeed.rfindex))
+								$('#side_videos_participants').append(getSideVideoHtml(remoteFeed.rfindex))
 							}
 							var target = document.getElementById('videoremote'+remoteFeed.rfindex);
 							remoteFeed.spinner = new Spinner({top:100}).spin(target);
+
 						} else {
 							remoteFeed.spinner.spin();
 						}
 						Janus.log("Successfully attached to feed " + remoteFeed.rfid + " (" + remoteFeed.rfdisplay + ") in room " + msg["room"]);
 						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
 						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-screen-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+						$('#sidevideoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+						$('#sidevideoremote'+remoteFeed.rfindex+' .el-participants--item-screen-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
 						onParticipantJoined()
 					} else if(msg["error"] !== undefined && msg["error"] !== null) {
 						bootbox.alert(msg["error"]);
@@ -950,6 +968,8 @@ function newRemoteFeed(id, display) {
 					// No remote video yet
 					$('#videoremote'+remoteFeed.rfindex).append('<video class="rounded centered" id="waitingvideo' + remoteFeed.rfindex + '" width=320 height=240 />');
 					$('#videoremote'+remoteFeed.rfindex).append('<video class="rounded centered relative hide" id="remotevideo' + remoteFeed.rfindex + '" width="100%" height="100%" autoplay/>');
+					$('#sidevideoremote'+remoteFeed.rfindex).append('<video class="rounded centered" id="sidewaitingvideo' + remoteFeed.rfindex + '" width=320 height=240 />');
+					$('#sidevideoremote'+remoteFeed.rfindex).append('<video class="rounded centered relative hide" id="sideremotevideo' + remoteFeed.rfindex + '" width="100%" height="100%" autoplay/>');
 					$(".spinner").css("top","50%")
 				}
 				// $('#videoremote'+remoteFeed.rfindex).append(
@@ -961,7 +981,9 @@ function newRemoteFeed(id, display) {
 						remoteFeed.spinner.stop();
 					remoteFeed.spinner = null;
 					$('#waitingvideo'+remoteFeed.rfindex).remove();
+					$('#sidewaitingvideo'+remoteFeed.rfindex).remove();
 					$('#remotevideo'+remoteFeed.rfindex).removeClass('hide');
+					$('#sideremotevideo'+remoteFeed.rfindex).removeClass('hide');
 					var width = this.videoWidth;
 					var height = this.videoHeight;
 					$('#curres'+remoteFeed.rfindex).removeClass('hide').text(width+'x'+height).show();
@@ -979,12 +1001,19 @@ function newRemoteFeed(id, display) {
 				}
 				else{
 					Janus.attachMediaStream($('#remotevideo'+remoteFeed.rfindex).get(0), stream);
+					Janus.attachMediaStream($('#sideremotevideo'+remoteFeed.rfindex).get(0), stream);					
 				}
 				var videoTracks = stream.getVideoTracks();
 				if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0 || videoTracks[0].muted) {
 					// No remote video
 					$('#remotevideo'+remoteFeed.rfindex).hide();
+					$('#sideremotevideo'+remoteFeed.rfindex).hide();					
 					$('#videoremote'+remoteFeed.rfindex).append(
+						'<div class="no-video-container">' +
+							'<i class="fa fa-video-camera fa-5 no-video-icon" style="height: 100%;"></i>' +
+							'<span class="no-video-text" style="font-size: 16px;">No remote video available</span>' +
+						'</div>');
+					$('#sidevideoremote'+remoteFeed.rfindex).append(
 						'<div class="no-video-container">' +
 							'<i class="fa fa-video-camera fa-5 no-video-icon" style="height: 100%;"></i>' +
 							'<span class="no-video-text" style="font-size: 16px;">No remote video available</span>' +
