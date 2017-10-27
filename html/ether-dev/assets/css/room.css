@@ -191,8 +191,9 @@
   border-style: solid;
   display: inline-block;
 }
-.el-participants--item-name {
-  padding: 20px 20px 10px 20px;
+.el-participants--item-screen-name {
+  font-size: 10px;
+  padding: 20px 20px 5px 20px;
   position: absolute;
   bottom: 15px;
   right: 15px;
@@ -202,9 +203,9 @@
   text-align: center;
 
   background: #000;
-  background: -webkit-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38));
-  background: -o-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38));
-  background: -moz-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38));
-  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38));
+  background: -webkit-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
+  background: -o-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
+  background: -moz-linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
 
 }
