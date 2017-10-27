@@ -735,7 +735,7 @@ function getVideoHtml(id){
 	return '<div class="el-participants--item hide"><span class="el-participants--item-video el-participants--item-active" id="videoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
 }
 function getSideVideoHtml(id){	
-    return '<div class="el-side-video-participants--item hide"><span class="el-side-participants--item-video el-side-participants--item-active" id="sidevideoremote'+id+'"><span class="el-participants--item-name"></span></span></div>'
+    return '<div class="el-side-video-participants--item hide"><span class="el-side-participants--item-video el-side-participants--item-active" id="sidevideoremote'+id+'"><span class="el-participants--item-screen-name"></span></span></div>'
 }
 function updateMeetingAttendees(meetingId, userId){
 	$.ajax({
@@ -917,7 +917,7 @@ function newRemoteFeed(id, display) {
 						if(remoteFeed.spinner === undefined || remoteFeed.spinner === null) {
 							if(remoteFeed.rfdisplay.includes("Screen")){
 								$('.el-participants-wrap-screen').append(getVideoHtml(remoteFeed.rfindex))
-								$('#side_videos_participants').append(getSideVideoHtml(remoteFeed.rfindex))	
+								// $('#side_videos_participants').append(getSideVideoHtml(remoteFeed.rfindex))	
 							}
 								else{
 								$('#videos .el-participants-wrap').append(getVideoHtml(remoteFeed.rfindex))
