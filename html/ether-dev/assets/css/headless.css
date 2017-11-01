@@ -9,6 +9,12 @@ html {
 	width: 100%;
 	bottom: 6px;
  }
+ .outerdiv-screen-share{
+  display: inline-flex;
+  height: 100%;
+  width: 100%;
+  bottom: 6px;
+ }
  .middlediv {
  	display: table-cell;
  	vertical-align: middle;
@@ -17,11 +23,23 @@ html {
  	margin-left: auto;
  	margin-right: auto;
  }
-
  .container {
     /*max-width: 1920px;*/
 }
-
+.container-screen{
+  /*max-width: 1920px;*/
+  display: table-cell;
+}
+.ss-resize-width
+{
+  width: 90%
+}
+.middlediv-screen{
+  display: none;
+}
+.el-participants-screen{
+  max-width: 100%;
+}
 .el-participants {
     max-width: 100%;
 }

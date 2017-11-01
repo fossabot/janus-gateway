@@ -230,12 +230,6 @@ function clickOnProgressBar(event){
 
 function populateMeetingFields(currentMeetingInfo){
 	currentCallTime = getCurrentCallTime()
-	if(!isRecorder && !Janus.isExtensionEnabled()) {
-		bootbox.alert("You're using a recent version of Chrome but don't have the screensharing extension installed: click <b><a href='https://chrome.google.com/webstore/detail/janus-webrtc-screensharin/hapfgfdkleiggjjpfpenajgdnfckjpaj' target='_blank'>here</a></b> to do so. Rejoin the call after installation.", function() {
-			window.location.reload();
-		});
-		return;
-	}
 	if (currentMeetingInfo.status === "recording-available"){
 		initPostCallProgressBarr()
 		postCallProgressBarRefreshTime(true)
@@ -329,12 +323,28 @@ function participantsCountChanged(currentNumberofParticipants){
 		$(".el-participants-wrap").addClass("screen-wrap")
 		$("#postCallVideo").parent().addClass("hide")
 		$('#side_videos_participants').removeClass("hide")
-		$('#videos').addClass("hide")
+		if(isRecorder){
+			$('#videos').attr("class","").addClass("container middlediv-screen")
+			$('.ether-chat-body').removeClass('outerdiv')
+			$('.ether-chat-body').addClass('outerdiv-screen-share')
+			$('.container-screen').addClass("ss-resize-width")
+		}
+		else{
+			$('#videos').addClass("hide")
+		}
 	}else{
 		$("#postCallVideo").parent().removeClass("hide")
 		$(".el-participants-wrap").removeClass("screen-wrap")
 		$('#side_videos_participants').addClass("hide")
-		$('#videos').removeClass("hide")
+		if(isRecorder){
+			$('#videos').attr("class","").addClass("container middlediv")
+			$('.ether-chat-body').addClass('outerdiv')
+			$('.ether-chat-body').removeClass('outerdiv-screen-share')
+			$('.container-screen').removeClass("ss-resize-width")
+		}
+		else{
+			$('#videos').removeClass("hide")
+		}
 	}
 	switch (currentNumberofParticipants){
 		case 0:
@@ -917,7 +927,6 @@ function newRemoteFeed(id, display) {
 						if(remoteFeed.spinner === undefined || remoteFeed.spinner === null) {
 							if(remoteFeed.rfdisplay.includes("Screen")){
 								$('.el-participants-wrap-screen').append(getVideoHtml(remoteFeed.rfindex))
-								// $('#side_videos_participants').append(getSideVideoHtml(remoteFeed.rfindex))	
 							}
 								else{
 								$('#videos .el-participants-wrap').append(getVideoHtml(remoteFeed.rfindex))
@@ -934,7 +943,7 @@ function newRemoteFeed(id, display) {
 						if (!isRecorder){
 							$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
 						}
-						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-screen-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+						$('#sidevideoremote'+remoteFeed.rfindex+' .el-participants--item-screen-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
 						if (!isRecorder)
 							onParticipantJoined()
 					} else if(msg["error"] !== undefined && msg["error"] !== null) {
@@ -988,8 +997,8 @@ function newRemoteFeed(id, display) {
 				// Show the video, hide the spinner and show the resolution when we get a playing event
 				$("#remotevideo"+remoteFeed.rfindex).bind("playing", function () {
 					if (isRecorder){
-						onParticipantJoined()
 						$('#videoremote'+remoteFeed.rfindex+' .el-participants--item-name').html(remoteFeed.rfdisplay).parent().parent().removeClass('hide').show()
+						onParticipantJoined()
 					}
 					if(remoteFeed.spinner !== undefined && remoteFeed.spinner !== null)
 						remoteFeed.spinner.stop();
