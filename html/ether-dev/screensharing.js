@@ -180,7 +180,7 @@ $(document).ready(function() {
 														},
 														error: function(error) {
 															Janus.error("WebRTC error:", error);
-															bootbox.alert("WebRTC error... " + JSON.stringify(error));
+															// bootbox.alert("WebRTC error... " + JSON.stringify(error));
 														}
 													});
 											} else {
@@ -494,7 +494,7 @@ function newRemoteFeed_ss(id, display) {
 							},
 							error: function(error) {
 								Janus.error("WebRTC error:", error);
-								bootbox.alert("WebRTC error... " + error);
+								// bootbox.alert("WebRTC error... " + error);
 							}
 						});
 				}
