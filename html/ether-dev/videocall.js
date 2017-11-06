@@ -346,6 +346,9 @@ function participantsCountChanged(currentNumberofParticipants){
 			$('#videos').removeClass("hide")
 		}
 	}
+	if (currentNumberofParticipants > 1) {
+		currentNumberofParticipants = 1;
+	}
 	switch (currentNumberofParticipants){
 		case 0:
 			$('#videolocal_side').addClass('hide')
@@ -562,10 +565,11 @@ function handleJanusCall() {
 						oncleanup: function() {
 							Janus.log(" ::: Got a cleanup notification: we are unpublished now :::");
 							mystream = null;
+							$('.myvideo').remove();
 							// Try to publish again, when it fails
 							publishOwnFeed(true);
-							$('#videolocal').html('<button id="publish" class="btn btn-primary">Publish</button>');
-							$('#publish').click(function() { publishOwnFeed(true); });
+							// $('#videolocal').html('<button id="publish" class="btn btn-primary">Publish</button>');
+							// $('#publish').click(function() { publishOwnFeed(true); });
 							$("#videos").unblock();
 						}
 					});
