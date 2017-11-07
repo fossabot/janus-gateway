@@ -26,7 +26,7 @@
 Janus.sessions = {};
 
 // Screensharing Chrome Extension ID
-Janus.extensionId = "hapfgfdkleiggjjpfpenajgdnfckjpaj";
+Janus.extensionId = "peeomhmdbpcmmmhdaojpeihlgigjfpif";
 Janus.isExtensionEnabled = function() {
 	if(window.navigator.userAgent.match('Chrome')) {
 		var chromever = parseInt(window.navigator.userAgent.match(/Chrome\/(.*) /)[1], 10);
