@@ -523,9 +523,6 @@ function handleJanusCall() {
 
 								$('#mic').removeAttr('disabled').click(toggleMute);
 								$('#camera').removeAttr('disabled').click(toggleVideo);
-								// Add an 'unpublish' button
-								// $('#videolocal').append('<button class="btn btn-warning btn-xs" id="unpublish" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;">Unpublish</button>');
-								// $('#unpublish').click(unpublishOwnFeed);
 								$('#videolocal').parent().removeClass('hide').show()
 								$('#videolocal .el-participants--item-name').html(myusername)
 							}
@@ -558,14 +555,11 @@ function handleJanusCall() {
 						oncleanup: function() {
 							Janus.log(" ::: Got a cleanup notification: we are unpublished now :::");
 							mystream = null;
-
 							$('.myvideo').remove();
 							$('#mic').attr('disabled', true).unbind('click');
 							$('#camera').attr('disabled', true).unbind('click');
 							// Try to publish again, when it fails
 							publishOwnFeed(true);
-							// $('#videolocal').html('<button id="publish" class="btn btn-primary">Publish</button>');
-							// $('#publish').click(function() { publishOwnFeed(true); });
 							$("#videos").unblock();
 						}
 					});
@@ -767,7 +761,6 @@ function publishOwnFeed(useAudio) {
 		return;
 	}
 
-	// $('#publish').attr('disabled', true).unbind('click');
 	sfutest.createOffer(
 		{
 			// Add data:true here if you want to publish datachannels as well
@@ -786,7 +779,6 @@ function publishOwnFeed(useAudio) {
 					 publishOwnFeed(false);
 				} else {
 					bootbox.alert("WebRTC error... " + JSON.stringify(error));
-					// $('#publish').removeAttr('disabled').click(function() { publishOwnFeed(true); });
 				}
 			}
 		});
@@ -883,7 +875,6 @@ function adjustMarkerPosition(){
 
 function unpublishOwnFeed() {
 	// Unpublish our stream
-	// $('#unpublish').attr('disabled', true).unbind('click');
 	var unpublish = { "request": "unpublish" };
 	sfutest.send({"message": unpublish});
 }
