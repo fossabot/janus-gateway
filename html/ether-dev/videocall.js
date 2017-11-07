@@ -316,7 +316,6 @@ function onParticipantJoined(){
 function participantsCountChanged(currentNumberofParticipants){
 	$(".container .el-participants").attr("class","").addClass("el-attendees-"+currentNumberofParticipants).addClass("container el-participants")
 
-	
 	if($("div:contains('s Screen')").length>0)
 	{
 		$(".container .el-participants").attr("class","").addClass("screen").addClass("container el-participants")
@@ -346,18 +345,12 @@ function participantsCountChanged(currentNumberofParticipants){
 			$('#videos').removeClass("hide")
 		}
 	}
-	if (currentNumberofParticipants > 1) {
-		currentNumberofParticipants = 1;
-	}
-	switch (currentNumberofParticipants){
-		case 0:
-			$('#videolocal_side').addClass('hide')
-			$('#videolocal').parent().removeClass('hide').show()
-			break
-		case 1:
-			$('#videolocal_side').removeClass('hide')
-			$('#videolocal').parent().addClass('hide')
-			break
+	if (currentNumberofParticipants == 0) {
+		$('#videolocal_side').addClass('hide')
+		$('#videolocal').parent().removeClass('hide').show()
+	} else {
+		$('#videolocal_side').removeClass('hide')
+		$('#videolocal').parent().addClass('hide')
 	}
 }
 function handleJanusCall() {
@@ -528,8 +521,8 @@ function handleJanusCall() {
 								// $('#videolocal').append('<button class="btn btn-warning btn-xs" id="mute" style="position: absolute;bottom: 0px;left: 0px;margin: 41px;background: transparent;"><img class="audio" src="microphone-128.png" style="width: 23px;"/></button>')
 								// $('#videolocal').append('<button class="btn btn-warning btn-xs" id="videomute" style="position: absolute;bottom: 0px;left: 60px;margin: 41px;background: transparent;"><img class="video" src="video-128.png" style="width: 23px;"/></button>');
 
-								$('#mic').click(toggleMute);
-								$('#camera').click(toggleVideo);
+								$('#mic').removeAttr('disabled').click(toggleMute);
+								$('#camera').removeAttr('disabled').click(toggleVideo);
 								// Add an 'unpublish' button
 								// $('#videolocal').append('<button class="btn btn-warning btn-xs" id="unpublish" style="position: absolute; bottom: 0px; right: 0px; margin: 15px;">Unpublish</button>');
 								// $('#unpublish').click(unpublishOwnFeed);
@@ -565,7 +558,10 @@ function handleJanusCall() {
 						oncleanup: function() {
 							Janus.log(" ::: Got a cleanup notification: we are unpublished now :::");
 							mystream = null;
+
 							$('.myvideo').remove();
+							$('#mic').attr('disabled', true).unbind('click');
+							$('#camera').attr('disabled', true).unbind('click');
 							// Try to publish again, when it fails
 							publishOwnFeed(true);
 							// $('#videolocal').html('<button id="publish" class="btn btn-primary">Publish</button>');
@@ -771,7 +767,7 @@ function publishOwnFeed(useAudio) {
 		return;
 	}
 
-	$('#publish').attr('disabled', true).unbind('click');
+	// $('#publish').attr('disabled', true).unbind('click');
 	sfutest.createOffer(
 		{
 			// Add data:true here if you want to publish datachannels as well
