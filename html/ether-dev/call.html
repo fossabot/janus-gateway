@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="http://etherlabs.io/wp-content/uploads/2017/09/cropped-Untitled-2-32x32.png" sizes="32x32">
+    <link rel="icon" href="http://etherlabs.io/wp-content/uploads/2017/09/cropped-Untitled-2-192x192.png" sizes="192x192">
+    <link rel="apple-touch-icon-precomposed" href="http://etherlabs.io/wp-content/uploads/2017/09/cropped-Untitled-2-180x180.png">
+    <meta name="msapplication-TileImage" content="http://etherlabs.io/wp-content/uploads/2017/09/cropped-Untitled-2-270x270.png">
+    <title>ETHER</title>
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet"  href="assets/css/bootstrap.css?version=49" type="text/css">
+    <link rel="stylesheet" href="assets/css/costom.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/chat-controller.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/playback-controller.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/spinner.css?version=49" type="text/css" >
+    <!-- <link rel="stylesheet" href="assets/css/icons.css" type="text/css" > -->
+    <link rel="stylesheet" href="assets/css/marker.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/nav.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/progess-bar.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/room.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/search_bar.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/side-bar.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/marker-modal.css?version=49" type="text/css" >
+    <link rel="stylesheet" href="assets/css/bootstrap.model.css?version=49" type="text/css" >
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.1.0/bootbox.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="webspeech.js?version=49"></script>
+    <script type="text/javascript" src="janus.js" ></script>
+    <script type="text/javascript" src="assets/js/bootstrap.model.js" ></script>
+    <script type="text/javascript" src="videocall.js?version=49"></script>
+    <script>window.jQuery || document.write('<script src="assets/js/jquery.min.js"><\/script>')</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <!-- // <script src="assets/js/bootstrap.min.js"></script> -->
+    <script src="assets/js/tooltip-viewport.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="assets/js/ie10-viewport-bug-workaround.js"></script>
+    <script type="text/javascript" src="screensharing.js?version=49"></script>
+  </head>
+
+
+<!-- Large modal -->
+  <div id="marker-modal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg marker-modal-dialog" role="document">
+      <div class="modal-content marker-modal-content">
+        <div class="modal-header desc">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="icon-close a" onClick="clearMarkerForm()" aria-hidden="true"></span>
+          </button>
+          <h5 class="modal-title" id="exampleModalLabel"><div class="big"></div>
+            <div class="small"> Leave your mark! You can mention folks in the message - and we’ll notify and route the marker to them - like magic! </div>
+          </h5>
+          <button type="button" class="close hide" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body marker-modal-body">
+          <form id="marker-form">
+            <div class="form-group">
+              <input type="text" class="form-control hide" id="marker-topic" placeholder="Enter Topic for Marker" aria-describedby="sizing-addon1">
+            </div>
+            <div class="form-group">
+              <textarea id="marker-description" class="form-control" placeholder="Marker Description"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer marker-modal-footer">
+          <div class="note">
+            <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
+          </div>
+          <div class="button-list">
+            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close</button> -->
+            <!-- <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button> -->
+            <button id="markButton" type="button" class="el-btn-save btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close"> <i class="icon-save clearfix"></i> Mark</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="marker-info-modal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg marker-modal-dialog" role="document">
+      <div class="modal-content marker-modal-content">
+        <div class="modal-header desc">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="icon-close a" aria-hidden="true"></span>
+          </button>
+          <h5 class="modal-title" id="exampleModalLabel"><div class="big"></div>
+            <div class="small"></div>
+          </h5>
+          <button type="button" class="close hide" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body marker-modal-body marker-info-modal-body">
+          <div class="marked-description">
+          </div>
+        </div>
+
+
+        <div class="modal-body marker-info-body">
+           <div class="el-speaker-read">
+
+                <div class="el-nav-tabs--wrap">
+                  <ul class="nav nav-tabs el-nav-tabs" role="tablist">
+                    <!-- <li class="nav-item el-nav-tabs--item">
+                      <a class="btn el-nav-tabs--item-active" href="#profile" role="tab" data-toggle="tab">
+                        <span class="selected">
+                        <span class="icon-read clearfix "></span>
+                        <span class="small">Read</span>
+                        </span>
+                      </a>
+                    </li> -->
+                    <li class="nav-item el-nav-tabs--item">
+                      <a onclick="postCallMarkerWatchClick(event)" class="btn el-nav-tabs--item-inactive" href="#buzz" role="tab" data-toggle="tab">
+                        <span class="clearfix icon-watch"></span>
+                        <span class="small">Watch</span>
+                      </a>
+                    </li>
+                    <li class="nav-item el-nav-tabs--item">
+                      <a class="btn el-nav-tabs--item-inactive" href="#references" role="tab" data-toggle="tab">
+                        <span class="clearfix icon-listen"></span>
+                        <span class="small">Listen</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Tab panes -->
+                <div class="tab-content hide">
+                  <div role="tabpanel" class="tab-pane in active" id="profile">
+
+                    <div class="el-speaker-read--item">
+                      <div class="el-speaker-read--item-details">
+                        <span class="el-speaker-read--item-details-avatar"><img class="el-speaker-read--item-details-avatar-img rounded-circle" src="#"/> </span>
+                        <span class="el-speaker-read--item-details-name">Attendees Name</samp>
+                      </div>
+                      <div class="el-speaker-read--item-cont">Scelerisque eget at purus.
+                      </div>
+                    </div><!-- item-start -->
+                    <div class="el-speaker-read--item">
+                      <div class="el-speaker-read--item-details">
+                        <span class="el-speaker-read--item-details-avatar"><img class="el-speaker-read--item-details-avatar-img rounded-circle" src="#"/> </span>
+                        <span class="el-speaker-read--item-details-name">Attendees Name</samp>
+                      </div>
+                      <div class="el-speaker-read--item-cont"> Lorem ipsum dolor sit amet
+                      </div>
+                    </div><!-- item-start -->
+
+                  </div> <!-- read -->
+                  <div role="tabpanel" class="tab-pane fade" id="buzz"><h2> The watch content </h2> </div>
+                  <div role="tabpanel" class="tab-pane fade" id="references"><h1>The listen content </h1> </div>
+                </div>
+           </div> <!-- el-speaker-read -->
+        </div>
+
+
+
+
+        <div class="modal-footer marker-modal-footer hide">
+          <div class="note">
+            <small>Marker set <span class="text-scondery">30 seconds </span> prior this point.</small>
+          </div>
+          <div class="button-list">
+            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close</button> -->
+            <!-- <button type="button" class="btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close">Mark</button> -->
+            <button type="button" class="el-btn-save btn btn-primary" onclick="mark()" data-dismiss="modal" aria-label="Close"> <i class="icon-save clearfix"></i> Mark</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <body class="ether-chat-body">
+    <nav class="el-navbar">
+     <div class="el-logo">
+       <span class="el-display-name--logo text-primary" style="margin-left:2%">
+         <img src="assets/images/logo.png" onclick="copyToClipboard('#meetingLink')">
+       </span>
+       <span id="meetingLink" class="hide"></span>
+     </div>
+    </nav>
+
+    <div class="el-progress">
+       <div id="progress-bar" class="progress" onclick="clickOnProgressBar(event)">
+        <img class="progress-bar--indicator" src="assets/images/elipse.png">
+      </div>
+      <span class="progress-bar--time"> <i>00:00</i> </span>
+    </div> <!-- / el-progress -->
+
+    <ul class="el-marker">
+      <div class="el-marker--item-block-title"> Markers </div>
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="topic" data-title="set a topic marker" data-description="Mark an Agenda Item or Topic change for the call. @mention folks in the message - we'll route the marker to them!">
+        <span class="el-marker--item-icon icon-crown crown"> </span>
+        <span class="el-marker--item-title">New Topic</span>
+      </button>
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="action" data-title="set an action item" data-description="Action Item? Mark it! You can @mention folks in the message - and we'll notify and route the marker to them!">
+        <span class="el-marker--item-icon icon-star-o star"> </span>
+        <span class="el-marker--item-title"> Action Item </span>
+      </button>
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="decision" data-title="mark a key decision that was made" data-description="Memorialize a decision for others to come back to. @mention folks in the message - we'll take care of the rest!">
+        <span class="el-marker--item-icon icon-arrow-swap arrowSwap"> </span>
+        <span class="el-marker--item-title"> Decision </span>
+      </button>
+      <button class="btn el-marker--item hide" data-toggle="modal" data-target="#marker-modal" data-type="priority">
+        <span class="el-marker--item-icon icon-alert"> </span>
+        <span class="el-marker--item-title"> Priority </span>
+      </button>
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="fyi" data-title="give someone a heads up" data-description="Give someone a shoutout to see the context of a certain part of the call. Be sure to @mention them!">
+        <span class="el-marker--item-icon icon-alert alertIcon"> </span>
+        <span class="el-marker--item-title"> FYI </span>
+      </button>
+      <button class="btn el-marker--item" data-toggle="modal" data-target="#marker-modal" data-type="personal" data-title="set your own private personal marker" data-description="Don't want to slow down the meeting? Set a personal marker to go back and watch or listen.">
+        <span class="el-marker--item-icon icon-user-outline userOutline"> </span>
+        <span class="el-marker--item-title"> Personal </span>
+      </button>
+    </ul> <!-- / el-marker -->
+
+    <div class="container-sidevideo hide" id="side_videos_participants" style="zoom: 1;">
+      </div>
+
+    <div class="container-screen" id="videos_ss" style="zoom: 1;">
+      <div class="container-screen el-participants-screen">
+        <div class="el-participants-wrap-screen">
+          <div class="el-participants--item-screen-video">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" id="videos" style="zoom: 1;">
+      <div class="container el-participants">
+        <div class="el-participants-wrap">
+          <div class="el-participants--item-video">
+            <div class="el-participants--item-video el-participants--item-active hide" id="postCallVideo" >
+             <div id="spinner"></div>
+              <video
+              src="#"
+                type="video/mp4"
+                id="recordingVideo"
+                preload="metadata"
+                autoplay="true"
+                />
+              </div>
+             <span>
+                <ul class="el-playback-controller hide">
+                  <button onclick="rewindRecordingVideo()" class="btn el-playback-controller--item icon-playback-rewind tooltip-bottom" title="">  </button>
+                  <button onclick="toggleRecordingPlay()" class="btn el-playback-controller--item icon-playback-play tooltip-bottom hide" title="">  </button>
+                  <button onclick="toggleRecordingPlay()" class="btn el-playback-controller--item icon-playback-pause tooltip-bottom " title=""></button>
+                  <button onclick="forwardRecordingVideo()" class="btn el-playback-controller--item icon-playback-fast-forward tooltip-bottom " title=""></button>
+                </ul>
+             </span>
+          </div>
+          <div class="el-participants--item hide">
+            <span class="el-participants--item-video el-participants--item-active" id="videolocal">
+              <span class="el-participants--item-name"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <ul class="el-chat-controller hide">
+      <button class="btn el-chat-controller--item el-chat-controller--video icon-video tooltip-bottom" id="camera" title="">  </button>
+      <button class="btn el-chat-controller--item el-chat-controller--mute icon-microphone tooltip-bottom" id="mic" title="">  </button>
+      <!-- <button class="btn el-chat-controller--item icon-microphone-slash tooltip-bottom" title="Turn on ">  </button> -->
+      <button class="btn el-chat-controller--item icon-computer-imac tooltip-bottom" id="screenShare" title="">  </button> <!--el-chat-controller--turn-on -->
+      <button class="btn el-chat-controller--item el-chat-controller--mute  icon-users-outline tooltip-bottom" title="">  </button>
+      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-settings-streamline-1 tooltip-bottom" title=""></button>
+      <button class="btn el-chat-controller--item el-chat-controller--hungup icon-logout tooltip-bottom" id="hangup" title=""></button>
+    </ul>
+
+
+
+    <div class="el-rightBar-selfie">
+      <span class="el-rightBar-selfie--item hide" id="videolocal_side"></span>
+    </div>
+
+    <div class="el-rightBar-participans hide">
+      <span class="el-rightBar-participans--title"> Participans (2) </span>
+
+      <div class="el-rightBar--participans-item">
+        <span> <img src="assets/images/attendies-2.png" class="el-rightBar--participans-avathar"> </span>
+        <span class="el-rightBar--participans-name"> Participans username  </span>
+        <span class="el-rightBar--participans-muteIcon  icon-microphone">  </span>
+      </div>
+
+      <div class="el-rightBar--participans-item">
+        <span> <img src="assets/images/attendies-2.png" class="el-rightBar--participans-avathar"> </span>
+        <span class="el-rightBar--participans-name"> Participans username </span>
+        <span class="el-rightBar--participans-muteIcon  icon-microphone">  </span>
+      </div>
+
+      <div class="el-rightBar--participans-controler">
+        <button type="button" class="btn btn-primary btn-sm btn-block"> Mute All</button>
+        <button type="button" class="btn btn-primary btn-sm btn-block"> Unmute All </button>
+        <button type="button" class="btn btn-primary btn-sm btn-block"> More </button>
+      </div>
+     </div> <!-- el-rightBar--participans -->
+    
+<div class=" el-playback-searchbox-wrap ">
+  <div class="el-playback-searchbox hide">
+      <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+        <input type="text" class="form-control el-playback-searchbox--form-control" id="inlineFormInputGroup" placeholder="Search Call">
+        <div class="input-group-addon el-playback-searchbox--input-group-addon">
+          <span class="icon-search"></span>
+        </div>
+      </div>
+      <form>
+        <div class="el-playback-search--result hide">
+          <button type="button" class="close closeButton" aria-label="Close" onclick="postCallSearchBarClose(event)">
+            <span class="icon-close a" aria-hidden="true"></span>
+          </button>
+          <div class="el-results-head"> Markers</div>
+          <div id="searchResults"></div>
+        </div>
+      <!-- </div>  search result  -->
+      </form>
+  </div>
+</div><!-- el-participants -->
+
+
+<div class="container">
+	<div class="row">
+		<div class="col-md-12">
+
+      <div class="container hide" id="screenmenu">
+				<div class="row">
+					<div class="input-group margin-bottom-md hide" id="createnow">
+						<span class="input-group-addon"><i class="fa fa-users fa-1"></i></span>
+						<input class="form-control" type="text" placeholder="Insert a title for the session" autocomplete="off" id="desc" onkeypress="return checkEnterShare(this, event);"></input>
+						<span class="input-group-btn">
+							<button class="btn btn-success" autocomplete="off" id="create">Share your screen</button>
+						</span>
+					</div>
+				</div>
+			<div class="container hide" id="room">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title">Screen Capture <span class="label label-info" id="title"></span> <span class="label label-success" id="session"></span></h3>
+							</div>
+							<div class="panel-body" id="screencapture"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+  </body>
+  <script type="text/javascript" src="marker.js?version=49" ></script>
+</html>

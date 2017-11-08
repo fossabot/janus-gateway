@@ -1,0 +1,99 @@
+.el-progress {
+  position: absolute;
+  top: 46px;
+  right: 16%;
+  left: 16%;
+}
+.bar-step {
+  position: absolute;
+  margin-top: -11px;
+  z-index: 1;
+  font-size: 19px;
+  background: #fff;
+  height: 26px;
+  width: 26px;
+  border-radius: 30px;
+  cursor: pointer;
+}
+.bar-step.el-marker-pending {
+    left: 84.26356779006672%;
+    border: 2px #cf641c solid;
+    background: #343434 !important;
+    z-index: 1049;
+}
+
+.bar-step .label-txt:hover{
+  color: #cf641c
+}
+
+.label-txt {
+  float: left;
+  padding-top: 3px;
+  padding-left: 3.5px;
+  font-weight: 900;
+  color: #000;
+}
+.label-line {
+  float: right;
+  background: #000;
+  height:50px;
+  width:1px;
+  margin-left: 5px;
+}
+.label-percent {
+  float: right;
+  margin-left: 5px;
+}
+.progress-bar--time {
+  float: right;
+  padding-top: 8px;
+}
+.progress-bar--time i {
+  position: absolute;
+  bottom: 5px;
+}
+
+.progress-bar--indicator {
+  position: absolute;
+  margin-top: -6px;
+  z-index: 1;
+  font-size: 12px;
+  height: 16px;
+  width: 16px;
+}
+
+.el-progress .label-txt.icon-crown{
+  padding-left: 3.7px;
+  padding-top: 3.7px
+}
+
+.el-progress .label-txt.icon-arrow-swap{
+  padding-left: 3.8px;
+}
+.el-progress .label-txt.icon-alert{
+  padding-top: 2px;
+}
+
+.el-progress .el-marker-pending .label-txt.icon-alert {
+  padding-top: 0.5px;
+  padding-left: 1.9px;
+}
+
+.el-progress .el-marker-pending .label-txt.icon-crown{
+  padding-left: 1.2px;
+  padding-top: 1.1px
+}
+.el-progress .el-marker-pending .label-txt.icon-arrow-swap{
+  padding-left: 2px;
+}
+.el-progress .el-marker-suggested {
+  background: #049fc2;
+}
+
+.el-progress .el-marker-suggested .label-txt {
+  color: #fff;
+}
+
+.bar-step.el-marker-suggested .label-txt:hover{
+  color: #000;
+}
