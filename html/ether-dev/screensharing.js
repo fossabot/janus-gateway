@@ -180,7 +180,6 @@ $(document).ready(function() {
 														},
 														error: function(error) {
 															Janus.error("WebRTC error:", error);
-															// bootbox.alert("WebRTC error... " + JSON.stringify(error));
 														}
 													});
 											} else {
@@ -298,39 +297,33 @@ function preShareScreen() {
 		return;
 	}
 	if(!Janus.isExtensionEnabled()) {
-	// 	bootbox.alert("You're using a recent version of Chrome but don't have the screensharing extension installed: click <b><a href='https://chrome.google.com/webstore/detail/janus-webrtc-screensharin/hapfgfdkleiggjjpfpenajgdnfckjpaj' target='_blank'>here</a></b> to do so", function() {
-	// 		$('#screenShare').removeClass("icon-active")
-	// 		$('#screenShare').attr('disabled', true);
-	// 		// window.location.reload();
-	// 	});
-	// 	return;
-	bootbox.confirm({
-		message: 'You will need to install the screen sharing extension for Chrome to share your screen.\
-				 Please click <b>INSTALL</b> and then <b>re-join</b> the call from Slack, or click <b>CANCEL</b> to stay on this call.\
-				 Note that you will not be able to share your screen unless you install the extension.',
-		buttons: {
-			confirm: {
-				label: 'INSTALL',
-				className: 'screen-share-alertbox'
+		bootbox.confirm({
+			message: 'You will need to install the screen sharing extension for Chrome to share your screen.\
+					 Please click <b>INSTALL</b> and then <b>re-join</b> the call from Slack, or click <b>CANCEL</b> to stay on this call.\
+					 Note that you will not be able to share your screen unless you install the extension.',
+			buttons: {
+				confirm: {
+					label: 'INSTALL',
+					className: 'screen-share-alertbox'
+				},
+				cancel: {
+					label: 'CANCEL',
+					className: 'screen-share-alertbox'
+				}
 			},
-			cancel: {
-				label: 'CANCEL',
-				className: 'screen-share-alertbox'
+			callback: function (result) {
+				console.log(result)
+				if(result === true) {
+					window.open("https://chrome.google.com/webstore/detail/ether-screensharing/peeomhmdbpcmmmhdaojpeihlgigjfpif");
+					window.location.reload();
+				}else{
+					$('#screenShare').removeClass("icon-active")
+					$('#screenShare').attr('disabled', true);
+				}
 			}
-		},
-		callback: function (result) {
-			console.log(result)
-			if(result === true) {
-				window.open("https://chrome.google.com/webstore/detail/janus-webrtc-screensharin/hapfgfdkleiggjjpfpenajgdnfckjpaj");
-				window.location.reload();
-			}else{
-				$('#screenShare').removeClass("icon-active")
-				$('#screenShare').attr('disabled', true);
-			}
-		}
-	});
-	return;
-}
+		});
+		return;
+	}
 
 
 	// Create a new room
@@ -494,7 +487,6 @@ function newRemoteFeed_ss(id, display) {
 							},
 							error: function(error) {
 								Janus.error("WebRTC error:", error);
-								// bootbox.alert("WebRTC error... " + error);
 							}
 						});
 				}

@@ -26,7 +26,7 @@
 Janus.sessions = {};
 
 // Screensharing Chrome Extension ID
-Janus.extensionId = "hapfgfdkleiggjjpfpenajgdnfckjpaj";
+Janus.extensionId = "peeomhmdbpcmmmhdaojpeihlgigjfpif";
 Janus.isExtensionEnabled = function() {
 	if(window.navigator.userAgent.match('Chrome')) {
 		var chromever = parseInt(window.navigator.userAgent.match(/Chrome\/(.*) /)[1], 10);
@@ -37,7 +37,7 @@ Janus.isExtensionEnabled = function() {
 			// Older versions of Chrome don't support this extension-based approach, so lie
 			return true;
 		}
-		return ($('#janus-extension-installed').length > 0);
+		return ($('#ether-extension-installed').length > 0);
 	} else {
 		// Firefox of others, no need for the extension (but this doesn't mean it will work)
 		return true;
