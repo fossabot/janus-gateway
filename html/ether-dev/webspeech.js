@@ -14,8 +14,8 @@ speechRecognitionList.addFromString(grammar, 1);
 recognition.grammars = speechRecognitionList;
 recognition.lang = 'en-US';
 recognition.maxAlternatives = 1;
-recognition.continuous = false;
-recognition.interimResults = false;
+recognition.continuous = true;
+recognition.interimResults = true;
 
 function startRecognition() {
   recognition.onend = onend
@@ -34,28 +34,35 @@ recognition.onresult = function(event) {
   var end = new Date();
   endutc = end.toISOString().split('.')[0]+"Z";
 
-  var last = event.results.length - 1;
-  var transcriptReceived = event.results[last][0].transcript;
-  var confidence = event.results[last][0].confidence
-
-  var data = {}
-  data["meetingId"] = meetingId;
-  data["startTime"] = startutc;
-  data["endTime"] = endutc;
-  data["SpokenBy"] = userId;
-  data["text"] = transcriptReceived;
-  data["confidence"] = confidence;
-  data["recordingId"] = recordingId;
-  console.log(data)
-  $.ajax({
-    type: "POST",
-    url: "https://"+etherHost+"/v1/transcriptions/segments",
-    data: JSON.stringify(data),
-    crossDomain: true,
-    async: true,
-    success: function(res) {
-    }
-  });
+  var transcriptReceived = '';
+  var confidence = 0.0;
+  for (var i = event.resultIndex; i < event.results.length; i++) {
+    if (event.results[i].isFinal) {
+        transcriptReceived = event.results[i][0].transcript;
+        confidence = event.results[i][0].confidence;
+        console.log(event.results);
+        console.log('Confidence: ' + confidence);
+        
+        var data = {}
+        data["meetingId"] = meetingId;
+        data["startTime"] = startutc;
+        data["endTime"] = endutc;
+        data["SpokenBy"] = userId;
+        data["text"] = transcriptReceived;
+        data["confidence"] = confidence;
+        data["recordingId"] = recordingId;
+        console.log(data)
+        $.ajax({
+          type: "POST",
+          url: "https://"+etherHost+"/v1/transcriptions/segments",
+          data: JSON.stringify(data),
+          crossDomain: true,
+          async: true,
+          success: function(res) {
+          }
+        });      
+      } 
+  }
 }
 
 recognition.onerror = function(event) {
