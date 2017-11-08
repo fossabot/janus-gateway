@@ -1595,11 +1595,12 @@ function Janus(gatewayCallbacks) {
 							} else {
 								constraints = {
 									audio: isAudioSendEnabled(media),
+									// Limit the screen share resolution to save b/w and it could be cause for recorder crash
 									video: {
 										mandatory: {
 											chromeMediaSource: 'desktop',
-											maxWidth: window.screen.width,
-											maxHeight: window.screen.height,
+											maxWidth: 1920, //window.screen.width,
+											maxHeight: 1080, // window.screen.height,
 											minFrameRate: media.screenshareFrameRate,
 											maxFrameRate: media.screenshareFrameRate,
 										},
