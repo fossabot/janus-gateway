@@ -66,7 +66,6 @@ var source = null;
 
 var spinner = null;
 
-
 // Just an helper to generate random usernames
 function randomString(len, charSet) {
     charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -78,15 +77,25 @@ function randomString(len, charSet) {
     return randomString;
 }
 
+function CurrentSessinInstallation(){
+	window.extensionInstalledNow = true;
+	window.location.href = $('#meetingLink').html();
+}
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
 	Janus.init({debug: "all", callback: function() {
 		// Use a button to start the demo
 		$('#screenShare').click(function() {
+			if(!Janus.isExtensionEnabled()) {
+				chrome.webstore.install("https://chrome.google.com/webstore/detail/peeomhmdbpcmmmhdaojpeihlgigjfpif",CurrentSessinInstallation);
+				return;
+			}
 			if(screenShareStart)
 				return;
+			if(Janus.isExtensionEnabled()) {
 				screenShareStart = true;
+			}
 			// $(this).attr('disabled', true).unbind('click');
 			// Make sure the browser supports WebRTC
 			if(!Janus.isWebrtcSupported()) {
@@ -296,35 +305,6 @@ function preShareScreen() {
 		$('#screenShare').attr('disabled', true);
 		return;
 	}
-	if(!Janus.isExtensionEnabled()) {
-		bootbox.confirm({
-			message: 'You will need to install the screen sharing extension for Chrome to share your screen.\
-					 Please click <b>INSTALL</b> and then <b>re-join</b> the call from Slack, or click <b>CANCEL</b> to stay on this call.\
-					 Note that you will not be able to share your screen unless you install the extension.',
-			buttons: {
-				confirm: {
-					label: 'INSTALL',
-					className: 'screen-share-alertbox'
-				},
-				cancel: {
-					label: 'CANCEL',
-					className: 'screen-share-alertbox'
-				}
-			},
-			callback: function (result) {
-				console.log(result)
-				if(result === true) {
-					window.open("https://chrome.google.com/webstore/detail/ether-screensharing/peeomhmdbpcmmmhdaojpeihlgigjfpif");
-					window.location.reload();
-				}else{
-					$('#screenShare').removeClass("icon-active")
-					$('#screenShare').attr('disabled', true);
-				}
-			}
-		});
-		return;
-	}
-
 
 	// Create a new room
 	// $('#desc').attr('disabled', true);
