@@ -1,0 +1,19 @@
+.container{
+  margin-left: 47%;
+  margin-top: 10%;
+}
+.checkPoints{
+  padding-bottom: 1%;
+  padding-top: 1%;
+}
+.checkResults{
+  margin-left: 44%;
+  padding-top: 1%;
+  padding-bottom: 1%;
+}
+.body{
+  font-family: Lato,sans-serif;
+  min-height: 100%;
+  color: #2c2d30;
+  font-size: 15px;
+}

@@ -86,6 +86,7 @@ var isRecorder = false;
 var markerId = null;
 var workspaceId = null;
 var teamId = null;
+var extensionInstalledNow = false;
 
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)

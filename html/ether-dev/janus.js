@@ -37,7 +37,12 @@ Janus.isExtensionEnabled = function() {
 			// Older versions of Chrome don't support this extension-based approach, so lie
 			return true;
 		}
-		return ($('#ether-extension-installed').length > 0);
+		if(window.extensionInstalledNow == true || $('#ether-extension-installed').length > 0){
+			return true;
+		}
+		else{
+			return ($('#ether-extension-installed').length > 0);
+		}
 	} else {
 		// Firefox of others, no need for the extension (but this doesn't mean it will work)
 		return true;
