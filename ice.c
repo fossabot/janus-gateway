@@ -996,6 +996,7 @@ janus_ice_handle *janus_ice_handle_create(void *gateway_session, const char *opa
 	g_hash_table_insert(session->ice_handles, janus_uint64_dup(handle->handle_id), handle);
 	janus_mutex_unlock(&session->mutex);
 
+	JANUS_LOG(LOG_INFO, "Created new handle in session %"SCNu64": %"SCNu64": %s\n", session->session_id, handle_id, handle->opaque_id);
 	return handle;
 }
 
@@ -1086,7 +1087,7 @@ gint janus_ice_handle_destroy(void *gateway_session, guint64 handle_id) {
 		janus_mutex_unlock(&session->mutex);
 		return 0;
 	}
-	JANUS_LOG(LOG_INFO, "Detaching handle from %s\n", plugin_t->get_name());
+	JANUS_LOG(LOG_INFO, "Detaching handle [%"SCNu64"] from %s\n", handle_id, plugin_t->get_name());
 	/* TODO Actually detach handle... */
 	int error = 0;
 	janus_mutex_lock(&old_plugin_sessions_mutex);
@@ -1535,7 +1536,7 @@ void janus_ice_cb_component_state_changed(NiceAgent *agent, guint stream_id, gui
 		handle->send_thread = g_thread_try_new(tname, &janus_ice_send_thread, handle, &error);
 		if(error != NULL) {
 			/* FIXME We should clear some resources... */
-			JANUS_LOG(LOG_ERR, "[%"SCNu64"] Got error %d (%s) trying to launch the ICE send thread...\n", handle->handle_id, error->code, error->message ? error->message : "??");
+			JANUS_LOG(LOG_ERR, "[%"SCNu64"][%s] Got error %d (%s) trying to launch the ICE send thread...\n", handle->handle_id, handle->opaque_id, error->code, error->message ? error->message : "??");
 			return;
 		}
 	}
@@ -1548,21 +1549,21 @@ void janus_ice_cb_component_state_changed(NiceAgent *agent, guint stream_id, gui
 		if(handle && trickle_recv && answer_recv && !alert_set) {
 			/* FIXME Should we really give up for what may be a failure in only one of the media? */
 			if(stream->disabled) {
-				JANUS_LOG(LOG_WARN, "[%"SCNu64"] ICE failed for component %d in stream %d, but stream is disabled so we don't care...\n", handle->handle_id, component_id, stream_id);
+				JANUS_LOG(LOG_WARN, "[%"SCNu64"][%s] ICE failed for component %d in stream %d, but stream is disabled so we don't care...\n", handle->handle_id, handle->opaque_id, component_id, stream_id);
 				return;
 			}
-			JANUS_LOG(LOG_ERR, "[%"SCNu64"] ICE failed for component %d in stream %d...\n", handle->handle_id, component_id, stream_id);
+			JANUS_LOG(LOG_ERR, "[%"SCNu64"][%s] ICE failed for component %d in stream %d...\n", handle->handle_id, handle->opaque_id, component_id, stream_id);
 			janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALERT);
 			janus_plugin *plugin = (janus_plugin *)handle->app;
 			if(plugin != NULL) {
-				JANUS_LOG(LOG_VERB, "[%"SCNu64"] Telling the plugin about it (%s)\n", handle->handle_id, plugin->get_name());
+				JANUS_LOG(LOG_VERB, "[%"SCNu64"][%s] Telling the plugin about it (%s)\n", handle->handle_id, handle->opaque_id, plugin->get_name());
 				if(plugin && plugin->hangup_media)
 					plugin->hangup_media(handle->app_handle);
 			}
 			janus_ice_notify_hangup(handle, "ICE failed");
 		} else {
-			JANUS_LOG(LOG_WARN, "[%"SCNu64"] ICE failed for component %d in stream %d, but we're still waiting for some info so we don't care... (trickle %s, answer %s, alert %s)\n",
-				handle->handle_id, component_id, stream_id,
+			JANUS_LOG(LOG_WARN, "[%"SCNu64"][%s] ICE failed for component %d in stream %d, but we're still waiting for some info so we don't care... (trickle %s, answer %s, alert %s)\n",
+				handle->handle_id, handle->opaque_id, component_id, stream_id,
 				trickle_recv ? "received" : "pending",
 				answer_recv ? "received" : "pending",
 				alert_set ? "set" : "not set");
@@ -1589,12 +1590,12 @@ void janus_ice_cb_new_selected_pair (NiceAgent *agent, guint stream_id, guint co
 #endif
 	janus_ice_stream *stream = g_hash_table_lookup(handle->streams, GUINT_TO_POINTER(stream_id));
 	if(!stream) {
-		JANUS_LOG(LOG_ERR, "[%"SCNu64"]     No stream %d??\n", handle->handle_id, stream_id);
+		JANUS_LOG(LOG_ERR, "[%"SCNu64"][%s]     No stream %d??\n", handle->handle_id, handle->opaque_id, stream_id);
 		return;
 	}
 	janus_ice_component *component = g_hash_table_lookup(stream->components, GUINT_TO_POINTER(component_id));
 	if(!component) {
-		JANUS_LOG(LOG_ERR, "[%"SCNu64"]     No component %d in stream %d??\n", handle->handle_id, component_id, stream_id);
+		JANUS_LOG(LOG_ERR, "[%"SCNu64"][%s]     No component %d in stream %d??\n", handle->handle_id, handle->opaque_id, component_id, stream_id);
 		return;
 	}
 	char sp[200];
@@ -1665,7 +1666,7 @@ void janus_ice_cb_new_selected_pair (NiceAgent *agent, guint stream_id, guint co
 	/* Create DTLS-SRTP context, at last */
 	component->dtls = janus_dtls_srtp_create(component, stream->dtls_role);
 	if(!component->dtls) {
-		JANUS_LOG(LOG_ERR, "[%"SCNu64"]     No component DTLS-SRTP session??\n", handle->handle_id);
+		JANUS_LOG(LOG_ERR, "[%"SCNu64"][%s]     No component DTLS-SRTP session??\n", handle->handle_id, handle->opaque_id);
 		return;
 	}
 	janus_dtls_srtp_handshake(component->dtls);
@@ -1714,12 +1715,12 @@ void janus_ice_cb_new_remote_candidate (NiceAgent *agent, NiceCandidate *candida
 	}
 	janus_ice_stream *stream = g_hash_table_lookup(handle->streams, GUINT_TO_POINTER(stream_id));
 	if(!stream) {
-		JANUS_LOG(LOG_ERR, "[%"SCNu64"]     No stream %d??\n", handle->handle_id, stream_id);
+		JANUS_LOG(LOG_ERR, "[%"SCNu64"][%s]    No stream %d??\n", handle->handle_id, handle->opaque_id, stream_id);
 		return;
 	}
 	janus_ice_component *component = g_hash_table_lookup(stream->components, GUINT_TO_POINTER(component_id));
 	if(!component) {
-		JANUS_LOG(LOG_ERR, "[%"SCNu64"]     No component %d in stream %d??\n", handle->handle_id, component_id, stream_id);
+		JANUS_LOG(LOG_ERR, "[%"SCNu64"][%s]    No component %d in stream %d??\n", handle->handle_id, handle->opaque_id, component_id, stream_id);
 		return;
 	}
 #ifndef HAVE_LIBNICE_TCP
@@ -2672,7 +2673,7 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 	handle->send_thread = NULL;
 	/* Note: NICE_COMPATIBILITY_RFC5245 is only available in more recent versions of libnice */
 	handle->controlling = janus_ice_lite_enabled ? FALSE : !offer;
-	JANUS_LOG(LOG_INFO, "[%"SCNu64"] Creating ICE agent (ICE %s mode, %s)\n", handle->handle_id,
+	JANUS_LOG(LOG_INFO, "[%"SCNu64"][%s] Creating ICE agent (ICE %s mode, %s)\n", handle->handle_id, handle->opaque_id,
 		janus_ice_lite_enabled ? "Lite" : "Full", handle->controlling ? "controlling" : "controlled");
 	g_atomic_int_set(&handle->send_thread_created, 0);
 	handle->agent = g_object_new(NICE_TYPE_AGENT,
@@ -3224,7 +3225,7 @@ void *janus_ice_send_thread(void *data) {
 				if(!component->in_stats.audio_notified_lastsec && last && now-last->when >= no_media_timer*G_USEC_PER_SEC) {
 					/* We missed more than no_second_timer seconds of audio! */
 					component->in_stats.audio_notified_lastsec = TRUE;
-					JANUS_LOG(LOG_WARN, "[%"SCNu64"] Didn't receive audio for more than %d seconds...\n", handle->handle_id, no_media_timer);
+					JANUS_LOG(LOG_WARN, "[%"SCNu64"][%s] Didn't receive audio for more than %d seconds...\n", handle->handle_id, handle->opaque_id, no_media_timer);
 					janus_ice_notify_media(handle, FALSE, FALSE);
 				}
 				if(!component->in_stats.video_notified_lastsec && janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_BUNDLE)) {
@@ -3233,7 +3234,7 @@ void *janus_ice_send_thread(void *data) {
 					if(last && now-last->when >= no_media_timer*G_USEC_PER_SEC) {
 						/* We missed more than no_second_timer seconds of video! */
 						component->in_stats.video_notified_lastsec = TRUE;
-						JANUS_LOG(LOG_WARN, "[%"SCNu64"] Didn't receive video for more than %d seconds...\n", handle->handle_id, no_media_timer);
+						JANUS_LOG(LOG_WARN, "[%"SCNu64"][%s] Didn't receive video for more than %d seconds...\n", handle->handle_id, handle->opaque_id, no_media_timer);
 						janus_ice_notify_media(handle, TRUE, FALSE);
 					}
 				}
@@ -3245,7 +3246,7 @@ void *janus_ice_send_thread(void *data) {
 				if(!component->in_stats.video_notified_lastsec && last && now-last->when >= no_media_timer*G_USEC_PER_SEC) {
 					/* We missed more than no_second_timer seconds of video! */
 					component->in_stats.video_notified_lastsec = TRUE;
-					JANUS_LOG(LOG_WARN, "[%"SCNu64"] Didn't receive video for more than a second...\n", handle->handle_id);
+					JANUS_LOG(LOG_WARN, "[%"SCNu64"][%s] Didn't receive video for more than a second...\n", handle->handle_id,handle->opaque_id);
 					janus_ice_notify_media(handle, TRUE, FALSE);
 				}
 			}
@@ -3848,8 +3849,8 @@ void janus_ice_relay_data(janus_ice_handle *handle, char *buf, int len) {
 void janus_ice_dtls_handshake_done(janus_ice_handle *handle, janus_ice_component *component) {
 	if(!handle || !component)
 		return;
-	JANUS_LOG(LOG_VERB, "[%"SCNu64"] The DTLS handshake for the component %d in stream %d has been completed\n",
-		handle->handle_id, component->component_id, component->stream_id);
+	JANUS_LOG(LOG_VERB, "[%"SCNu64"][%s] The DTLS handshake for the component %d in stream %d has been completed\n",
+		handle->handle_id, handle->opaque_id, component->component_id, component->stream_id);
 	/* Check if all components are ready */
 	janus_mutex_lock(&handle->mutex);
 	if(handle->audio_stream && !handle->audio_stream->disabled) {
@@ -3895,7 +3896,7 @@ void janus_ice_dtls_handshake_done(janus_ice_handle *handle, janus_ice_component
 	}
 	janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_READY);
 	janus_mutex_unlock(&handle->mutex);
-	JANUS_LOG(LOG_INFO, "[%"SCNu64"] The DTLS handshake has been completed\n", handle->handle_id);
+	JANUS_LOG(LOG_INFO, "[%"SCNu64"][%s] The DTLS handshake has been completed\n", handle->handle_id, handle->opaque_id);
 	/* Notify the plugin that the WebRTC PeerConnection is ready to be used */
 	janus_plugin *plugin = (janus_plugin *)handle->app;
 	if(plugin != NULL) {
