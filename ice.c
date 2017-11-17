@@ -1087,7 +1087,7 @@ gint janus_ice_handle_destroy(void *gateway_session, guint64 handle_id) {
 		janus_mutex_unlock(&session->mutex);
 		return 0;
 	}
-	JANUS_LOG(LOG_INFO, "Detaching handle [%"SCNu64"] from %s\n", handle_id, plugin_t->get_name());
+	JANUS_LOG(LOG_INFO, "Detaching handle [%"SCNu64"][%s] from %s\n", handle_id, handle->opaque_id, plugin_t->get_name());
 	/* TODO Actually detach handle... */
 	int error = 0;
 	janus_mutex_lock(&old_plugin_sessions_mutex);
@@ -1157,7 +1157,7 @@ void janus_ice_free(janus_ice_handle *handle) {
 	}
 	janus_mutex_unlock(&handle->mutex);
 	janus_ice_webrtc_free(handle);
-	JANUS_LOG(LOG_INFO, "[%"SCNu64"] Handle and related resources freed\n", handle->handle_id);
+	JANUS_LOG(LOG_INFO, "[%"SCNu64"][%s] Handle and related resources freed\n", handle->handle_id, handle->opaque_id);
 	g_free(handle->opaque_id);
 	g_free(handle);
 	handle = NULL;
@@ -1279,7 +1279,7 @@ void janus_ice_webrtc_free(janus_ice_handle *handle) {
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_CLEANING);
 	g_atomic_int_set(&handle->send_thread_created, 0);
 	janus_mutex_unlock(&handle->mutex);
-	JANUS_LOG(LOG_INFO, "[%"SCNu64"] WebRTC resources freed\n", handle->handle_id);
+	JANUS_LOG(LOG_INFO, "[%"SCNu64"][%s] WebRTC resources freed\n", handle->handle_id, handle->opaque_id);
 }
 
 void janus_ice_stream_free(GHashTable *streams, janus_ice_stream *stream) {
