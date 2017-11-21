@@ -3033,19 +3033,19 @@ static void janus_videoroom_recorder_create(janus_videoroom_participant *partici
 static void janus_videoroom_recorder_close(janus_videoroom_participant *participant) {
 	if(participant->arc) {
 		janus_recorder_close(participant->arc);
-		JANUS_LOG(LOG_INFO, "Closed audio recording %s\n", participant->arc->filename ? participant->arc->filename : "??");
+		JANUS_LOG(LOG_INFO, "Closed audio recording %s for %s\n", participant->arc->filename ? participant->arc->filename : "??", participant->display);
 		janus_recorder_free(participant->arc);
 	}
 	participant->arc = NULL;
 	if(participant->vrc) {
 		janus_recorder_close(participant->vrc);
-		JANUS_LOG(LOG_INFO, "Closed video recording %s\n", participant->vrc->filename ? participant->vrc->filename : "??");
+		JANUS_LOG(LOG_INFO, "Closed video recording %s for %s\n", participant->vrc->filename ? participant->vrc->filename : "??", participant->display);
 		janus_recorder_free(participant->vrc);
 	}
 	participant->vrc = NULL;
 	if(participant->drc) {
 		janus_recorder_close(participant->drc);
-		JANUS_LOG(LOG_INFO, "Closed data recording %s\n", participant->drc->filename ? participant->drc->filename : "??");
+		JANUS_LOG(LOG_INFO, "Closed data recording %s for %s\n", participant->drc->filename ? participant->drc->filename : "??", participant->display);
 		janus_recorder_free(participant->drc);
 	}
 	participant->drc = NULL;
