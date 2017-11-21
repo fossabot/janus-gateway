@@ -46,6 +46,16 @@ fir_freq = 10
 record = false
 ;rec_dir = /path/to/recordings-folder
 
+[4321]
+description = Demo Room
+secret = adminpwd
+publishers = 6
+bitrate = 128000
+fir_freq = 10
+audiocodec = opus
+videocodec = h264
+record = false
+;rec_dir = /path/to/recordings-folder
 
 ; This other demo room here is only there in case you want to play with
 ; the VP9 SVC support. Notice that you'll need a Chrome launched with
