@@ -140,7 +140,6 @@ notify_joining = true|false (optional, whether to notify all participants when a
 #include "plugin.h"
 
 #include <jansson.h>
-#include <opus/opus.h>
 
 #include "../debug.h"
 #include "../apierror.h"
@@ -596,14 +595,6 @@ typedef struct janus_videoroom_participant {
 	janus_mutex rtp_forwarders_mutex;
 	int udp_sock; /* The udp socket on which to forward rtp packets */
 	gboolean kicked;	/* Whether this participant has been kicked */
-
-	// Added for audio mixing
-	GList *inbuf;			/* Incoming audio from this participant, as an ordered list of packets */
-	gint64 last_drop;		/* When we last dropped a packet because the imcoming queue was full */
-	janus_mutex qmutex;		/* Incoming queue mutex */
-	OpusDecoder *decoder;	/* Opus decoder instance */
-	gboolean reset;			/* Whether or not the Opus context must be reset, without re-joining the room */
-	gboolean prebuffering;	/* Whether this participant needs pre-buffering of a few packets (just joined) */
 } janus_videoroom_participant;
 
 static void janus_videoroom_participant_free(janus_videoroom_participant *p);
@@ -670,8 +661,6 @@ typedef struct janus_videoroom_rtp_relay_packet {
 #define JANUS_VIDEOROOM_ERROR_NOT_PUBLISHED		435
 #define JANUS_VIDEOROOM_ERROR_ID_EXISTS			436
 #define JANUS_VIDEOROOM_ERROR_INVALID_SDP		437
-
-#define JANUS_VIDEOROOM_ERROR_LIBOPUS_ERROR	488
 
 
 static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_participant *p,
@@ -995,6 +984,9 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			videoroom->private_ids = g_hash_table_new(NULL, NULL);
 			videoroom->check_tokens = FALSE;	/* Static rooms can't have an "allowed" list yet, no hooks to the configuration file */
 			videoroom->allowed = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
+			janus_mutex_lock(&rooms_mutex);
+			g_hash_table_insert(rooms, janus_uint64_dup(videoroom->room_id), videoroom);
+			janus_mutex_unlock(&rooms_mutex);
 			JANUS_LOG(LOG_VERB, "Created videoroom: %"SCNu64" (%s, %s, %s/%s codecs, secret: %s, pin: %s, pvtid: %s)\n",
 				videoroom->room_id, videoroom->room_name,
 				videoroom->is_private ? "private" : "public",
@@ -1912,24 +1904,6 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 				/* Notify the user we're going to destroy the room... */
 				int ret = gateway->push_event(p->session->handle, &janus_videoroom_plugin, NULL, destroyed, NULL);
 				JANUS_LOG(LOG_VERB, "  >> %d (%s)\n", ret, janus_get_api_error(ret));
-
-				/* Get rid of queued packets */
-				janus_mutex_lock(&p->qmutex);
-				while(p->inbuf) {
-					GList *first = g_list_first(p->inbuf);
-					janus_videoroom_rtp_relay_packet *pkt = (janus_videoroom_rtp_relay_packet *)first->data;
-					p->inbuf = g_list_remove_link(p->inbuf, first);
-					first = NULL;
-					if(pkt == NULL)
-						continue;
-					if(pkt->data)
-						g_free(pkt->data);
-					pkt->data = NULL;
-					g_free(pkt);
-					pkt = NULL;
-				}
-				janus_mutex_unlock(&p->qmutex);
-
 				/* ... and then ask the core to remove the handle */
 				gateway->end_session(p->session->handle);
 			}
@@ -3113,33 +3087,6 @@ void janus_videoroom_hangup_media(janus_plugin_session *handle) {
 		participant->remb_latest = 0;
 		participant->fir_latest = 0;
 		participant->fir_seq = 0;
-		
-		/* Remove the decoder used for audio mixing */	
-		if(participant->decoder)
-			opus_decoder_destroy(participant->decoder);
-		participant->decoder = NULL;
-
-		// TODO Ether: Check if has to be true or false
-		participant->reset = TRUE;
-
-		/* Get rid of queued packets */
-		janus_mutex_lock(&participant->qmutex);		
-		while(participant->inbuf) {
-			GList *first = g_list_first(participant->inbuf);
-			janus_videoroom_rtp_relay_packet *pkt = (janus_videoroom_rtp_relay_packet *)first->data;
-			participant->inbuf = g_list_remove_link(participant->inbuf, first);
-			first = NULL;
-			if(pkt == NULL)
-				continue;
-			if(pkt->data)
-				g_free(pkt->data);
-			pkt->data = NULL;
-			g_free(pkt);
-			pkt = NULL;
-		}
-		participant->last_drop = 0;
-		janus_mutex_unlock(&participant->qmutex);		
-
 		/* Get rid of the recorders, if available */
 		janus_mutex_lock(&participant->rec_mutex);
 		janus_videoroom_recorder_close(participant);
@@ -3351,15 +3298,6 @@ static void *janus_videoroom_handler(void *data) {
 				publisher->listeners = NULL;
 				publisher->subscriptions = NULL;
 				janus_mutex_init(&publisher->listeners_mutex);
-
-				/* Recording mix initialization */
-				publisher->inbuf = NULL;
-				publisher->last_drop = 0;
-				publisher->decoder = NULL;
-				publisher->reset = TRUE;
-				publisher->prebuffering  = TRUE;
-				janus_mutex_init(&publisher->qmutex);
-
 				publisher->audio_pt = OPUS_PT;
 				switch(videoroom->acodec) {
 					case JANUS_VIDEOROOM_OPUS:
@@ -3448,8 +3386,6 @@ static void *janus_videoroom_handler(void *data) {
 					publisher->recording_base = g_strdup(json_string_value(recfile));
 					JANUS_LOG(LOG_VERB, "Setting recording basename: %s (room %"SCNu64", user %"SCNu64")\n", publisher->recording_base, publisher->room->room_id, publisher->user_id);
 				}
-				publisher->reset = FALSE;
-
 				/* Done */
 				session->participant_type = janus_videoroom_p_type_publisher;
 				session->participant = publisher;
@@ -3859,25 +3795,6 @@ static void *janus_videoroom_handler(void *data) {
 				/* This publisher is leaving, tell everybody */
 				session->participant_type = janus_videoroom_p_type_none;
 				janus_videoroom_leave_or_unpublish(participant, TRUE, FALSE);
-
-				/* Get rid of queued packets */
-				janus_mutex_lock(&participant->qmutex);
-				participant->prebuffering = TRUE;
-				while(participant->inbuf) {
-					GList *first = g_list_first(participant->inbuf);
-					janus_videoroom_rtp_relay_packet *pkt = (janus_videoroom_rtp_relay_packet *)first->data;
-					participant->inbuf = g_list_remove_link(participant->inbuf, first);
-					first = NULL;
-					if(pkt == NULL)
-						continue;
-					if(pkt->data)
-						g_free(pkt->data);
-					pkt->data = NULL;
-					g_free(pkt);
-					pkt = NULL;
-				}
-				janus_mutex_unlock(&participant->qmutex);				
-
 				/* Done */
 				participant->audio_active = FALSE;
 				participant->video_active = FALSE;
