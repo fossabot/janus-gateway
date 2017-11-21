@@ -38,7 +38,7 @@
 [1234]
 description = Demo Room
 secret = adminpwd
-publishers = 24
+publishers = 6
 bitrate = 128000
 fir_freq = 10
 ;audiocodec = opus

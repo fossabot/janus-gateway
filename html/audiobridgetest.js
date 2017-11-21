@@ -44,9 +44,9 @@
 //
 var server = null;
 if(window.location.protocol === 'http:')
-	server = "http://" + window.location.host + "/janus-meet/janus";
+	server = "http://" + window.location.hostname + "/janus-meet/janus";
 else
-	server = "https://" + window.location.host + "/janus-meet/janus";
+	server = "https://" + window.location.hostname + "/janus-meet/janus";
 
 var janus = null;
 var mixertest = null;
