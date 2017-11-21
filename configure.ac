@@ -1,4 +1,4 @@
-AC_INIT([Janus Gateway],[0.2.3],[https://github.com/meetecho/janus-gateway],[janus-gateway],[https://janus.conf.meetecho.com])
+AC_INIT([Janus Gateway],[0.2.5],[https://github.com/meetecho/janus-gateway],[janus-gateway],[https://janus.conf.meetecho.com])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -127,6 +127,17 @@ AC_ARG_ENABLE([all-handlers],
               ],
               [])
 
+AC_ARG_ENABLE([all-js-modules],
+              [AS_HELP_STRING([--enable-all-js-modules],
+                              [Build all the JavaScript modules (instead of manually enabling them one by one)])],
+              [
+               enable_javascript_es_module=yes
+               enable_javascript_umd_module=yes
+               enable_javascript_iife_module=yes
+               enable_javascript_common_js_module=yes
+              ],
+              [])
+
 AC_ARG_ENABLE([rest],
               [AS_HELP_STRING([--disable-rest],
                               [Disable REST (HTTP/HTTPS) support])],
@@ -200,6 +211,12 @@ AS_IF([test "x$enable_dtls_settimeout" = "xyes"],
       AC_MSG_NOTICE([Assuming DTLSv1_set_initial_timeout_duration is available])
       ])
 AM_CONDITIONAL([ENABLE_DTLS_SETTIMEOUT], [test "x$enable_dtls_settimeout" = "xyes"])
+
+AC_CHECK_LIB([crypto],
+             [RAND_egd],
+             [AM_CONDITIONAL([LIBRESSL_DETECTED], false)],
+             [AM_CONDITIONAL([LIBRESSL_DETECTED], true)]
+             )
 
 AC_CHECK_LIB([nice],
              [nice_agent_set_port_range],
@@ -347,35 +364,24 @@ AC_SUBST([MHD_CFLAGS])
 AC_SUBST([MHD_LIBS])
 AM_CONDITIONAL([ENABLE_REST], [test "x$enable_rest" = "xyes"])
 
-AM_CONDITIONAL([ENABLE_WEBSOCKETS_NEWAPI], false)
 AC_CHECK_LIB([websockets],
-             [libwebsocket_create_context],
-             [
-               AS_IF([test "x$enable_websockets" != "xno"],
-               [
-                  AC_DEFINE(HAVE_WEBSOCKETS)
-                  WS_MANUAL_LIBS="-lwebsockets"
-                  enable_websockets=yes
-               ])
-             ],
-             [
-				AC_CHECK_LIB([websockets],
-							 [lws_create_context],
-							 [
-							   AS_IF([test "x$enable_websockets" != "xno"],
-							   [
-								  AC_DEFINE(HAVE_WEBSOCKETS)
-								  AC_DEFINE(HAVE_LIBWEBSOCKETS_NEWAPI)
-								  AM_CONDITIONAL([ENABLE_WEBSOCKETS_NEWAPI], true)
-								  WS_MANUAL_LIBS="-lwebsockets"
-								  enable_websockets=yes
-							   ])
-							 ],
-							 [
-							   AS_IF([test "x$enable_websockets" = "xyes"],
-									 [AC_MSG_ERROR([libwebsockets not found. See README.md for installation instructions or use --disable-websockets])])
-							 ])
-             ])
+			 [lws_create_vhost],
+			 [
+			   AS_IF([test "x$enable_websockets" != "xno"],
+			   [
+				  AC_DEFINE(HAVE_WEBSOCKETS)
+				  WS_MANUAL_LIBS="-lwebsockets"
+				  enable_websockets=yes
+				  AC_CHECK_LIB([websockets],
+							   [lws_get_peer_simple],
+							   [AC_DEFINE(HAVE_LIBWEBSOCKETS_PEER_SIMPLE)]
+							  )
+			   ])
+			 ],
+			 [
+			   AS_IF([test "x$enable_websockets" = "xyes"],
+					 [AC_MSG_ERROR([libwebsockets not found. See README.md for installation instructions or use --disable-websockets])])
+			 ])
 AM_CONDITIONAL([ENABLE_WEBSOCKETS], [test "x$enable_websockets" = "xyes"])
 AC_SUBST(WS_MANUAL_LIBS)
 
@@ -580,6 +586,59 @@ PKG_CHECK_MODULES([EVENTS],
 
 
 ##
+# JavaScript modules
+##
+
+AC_ARG_ENABLE([javascript-es-module],
+              [AS_HELP_STRING([--enable-javascript-es-module],
+                              [Generate an ECMAScript style module from janus.js])],
+              [AS_IF([test "x$enable_javascript_es_module" = "xyes"],
+                     [enable_javascript_es_module=yes])],
+              [enable_javascript_es_module=no])
+AM_CONDITIONAL([ENABLE_JAVASCRIPT_ES_MODULE], [test "x$enable_javascript_es_module" = "xyes" ])
+
+AC_ARG_ENABLE([javascript-umd-module],
+              [AS_HELP_STRING([--enable-javascript-umd-module],
+                              [Generate an UMD style module from janus.js])],
+              [AS_IF([test "x$enable_javascript_umd_module" = "xyes"],
+                     [enable_javascript_umd_module=yes])],
+              [enable_javascript_umd_module=no])
+AM_CONDITIONAL([ENABLE_JAVASCRIPT_UMD_MODULE], [test "x$enable_javascript_umd_module" = "xyes" ])
+
+AC_ARG_ENABLE([javascript-iife-module],
+              [AS_HELP_STRING([--enable-javascript-iife-module],
+                              [Generate an IIFE style wrapper around janus.js])],
+              [AS_IF([test "x$enable_javascript_iife_module" = "xyes"],
+                     [enable_javascript_iife_module=yes])],
+              [enable_javascript_iife_module=no])
+AM_CONDITIONAL([ENABLE_JAVASCRIPT_IIFE_MODULE], [test "x$enable_javascript_iife_module" = "xyes" ])
+
+AC_ARG_ENABLE([javascript-common-js-module],
+              [AS_HELP_STRING([--enable-javascript-common-js-module],
+                              [Generate an CommonJS style module from janus.js])],
+              [AS_IF([test "x$enable_javascript_common_js_module" = "xyes"],
+                     [enable_javascript_common_js_module=yes])],
+              [enable_javascript_common_js_module=no])
+AM_CONDITIONAL([ENABLE_JAVASCRIPT_COMMON_JS_MODULE], [test "x$enable_javascript_common_js_module" = "xyes" ])
+
+case "-${enable_javascript_common_js_module}-${enable_javascript_iife_module}-${enable_javascript_umd_module}-${enable_javascript_es_module}-" in
+    *-yes*)
+        AM_CONDITIONAL([ENABLE_JAVASCRIPT_MODULES], true)
+    ;;
+    *)
+        AM_CONDITIONAL([ENABLE_JAVASCRIPT_MODULES], false)
+    ;;
+esac
+
+AC_ARG_VAR(NPM,"npm executable to use")
+AC_PATH_PROG(NPM,npm,,)
+AM_CONDITIONAL([NPM_FOUND], [test "x$NPM" != "x" ])
+AM_COND_IF([ENABLE_JAVASCRIPT_MODULES],[
+    AM_COND_IF([NPM_FOUND],,[AC_MSG_ERROR([npm not found])])
+])
+
+
+##
 # Post-processing
 ##
 
@@ -601,6 +660,7 @@ AS_IF([test "x$enable_post_processing" = "xyes"],
                          ])
       ])
 
+AM_CONDITIONAL([WITH_SOURCE_DATE_EPOCH], [test "x$SOURCE_DATE_EPOCH" != "x"])
 AM_CONDITIONAL([ENABLE_POST_PROCESSING], [test "x$enable_post_processing" = "xyes"])
 
 AC_CONFIG_FILES([
@@ -627,7 +687,9 @@ AM_COND_IF([ENABLE_BORINGSSL],
 		[echo "DTLS set-timeout:          yes"],
 		[echo "DTLS set-timeout:          no"])
 	],
-	[echo "SSL/crypto library:        OpenSSL"
+	[AM_COND_IF([LIBRESSL_DETECTED],
+		[echo "SSL/crypto library:        LibreSSL"],
+		[echo "SSL/crypto library:        OpenSSL"])
 	 echo "DTLS set-timeout:          not available"])
 AM_COND_IF([ENABLE_SCTP],
 	[echo "DataChannels support:      yes"],
@@ -646,11 +708,7 @@ AM_COND_IF([ENABLE_REST],
 	[echo "    REST (HTTP/HTTPS):     yes"],
 	[echo "    REST (HTTP/HTTPS):     no"])
 AM_COND_IF([ENABLE_WEBSOCKETS],
-	[
-     AM_COND_IF([ENABLE_WEBSOCKETS_NEWAPI],
-		[echo "    WebSockets:            yes (new API)"],
-		[echo "    WebSockets:            yes (old API)"])
-	],
+	[echo "    WebSockets:            yes"],
 	[echo "    WebSockets:            no"])
 AM_COND_IF([ENABLE_RABBITMQ],
 	[echo "    RabbitMQ:              yes"],
@@ -693,6 +751,23 @@ echo "Event handlers:"
 AM_COND_IF([ENABLE_SAMPLEEVH],
 	[echo "    Sample event handler:  yes"],
 	[echo "    Sample event handler:  no"])
+AM_COND_IF([ENABLE_JAVASCRIPT_MODULES], [
+	echo "JavaScript modules:        yes"
+	echo "    Using npm:             $NPM"
+	AM_COND_IF([ENABLE_JAVASCRIPT_ES_MODULE],
+		[echo "    ES syntax:             yes"],
+		[echo "    ES syntax:             no"])
+	AM_COND_IF([ENABLE_JAVASCRIPT_IIFE_MODULE],
+		[echo "    IIFE syntax:           yes"],
+		[echo "    IIFE syntax:           no"])
+	AM_COND_IF([ENABLE_JAVASCRIPT_UMD_MODULE],
+		[echo "    UMD syntax:            yes"],
+		[echo "    UMD syntax:            no"])
+	AM_COND_IF([ENABLE_JAVASCRIPT_COMMON_JS_MODULE],
+		[echo "    CommonJS syntax:       yes"],
+		[echo "    CommonJS syntax:       no"])
+	],
+	[echo "JavaScript modules:        no"])
 
 echo
 echo "If this configuration is ok for you, do a 'make' to start building Janus. A 'make install' will install Janus and its plugins to the specified prefix. Finally, a 'make configs' will install some sample configuration files too (something you'll only want to do the first time, though)."

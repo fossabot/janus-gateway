@@ -11,6 +11,7 @@
 ; fir_freq = <send a FIR to publishers every fir_freq seconds> (0=disable)
 ; audiocodec = opus|isac32|isac16|pcmu|pcma (audio codec to force on publishers, default=opus)
 ; videocodec = vp8|vp9|h264 (video codec to force on publishers, default=vp8)
+; video_svc = yes|no (whether SVC support must be enabled; works only for VP9, default=no)
 ; audiolevel_ext = yes|no (whether the ssrc-audio-level RTP extension must
 ;		be negotiated/used or not for new publishers, default=yes)
 ; audiolevel_event = yes|no (whether to emit event to other users or not, default=no)
@@ -22,6 +23,11 @@
 ;		be negotiated/used or not for new publishers, default=yes)
 ; record = true|false (whether this room should be recorded, default=false)
 ; rec_dir = <folder where recordings should be stored, when enabled>
+; notify_joining = true|false (optional, whether to notify all participants when a new
+;               participant joins the room. The Videoroom plugin by design only notifies
+;               new feeds (publishers), and enabling this may result extra notification
+;               traffic. This flag is particularly useful when enabled with require_pvtid
+;               for admin to manage listening only participants. default=false)
 
 ***REMOVED***
 ;admin_key = supersecret		; If set, rooms can be created via API only
@@ -39,18 +45,18 @@ fir_freq = 10
 ;videocodec = vp8
 record = false
 ;rec_dir = /path/to/recordings-folder
-recordmix = false
-;recordmix_file = /home/ashwini/recordings/video-room-1234.wav
 
-[3456]
-description = Demo Room
+
+; This other demo room here is only there in case you want to play with
+; the VP9 SVC support. Notice that you'll need a Chrome launched with
+; the flag that enables that support, or otherwise you'll be using just
+; plain VP9 (which is good if you want to test how this indeed affect
+; what receivers will get, whether they're encoding SVC or not).
+[5678]
+description = VP9-SVC Demo Room
 secret = adminpwd
-publishers = 24
-bitrate = 128000
+publishers = 6
+bitrate = 512000
 fir_freq = 10
-;audiocodec = opus
-;videocodec = vp8
-record = false
-;rec_dir = /path/to/recordings-folder
-recordmix = false
-;recordmix_file = /home/ashwini/recordings/video-room-1234.wav
+videocodec = vp9
+video_svc = true

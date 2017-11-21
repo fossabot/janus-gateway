@@ -4,109 +4,69 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Janus WebRTC Gateway: Video Room Demo</title>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.1.5/adapter.min.js" ></script>
+<title>Janus WebRTC Gateway: Voice Mail Demo</title>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/5.0.1/adapter.min.js" ></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" ></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js" ></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.1.0/bootbox.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
 <script type="text/javascript" src="janus.js" ></script>
-<script type="text/javascript" src="videoroomtest.js?version=1"></script>
+<script type="text/javascript" src="voicemailtest.js"></script>
 <script>
 	$(function() {
 		$(".navbar-static-top").load("navbar.html", function() {
 			$(".navbar-static-top li.dropdown").addClass("active");
-			$(".navbar-static-top a[href='videoroomtest.html']").parent().addClass("active");
+			$(".navbar-static-top a[href='voicemailtest.html']").parent().addClass("active");
 		});
 		$(".footer").load("footer.html");
 	});
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/cerulean/bootstrap.min.css" type="text/css"/>
 <link rel="stylesheet" href="css/demo.css" type="text/css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css"/>
 </head>
 <body>
+
+<a href="https://github.com/meetecho/janus-gateway"><img style="position: absolute; top: 0; left: 0; border: 0; z-index: 1001;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"></a>
+
+<nav class="navbar navbar-default navbar-static-top">
+</nav>
 
 <div class="container">
 	<div class="row">
 		<div class="col-md-12">
 			<div class="page-header">
-				<h1>
-					<div class="row">
-						<div class="col-md-6">Ether Video Room
-						<button class="btn btn-default hide" autocomplete="off" id="hangup">Hangup</button></div>
-						<div class="marker col-md-6 hide">
-							<textarea id="markerText" class="text" maxlength="1000" style="height: 60px;width: 310px;margin-left: 7%;font-size: small;"></textarea>
-							<button class="btn" id="markNow" style="margin-top: -8%; background: lightblue;padding: 5px;">Mark</button>
-						</div>
-					</div>
+				<h1>Plugin Demo: Voice Mail
+					<button class="btn btn-default" autocomplete="off" id="start">Start</button>
 				</h1>
 			</div>
-			<div class="container" id="videojoin">
+			<div class="container" id="details">
 				<div class="row">
-					<span class="label label-info" id="you"></span>
-					<div class="col-md-12" id="controls">
-						<div class="input-group margin-bottom-md hide" id="registernow">
-							<span class="input-group-addon">@</span>
-							<input autocomplete="off" class="form-control" autocomplete="off" type="text" placeholder="Choose a display name" id="username" onkeypress="return checkEnter(this, event);"></input>
-							<span class="input-group-btn">
-								<button class="btn btn-success" autocomplete="off" id="register">Join the room</button>
-							</span>
-						</div>
+					<div class="col-md-12">
+						<h3>Demo details</h3>
+						<p>This demo showcases the functionality provided by the VoiceMail plugin. It
+						simply records your voice for ten seconds, and then returns both a downloadable
+						link to the recording (in .opus format) and a new <code>&lt;audio&gt;</code> element that
+						tries to reproduce the recording on the fly.</p>
+						<p>Press the <code>Start</code> button above to launch the demo.</p>
 					</div>
 				</div>
 			</div>
-			<div class="container hide" id="videos">
+			<div class="container hide" id="voicemail">
 				<div class="row">
-					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-heading">
-								<h3 class="panel-title">Local Video <span class="label label-primary hide" id="publisher"></span></h3>
-							</div>
-							<div class="panel-body" id="videolocal"></div>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title">Click on the button to start recording your message.</h3>
 						</div>
-					</div>
-					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-heading">
-								<h3 class="panel-title">Remote Video #1 <span class="label label-info hide" id="remote1"></span></h3>
+						<div class="container">
+							<div class="container">
+								<button class="btn btn-xs btn-danger margin-sm" autocomplete="off" id="record">Record</button>
+								After about 10 seconds you'll receive an .opus file with the recorded frames</p>
 							</div>
-							<div class="panel-body relative" id="videoremote1"></div>
-						</div>
-					</div>
-					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-heading">
-								<h3 class="panel-title">Remote Video #2 <span class="label label-info hide" id="remote2"></span></h3>
+							<div id="done" class="alert alert-success hide">Recording concluded! Click
+								<a id="listen" href="#" class="alert-link">here</a> to listen to it, or
+								<a id="download" href="#" target="_blank" class="alert-link">here</a> to download to it.
 							</div>
-							<div class="panel-body relative" id="videoremote2"></div>
-						</div>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-heading">
-								<h3 class="panel-title">Remote Video #3 <span class="label label-info hide" id="remote3"></span></h3>
-							</div>
-							<div class="panel-body relative" id="videoremote3"></div>
-						</div>
-					</div>
-					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-heading">
-								<h3 class="panel-title">Remote Video #4 <span class="label label-info hide" id="remote4"></span></h3>
-							</div>
-							<div class="panel-body relative" id="videoremote4"></div>
-						</div>
-					</div>
-					<div class="col-md-4">
-						<div class="panel panel-default">
-							<div class="panel-heading">
-								<h3 class="panel-title">Remote Video #5 <span class="label label-info hide" id="remote5"></span></h3>
-							</div>
-							<div class="panel-body relative" id="videoremote5"></div>
 						</div>
 					</div>
 				</div>
@@ -115,7 +75,8 @@
 	</div>
 
 	<hr>
-
+	<div class="footer">
+	</div>
 </div>
 
 </body>
