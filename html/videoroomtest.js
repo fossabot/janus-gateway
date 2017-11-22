@@ -54,7 +54,7 @@ var opaqueId = "videoroomtest-"+Janus.randomString(12);
 
 var started = false;
 
-var myroom = 1234;	// Demo room
+var myroom = parseInt(getQueryStringValue("room"));	// Demo room
 var myusername = null;
 var myid = null;
 var mystream = null;
