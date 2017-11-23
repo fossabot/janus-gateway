@@ -666,7 +666,7 @@ typedef struct wav_header {
 #define JANUS_VIDEOROOM_ERROR_ID_EXISTS			436
 #define JANUS_VIDEOROOM_ERROR_INVALID_SDP		437
 
-#define JANUS_VIDEOROOM_ERROR_LIBOPUS_ERROR	488
+#define JANUS_VIDEOROOM_ERROR_LIBOPUS_ERROR		488
 
 
 static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_participant *p,
@@ -2452,7 +2452,7 @@ plugin_response:
 }
 
 void janus_videoroom_setup_media(janus_plugin_session *handle) {
-	JANUS_LOG(LOG_INFO, "WebRTC media is now available\n");
+	JANUS_LOG(LOG_VERB, "WebRTC media is now available\n");
 	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
 	janus_videoroom_session *session = (janus_videoroom_session *)handle->plugin_handle;	
@@ -2961,7 +2961,7 @@ static void janus_videoroom_recorder_close(janus_videoroom_participant *particip
 }
 
 void janus_videoroom_hangup_media(janus_plugin_session *handle) {
-	JANUS_LOG(LOG_INFO, "No WebRTC media anymore\n");
+	JANUS_LOG(LOG_VERB, "No WebRTC media anymore\n");
 	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
 	janus_videoroom_session *session = (janus_videoroom_session *)handle->plugin_handle;	
@@ -2974,13 +2974,11 @@ void janus_videoroom_hangup_media(janus_plugin_session *handle) {
 		return;
 	if(g_atomic_int_add(&session->hangingup, 1))
 		return;
+
 	/* Send an event to the browser and tell the PeerConnection is over */
 	if(session->participant_type == janus_videoroom_p_type_publisher) {
 		/* This publisher just 'unpublished' */
 		janus_videoroom_participant *participant = (janus_videoroom_participant *)session->participant;
-
-		JANUS_LOG(LOG_VERB, "videoroom: hangup_media room %ld participant=%s\n", participant->room->room_id, participant->display);
-		
 		if(participant->sdp)
 			g_free(participant->sdp);
 		participant->sdp = NULL;
@@ -3149,7 +3147,6 @@ static void *janus_videoroom_handler(void *data) {
 				goto error;
 			json_t *ptype = json_object_get(root, "ptype");
 			const char *ptype_text = json_string_value(ptype);
-			JANUS_LOG(LOG_VERB, "videoroom: room=%ld ptype-none to ptype-new=%s request=%s \n", videoroom->room_id, ptype_text, request_text);
 			if(!strcasecmp(ptype_text, "publisher")) {
 				JANUS_VALIDATE_JSON_OBJECT(root, publisher_parameters,
 					error_code, error_cause, TRUE,
@@ -3379,7 +3376,7 @@ static void *janus_videoroom_handler(void *data) {
 				if(!strcasecmp(publisher->display, JANUS_RECEP_NAME)){
 					videoroom->is_recep_present = TRUE;
 				}
-
+				JANUS_LOG(LOG_INFO, "[%"SCNu64"][%"SCNu64"] Publisher joined =%s \n", videoroom->room_id, user_id, display_text);
 				/* Also notify event handlers */
 				if(notify_events && gateway->events_is_enabled()) {
 					json_t *info = json_object();
@@ -3399,7 +3396,6 @@ static void *janus_videoroom_handler(void *data) {
 					gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
 				}
 			} else if(!strcasecmp(ptype_text, "listener")) {
-				JANUS_LOG(LOG_VERB, "Configuring new listener\n");
 				/* This is a new listener */
 				JANUS_VALIDATE_JSON_OBJECT(root, listener_parameters,
 					error_code, error_cause, TRUE,
@@ -3417,6 +3413,7 @@ static void *janus_videoroom_handler(void *data) {
 				janus_videoroom_participant *owner = NULL;
 				janus_videoroom_participant *publisher = g_hash_table_lookup(videoroom->participants, &feed_id);
 				janus_mutex_unlock(&videoroom->participants_mutex);
+				JANUS_LOG(LOG_INFO, "[%"SCNu64"][%"SCNu64"] Listener joined\n", videoroom->room_id, feed_id);
 				if(publisher == NULL || publisher->sdp == NULL) {
 					JANUS_LOG(LOG_ERR, "No such feed (%"SCNu64")\n", feed_id);
 					error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_FEED;
@@ -3506,8 +3503,6 @@ static void *janus_videoroom_handler(void *data) {
 				g_snprintf(error_cause, 512, "Invalid participant instance");
 				goto error;
 			}
-			JANUS_LOG(LOG_VERB, "videoroom: room=%ld ptype-publisher request=%s, participant=%s \n", participant->room->room_id, request_text, participant->display);
-			
 			if(!strcasecmp(request_text, "join") || !strcasecmp(request_text, "joinandconfigure")) {
 				JANUS_LOG(LOG_ERR, "Already in as a publisher on this handle\n");
 				error_code = JANUS_VIDEOROOM_ERROR_ALREADY_JOINED;
