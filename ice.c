@@ -1951,7 +1951,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 	}
 	janus_session *session = (janus_session *)handle->session;
 	if(!component->dtls) {	/* Still waiting for the DTLS stack */
-		JANUS_LOG(LOG_WARN, "[%"SCNu64"] Still waiting for the DTLS stack for component %d in stream %d...\n", handle->handle_id, component_id, stream_id);
+		JANUS_LOG(LOG_WARN, "[%"SCNu64"][%s] Still waiting for the DTLS stack for component %d in stream %d...\n", handle->handle_id, handle->opaque_id, component_id, stream_id);
 		return;
 	}
 	/* What is this? */
@@ -2086,6 +2086,9 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							janus_ice_notify_media(handle, FALSE, TRUE);
 						}
 						component->in_stats.audio_packets++;
+						if (100 == component->in_stats.audio_packets){
+							JANUS_LOG(LOG_INFO, "[%"SCNu64"][%s] Got 100th audio packet \n", handle->handle_id, handle->opaque_id);
+						}
 						component->in_stats.audio_bytes += buflen;
 						component->in_stats.audio_bytes_lastsec = g_list_append(component->in_stats.audio_bytes_lastsec, s);
 						if(g_list_length(component->in_stats.audio_bytes_lastsec) > 100) {
@@ -2102,6 +2105,9 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							janus_ice_notify_media(handle, TRUE, TRUE);
 						}
 						component->in_stats.video_packets++;
+						if (100 == component->in_stats.video_packets){
+							JANUS_LOG(LOG_INFO, "[%"SCNu64"][%s] Got 100th video packet \n", handle->handle_id, handle->opaque_id);
+						}
 						component->in_stats.video_bytes += buflen;
 						component->in_stats.video_bytes_lastsec = g_list_append(component->in_stats.video_bytes_lastsec, s);
 						if(g_list_length(component->in_stats.video_bytes_lastsec) > 100) {
@@ -4133,7 +4139,7 @@ void janus_ice_dtls_handshake_done(janus_ice_handle *handle, janus_ice_component
 	/* Notify the plugin that the WebRTC PeerConnection is ready to be used */
 	janus_plugin *plugin = (janus_plugin *)handle->app;
 	if(plugin != NULL) {
-		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Telling the plugin about it (%s)\n", handle->handle_id, plugin->get_name());
+		JANUS_LOG(LOG_INFO, "[%"SCNu64"][%s] Setting up media (%s)\n", handle->handle_id, handle->opaque_id, plugin->get_name());
 		if(plugin && plugin->setup_media && janus_plugin_session_is_alive(handle->app_handle))
 			plugin->setup_media(handle->app_handle);
 	}
