@@ -1650,7 +1650,7 @@ static void janus_ice_cb_component_state_changed(NiceAgent *agent, guint stream_
 		gboolean trickle_recv = (!janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE) || janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALL_TRICKLES));
 		gboolean answer_recv = janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_ANSWER);
 		JANUS_LOG(LOG_WARN, "[%"SCNu64"][%s] ICE failed for component %d in stream %d, but let's give it some time... (trickle %s, answer %s, alert %s)\n",
-			handle->handle_id, handle->opaque_id, stream_id,
+			handle->handle_id, handle->opaque_id, component_id, stream_id,
 			trickle_recv ? "received" : "pending",
 			answer_recv ? "received" : "pending",
 			alert_set ? "set" : "not set");
