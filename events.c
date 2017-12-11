@@ -40,8 +40,9 @@ int janus_events_init(gboolean enabled, GHashTable *handlers) {
 
 void janus_events_deinit(void) {
 	eventsenabled = FALSE;
-
-	g_async_queue_push(events, &exit_event);
+	if (events != NULL) {
+		g_async_queue_push(events, &exit_event);
+	}
 	if(events_thread != NULL) {
 		g_thread_join(events_thread);
 		events_thread = NULL;
@@ -190,6 +191,7 @@ void janus_events_notify_handlers(int type, guint64 session_id, ...) {
 			JANUS_LOG(LOG_WARN, "Unknown event type '%d'\n", type);
 			json_decref(event);
 			json_decref(body);
+			va_end(args);
 			return;
 	}
 	json_object_set_new(event, "event", body);

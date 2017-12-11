@@ -26,31 +26,7 @@
 #include <string.h>
 #include <glib.h>
 
-#ifdef HAVE_SRTP_2
-#include <srtp2/srtp.h>
-#include <openssl/rand.h>
-#include <openssl/err.h>
-int srtp_crypto_get_random(uint8_t *key, int len);
-#else
-#include <srtp/srtp.h>
-#include <srtp/crypto_kernel.h>
-#define srtp_err_status_t err_status_t
-#define srtp_err_status_ok err_status_ok
-#define srtp_err_status_replay_fail err_status_replay_fail
-#define srtp_err_status_replay_old err_status_replay_old
-#define srtp_crypto_policy_set_rtp_default crypto_policy_set_rtp_default
-#define srtp_crypto_policy_set_rtcp_default crypto_policy_set_rtcp_default
-#define srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32 crypto_policy_set_aes_cm_128_hmac_sha1_32
-#define srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80 crypto_policy_set_aes_cm_128_hmac_sha1_80
-#define srtp_crypto_get_random crypto_get_random
-#endif
-
 #define RTP_HEADER_SIZE	12
-
-/* SRTP stuff (http://tools.ietf.org/html/rfc3711) */
-#define SRTP_MASTER_KEY_LENGTH	16
-#define SRTP_MASTER_SALT_LENGTH	14
-#define SRTP_MASTER_LENGTH (SRTP_MASTER_KEY_LENGTH + SRTP_MASTER_SALT_LENGTH)
 
 /*! \brief RTP Header (http://tools.ietf.org/html/rfc3550#section-5.1) */
 typedef struct rtp_header
@@ -75,6 +51,7 @@ typedef struct rtp_header
 	uint32_t ssrc;
 	uint32_t csrc[16];
 } rtp_header;
+typedef rtp_header janus_rtp_header;
 
 /*! \brief RTP packet */
 typedef struct janus_rtp_packet {
@@ -102,6 +79,8 @@ typedef struct janus_rtp_header_extension {
 #define JANUS_RTP_EXTMAP_CC_EXTENSIONS		"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
 /*! \brief a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay */
 #define JANUS_RTP_EXTMAP_PLAYOUT_DELAY		"http://www.webrtc.org/experiments/rtp-hdrext/playout-delay"
+/*! \brief a=extmap:3/sendonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id */
+#define JANUS_RTP_EXTMAP_RTP_STREAM_ID		"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id"
 
 /*! \brief Helper to quickly access the RTP payload, skipping header and extensions
  * @param[in] buf The packet data
@@ -153,6 +132,17 @@ int janus_rtp_header_extension_parse_video_orientation(char *buf, int len, int i
 int janus_rtp_header_extension_parse_playout_delay(char *buf, int len, int id,
 	uint16_t *min_delay, uint16_t *max_delay);
 
+/*! \brief Helper to parse a rtp-stream-id RTP extension (https://tools.ietf.org/html/draft-ietf-avtext-rid-09)
+ * @param[in] buf The packet data
+ * @param[in] len The packet data length in bytes
+ * @param[in] id The extension ID to look for
+ * @param[out] sdes_item Buffer where the RTP stream ID will be written
+ * @param[in] sdes_len Size of the input/output buffer
+ * @returns 0 if found, -1 otherwise */
+int janus_rtp_header_extension_parse_rtp_stream_id(char *buf, int len, int id,
+	char *sdes_item, int sdes_len);
+
+
 /*! \brief RTP context, in order to make sure SSRC changes result in coherent seq/ts increases */
 typedef struct janus_rtp_switching_context {
 	uint32_t a_last_ssrc, a_last_ts, a_base_ts, a_base_ts_prev,
@@ -171,11 +161,6 @@ void janus_rtp_switching_context_reset(janus_rtp_switching_context *context);
  * @param[in] context The context to use as a reference
  * @param[in] video Whether this is an audio or a video packet
  * @param[in] step The expected timestamp step */
-void janus_rtp_header_update(rtp_header *header, janus_rtp_switching_context *context, gboolean video, int step);
-
-/*! \brief Helper method to get a string representation of a libsrtp error code
- * @param[in] error The libsrtp error code
- * @returns A string representation of the error code */
-const char *janus_srtp_error_str(int error);
+void janus_rtp_header_update(janus_rtp_header *header, janus_rtp_switching_context *context, gboolean video, int step);
 
 #endif

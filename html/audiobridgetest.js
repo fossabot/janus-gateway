@@ -55,7 +55,7 @@ var opaqueId = "audiobridgetest-"+Janus.randomString(12);
 var started = false;
 var spinner = null;
 
-var myroom = null;	// Demo room
+var myroom = 1234;	// Demo room
 var myusername = null;
 var myid = null;
 var webrtcUp = false;
@@ -66,7 +66,7 @@ $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
 	Janus.init({debug: "all", callback: function() {
 		// Use a button to start the demo
-		$('#register').click(function() {
+		$('#start').click(function() {
 			if(started)
 				return;
 			started = true;
@@ -93,12 +93,9 @@ $(document).ready(function() {
 									// Prepare the username registration
 									$('#audiojoin').removeClass('hide').show();
 									$('#registernow').removeClass('hide').show();
-
-									registerUsername();
-									
-									// $('#register').click(registerUsername);
+									$('#register').click(registerUsername);
 									$('#username').focus();
-									$('#hangup').removeClass('hide').html("Hangup")
+									$('#start').removeAttr('disabled').html("Stop")
 										.click(function() {
 											$(this).attr('disabled', true);
 											janus.destroy();
@@ -129,7 +126,7 @@ $(document).ready(function() {
 								},
 								onmessage: function(msg, jsep) {
 									Janus.debug(" ::: Got a message :::");
-									Janus.debug(JSON.stringify(msg));
+									Janus.debug(msg);
 									var event = msg["audiobridge"];
 									Janus.debug("Event: " + event);
 									if(event != undefined && event != null) {
@@ -229,7 +226,17 @@ $(document).ready(function() {
 														$('#rp'+id + ' > i').hide();
 												}
 											} else if(msg["error"] !== undefined && msg["error"] !== null) {
-												bootbox.alert(msg["error"]);
+												if(msg["error_code"] === 485) {
+													// This is a "no such room" error: give a more meaningful description
+													bootbox.alert(
+														"<p>Apparently room <code>" + myroom + "</code> (the one this demo uses as a test room) " +
+														"does not exist...</p><p>Do you have an updated <code>janus.plugin.audiobridge.cfg</code> " +
+														"configuration file? If not, make sure you copy the details of room <code>" + myroom + "</code> " +
+														"from that sample in your current configuration file, then restart Janus and try again."
+													);
+												} else {
+													bootbox.alert(msg["error"]);
+												}
 												return;
 											}
 											// Any new feed to attach to?
@@ -249,7 +256,7 @@ $(document).ready(function() {
 								},
 								onlocalstream: function(stream) {
 									Janus.debug(" ::: Got a local stream :::");
-									Janus.debug(JSON.stringify(stream));
+									Janus.debug(stream);
 									// We're not going to attach the local audio stream
 									$('#audiojoin').hide();
 									$('#room').removeClass('hide').show();
@@ -301,7 +308,7 @@ $(document).ready(function() {
 function checkEnter(field, event) {
 	var theCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
 	if(theCode == 13) {
-		// registerUsername();
+		registerUsername();
 		return false;
 	} else {
 		return true;
@@ -329,7 +336,6 @@ function registerUsername() {
 		// Try a registration
 		$('#username').attr('disabled', true);
 		$('#register').attr('disabled', true).unbind('click');
-		var meetingroom = parseInt(getRoomNoFromQueryParams('room'));
 		var username = $('#username').val();
 		if(username === "") {
 			$('#you')
@@ -347,9 +353,8 @@ function registerUsername() {
 			$('#register').removeAttr('disabled').click(registerUsername);
 			return;
 		}
-		var register = { "request": "join", "room": meetingroom, "display": username };
+		var register = { "request": "join", "room": myroom, "display": username };
 		myusername = username;
-		myroom = meetingroom;
 		mixertest.send({"message": register});
 	}
 }
