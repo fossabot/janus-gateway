@@ -162,6 +162,7 @@ notify_joining = true|false (optional, whether to notify all participants when a
 #define JANUS_VIDEOROOM_AUTHOR			"Meetecho s.r.l."
 #define JANUS_VIDEOROOM_PACKAGE			"janus.plugin.videoroom"
 #define JANUS_RECEP_NAME				"etherrecorderep"
+#define JANUS_SCREENSHARE_SUFFIX		"'s Screen"
 
 /* Plugin methods */
 janus_plugin *create(void);
@@ -520,6 +521,7 @@ typedef struct janus_videoroom {
 	gboolean first_joined;
 	gboolean last_left;
 	gboolean is_recep_present;
+	gboolean is_screenshared;
 } janus_videoroom;
 
 static GHashTable *rooms;
@@ -661,6 +663,7 @@ typedef struct janus_videoroom_rtp_relay_packet {
 #define JANUS_VIDEOROOM_ERROR_NOT_PUBLISHED		435
 #define JANUS_VIDEOROOM_ERROR_ID_EXISTS			436
 #define JANUS_VIDEOROOM_ERROR_INVALID_SDP		437
+#define JANUS_VIDEOROOM_ERROR_ALREADY_SHARING	438
 
 
 static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_participant *p,
@@ -977,6 +980,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 				videoroom->notify_joining = janus_is_true(notify_joining->value);
 			videoroom->destroyed = 0;
 			videoroom->is_recep_present = FALSE;
+			videoroom->is_screenshared = FALSE;
 			videoroom->first_joined = FALSE;
 			videoroom->last_left = FALSE;
 			janus_mutex_init(&videoroom->participants_mutex);
@@ -1219,6 +1223,9 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 
 			if(!strcasecmp(participant->display, JANUS_RECEP_NAME)) {
 				participant->room->is_recep_present = FALSE;
+			}
+			if(strstr(participant->display, JANUS_SCREENSHARE_SUFFIX)) {
+				participant->room->is_screenshared = FALSE;
 			}
 
 			if(participant->recording_base)
@@ -1649,6 +1656,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 
 		videoroom->destroyed = 0;
 		videoroom->is_recep_present = FALSE;
+		videoroom->is_screenshared = FALSE;
 		videoroom->first_joined = FALSE;
 		videoroom->last_left = FALSE;
 		janus_mutex_init(&videoroom->participants_mutex);
@@ -3237,6 +3245,20 @@ static void *janus_videoroom_handler(void *data) {
 				guint64 user_id = 0;
 				json_t *id = json_object_get(root, "id");
 				janus_mutex_lock(&videoroom->participants_mutex);
+
+				// Check if it is screen share 
+				if(display_text && (!!strstr(display_text, JANUS_SCREENSHARE_SUFFIX))){
+					if(videoroom->is_screenshared) {
+						janus_mutex_unlock(&videoroom->participants_mutex);
+						/* User ID already taken */
+						JANUS_LOG(LOG_ERR, "[%"SCNu64"] already sharing screen\n", videoroom->room_id);
+						error_code = JANUS_VIDEOROOM_ERROR_ALREADY_SHARING;
+						g_snprintf(error_cause, 512, "[%"SCNu64"] already sharing screen\n", videoroom->room_id);
+						goto error;
+					} else {
+					   videoroom->is_screenshared = TRUE;
+					}
+				}
 				if(id) {
 					user_id = json_integer_value(id);
 					if(g_hash_table_lookup(videoroom->participants, &user_id) != NULL) {
@@ -3390,17 +3412,21 @@ static void *janus_videoroom_handler(void *data) {
 				json_t *list = json_array();
 				GHashTableIter iter;
 				gpointer value;
+
 				g_hash_table_insert(videoroom->participants, janus_uint64_dup(publisher->user_id), publisher);
 				g_hash_table_iter_init(&iter, videoroom->participants);
 				while (!videoroom->destroyed && g_hash_table_iter_next(&iter, NULL, &value)) {
 					janus_videoroom_participant *p = value;
+					gboolean is_this_screen = FALSE;
 					if(p == publisher || !p->sdp || !p->session->started) {
 						continue;
 					}
 					json_t *pl = json_object();
 					json_object_set_new(pl, "id", json_integer(p->user_id));
-					if(p->display)
+					if(p->display) {
 						json_object_set_new(pl, "display", json_string(p->display));
+						is_this_screen = !!strstr(p->display, JANUS_SCREENSHARE_SUFFIX);
+					}
 					if(p->audio)
 						json_object_set_new(pl, "audio_codec", json_string(janus_videoroom_audiocodec_name(p->room->acodec)));
 					if(p->video)
@@ -3409,6 +3435,7 @@ static void *janus_videoroom_handler(void *data) {
 						json_object_set_new(pl, "talking", p->talking ? json_true() : json_false());
 					json_array_append_new(list, pl);
 				}
+
 				janus_mutex_unlock(&videoroom->participants_mutex);
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("joined"));
