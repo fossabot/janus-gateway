@@ -2998,7 +2998,11 @@ static void janus_videoroom_recorder_create(janus_videoroom_participant *partici
 		memset(filename, 0, 255);
 		if(participant->recording_base) {
 			/* Use the filename and path we have been provided */
-			g_snprintf(filename, 255, "%s-video", participant->recording_base);
+			gboolean isScreen = FALSE;
+			if(participant->display) {
+				isScreen = !!strstr(participant->display, JANUS_SCREENSHARE_SUFFIX);
+			}			
+			g_snprintf(filename, 255, "%s-%s", participant->recording_base, (isScreen ? "screen" : "video"));
 			participant->vrc = janus_recorder_create(participant->room->rec_dir,
 				janus_videoroom_videocodec_name(participant->room->vcodec), filename);
 			if(participant->vrc == NULL) {
@@ -3006,8 +3010,12 @@ static void janus_videoroom_recorder_create(janus_videoroom_participant *partici
 			}
 		} else {
 			/* Build a filename */
-			g_snprintf(filename, 255, "videoroom-%"SCNu64"-user-%"SCNu64"-%"SCNi64"-video",
-				participant->room->room_id, participant->user_id, now);
+			gboolean isScreen = FALSE;
+			if(participant->display) {
+				isScreen = !!strstr(participant->display, JANUS_SCREENSHARE_SUFFIX);
+			}
+			g_snprintf(filename, 255, "videoroom-%"SCNu64"-user-%"SCNu64"-%"SCNi64"-%s",
+				participant->room->room_id, participant->user_id, now, (isScreen ? "screen" : "video"));
 			participant->vrc = janus_recorder_create(participant->room->rec_dir,
 				janus_videoroom_videocodec_name(participant->room->vcodec), filename);
 			if(participant->vrc == NULL) {
@@ -3417,7 +3425,6 @@ static void *janus_videoroom_handler(void *data) {
 				g_hash_table_iter_init(&iter, videoroom->participants);
 				while (!videoroom->destroyed && g_hash_table_iter_next(&iter, NULL, &value)) {
 					janus_videoroom_participant *p = value;
-					gboolean is_this_screen = FALSE;
 					if(p == publisher || !p->sdp || !p->session->started) {
 						continue;
 					}
@@ -3425,7 +3432,6 @@ static void *janus_videoroom_handler(void *data) {
 					json_object_set_new(pl, "id", json_integer(p->user_id));
 					if(p->display) {
 						json_object_set_new(pl, "display", json_string(p->display));
-						is_this_screen = !!strstr(p->display, JANUS_SCREENSHARE_SUFFIX);
 					}
 					if(p->audio)
 						json_object_set_new(pl, "audio_codec", json_string(janus_videoroom_audiocodec_name(p->room->acodec)));
