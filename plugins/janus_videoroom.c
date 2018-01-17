@@ -2518,7 +2518,8 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 	} else if(!strcasecmp(request_text, "join") || !strcasecmp(request_text, "joinandconfigure")
 			|| !strcasecmp(request_text, "configure") || !strcasecmp(request_text, "publish") || !strcasecmp(request_text, "unpublish")
 			|| !strcasecmp(request_text, "start") || !strcasecmp(request_text, "pause") || !strcasecmp(request_text, "switch") || !strcasecmp(request_text, "stop")
-			|| !strcasecmp(request_text, "add") || !strcasecmp(request_text, "remove") || !strcasecmp(request_text, "leave")) {
+			|| !strcasecmp(request_text, "add") || !strcasecmp(request_text, "remove") || !strcasecmp(request_text, "leave")
+			|| !strcasecmp(request_text, "ether_event") ) {
 		/* These messages are handled asynchronously */
 
 		janus_videoroom_message *msg = g_malloc0(sizeof(janus_videoroom_message));
@@ -3830,6 +3831,14 @@ static void *janus_videoroom_handler(void *data) {
 				participant->data_active = FALSE;
 				session->started = FALSE;
 				//~ session->destroy = TRUE;
+			} else if(!strcasecmp(request_text, "ether_event")) {
+				/* Relay ether events to all other participants */
+				event = json_object();
+				json_object_set_new(event, "videoroom", json_string("ether_event"));
+				json_object_set_new(event, "room", json_integer(participant->room->room_id));
+				json_object_set_new(event, "event_type",json_string(json_string_value(json_object_get(root, "etype"))));
+				json_object_set_new(event, "id", json_integer(participant->user_id));
+				janus_videoroom_notify_participants(participant, event);
 			} else {
 				JANUS_LOG(LOG_ERR, "Unknown request '%s'\n", request_text);
 				error_code = JANUS_VIDEOROOM_ERROR_INVALID_REQUEST;
