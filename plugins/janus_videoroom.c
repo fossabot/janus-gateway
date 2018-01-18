@@ -597,6 +597,8 @@ typedef struct janus_videoroom_participant {
 	janus_mutex rtp_forwarders_mutex;
 	int udp_sock; /* The udp socket on which to forward rtp packets */
 	gboolean kicked;	/* Whether this participant has been kicked */
+	gboolean audio_muted; /* Whether this participant audio is muted */
+	gboolean video_muted; /* Whether this participant video is muted */
 } janus_videoroom_participant;
 
 static void janus_videoroom_participant_free(janus_videoroom_participant *p);
@@ -3375,6 +3377,8 @@ static void *janus_videoroom_handler(void *data) {
 				publisher->remb_latest = 0;
 				publisher->fir_latest = 0;
 				publisher->fir_seq = 0;
+				publisher->audio_muted = FALSE;
+				publisher->video_muted = FALSE;
 				janus_mutex_init(&publisher->rtp_forwarders_mutex);
 				publisher->rtp_forwarders = g_hash_table_new_full(NULL, NULL, NULL, (GDestroyNotify)janus_videoroom_rtp_forwarder_free_helper);
 				publisher->udp_sock = -1;
@@ -3581,6 +3585,8 @@ static void *janus_videoroom_handler(void *data) {
 					json_object_set_new(event, "id", json_integer(feed_id));
 					if(publisher->display)
 						json_object_set_new(event, "display", json_string(publisher->display));
+					json_object_set_new(event, "audio_muted", publisher->audio_muted ? json_true() : json_false());
+					json_object_set_new(event, "video_muted", publisher->video_muted ? json_true() : json_false());
 					session->participant_type = janus_videoroom_p_type_subscriber;
 					JANUS_LOG(LOG_VERB, "Preparing JSON event as a reply\n");
 					/* Negotiate by sending the selected publisher SDP back */
@@ -3833,10 +3839,20 @@ static void *janus_videoroom_handler(void *data) {
 				//~ session->destroy = TRUE;
 			} else if(!strcasecmp(request_text, "ether_event")) {
 				/* Relay ether events to all other participants */
+				const char *event_type = json_string_value(json_object_get(root, "etype"));
+				if (!strcasecmp(event_type, "audio_muted")) {
+					participant->audio_muted = TRUE;
+				} else if (!strcasecmp(event_type, "audio_unmuted")){
+					participant->audio_muted = FALSE;
+				} else if (!strcasecmp(event_type, "video_muted")){
+					participant->video_muted = TRUE;
+				} else if (!strcasecmp(event_type, "video_unmuted")){
+					participant->video_muted = FALSE;
+				}
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("ether_event"));
 				json_object_set_new(event, "room", json_integer(participant->room->room_id));
-				json_object_set_new(event, "event_type",json_string(json_string_value(json_object_get(root, "etype"))));
+				json_object_set_new(event, "etype",json_string(json_string_value(json_object_get(root, "etype"))));
 				json_object_set_new(event, "id", json_integer(participant->user_id));
 				janus_videoroom_notify_participants(participant, event);
 			} else {
