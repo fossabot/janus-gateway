@@ -1,0 +1,5 @@
+localhost
+
+root html/
+ext .html   # Clean URLs
+log stdout
