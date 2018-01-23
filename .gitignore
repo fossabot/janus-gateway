@@ -57,3 +57,4 @@ Makefile.in
 .vscode/
 .mjr
 **/.DS_Store
+error.log
