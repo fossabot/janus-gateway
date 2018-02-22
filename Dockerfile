@@ -19,6 +19,11 @@ RUN  make -f MakefileDeployment install-dep
 ARG  RECORDING_PATH
 ARG  ETHERMEET_HOME
 ARG  ACTIVE_ENV
+ARG  TURN_SERVER
+ARG  TURN_PORT
+ARG  TURN_TYPE
+ARG  TURN_USER
+ARG  TURN_PWD
 ENV  JANUS_HOME $ETHERMEET_HOME/janus-gateway
 
 ## ADD Janus Code, shouldn't it be clone from gitlab ?
@@ -30,7 +35,8 @@ ADD . $JANUS_HOME/
 RUN  make -f MakefileDeployment install-ether ETHERMEET_HOME=$ETHERMEET_HOME JANUS_HOME=$JANUS_HOME 
 
 ## Configure Janus and dependencies
-RUN  make -f MakefileDeployment config ACTIVE_ENV=$ACTIVE_ENV JANUS_HOME=$JANUS_HOME RECORDING_PATH=$RECORDING_PATH 
+RUN  make -f MakefileDeployment config ACTIVE_ENV=$ACTIVE_ENV JANUS_HOME=$JANUS_HOME RECORDING_PATH=$RECORDING_PATH \
+    TURN_SERVER=$TURN_SERVER TURN_PORT=$TURN_PORT TURN_TYPE=$TURN_TYPE TURN_USER=$TURN_USER TURN_PWD=$TURN_PWD
 
 CMD ["sh", "-c", "$JANUS_HOME/scripts/run_janus.sh"]
 
