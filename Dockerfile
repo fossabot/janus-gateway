@@ -7,6 +7,7 @@
 FROM ubuntu:16.04
 
 ## Install build essential
+RUN  apt-get clean
 RUN  apt-get update
 RUN  apt-get install -y make vim wget git
 
