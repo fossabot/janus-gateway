@@ -1,4 +1,4 @@
-AC_INIT([Janus Gateway],[0.2.5],[https://github.com/meetecho/janus-gateway],[janus-gateway],[https://janus.conf.meetecho.com])
+AC_INIT([Janus Gateway],[0.3.1],[https://github.com/meetecho/janus-gateway],[janus-gateway],[https://janus.conf.meetecho.com])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -15,6 +15,11 @@ AC_PROG_CC
 LT_PREREQ([2.2])
 LT_INIT
 
+JANUS_VERSION=31
+AC_SUBST(JANUS_VERSION)
+JANUS_VERSION_STRING="0.3.1"
+AC_SUBST(JANUS_VERSION_STRING)
+
 case "$host_os" in
 darwin*)
 	CFLAGS="$CFLAGS -I/usr/local/opt/openssl/include -I/usr/local/include"
@@ -29,6 +34,7 @@ esac
 
 glib_version=2.34
 ssl_version=1.0.1
+jansson_version=2.5
 
 ##
 # Janus
@@ -88,6 +94,10 @@ AC_ARG_ENABLE([all-plugins],
                      [enable_plugin_recordplay=no])
                AS_IF([test "x$enable_plugin_sip" != "xyes"],
                      [enable_plugin_sip=no])
+               AS_IF([test "x$enable_plugin_sipre" != "xyes"],
+                     [enable_plugin_sipre=no])
+               AS_IF([test "x$enable_plugin_nosip" != "xyes"],
+                     [enable_plugin_nosip=no])
                AS_IF([test "x$enable_plugin_streaming" != "xyes"],
                      [enable_plugin_streaming=no])
                AS_IF([test "x$enable_plugin_textroom" != "xyes"],
@@ -124,6 +134,8 @@ AC_ARG_ENABLE([all-handlers],
               [
                AS_IF([test "x$enable_sample_event_handler" != "xyes"],
                      [enable_sample_event_handler=no])
+               AS_IF([test "x$enable_rabbitmq_event_handler" != "xyes"],
+                     [enable_rabbitmq_event_handler=no])
               ],
               [])
 
@@ -180,11 +192,18 @@ AC_ARG_ENABLE([sample-event-handler],
                      [enable_sample_event_handler=no])],
               [enable_sample_event_handler=maybe])
 
+AC_ARG_ENABLE([rabbitmq-event-handler],
+              [AS_HELP_STRING([--disable-rabbitmq-event-handler],
+                              [Disable RabbitMQ event handler ])],
+              [AS_IF([test "x$enable_rabbitmq_event_handler" != "xyes"],
+                     [enable_rabbitmq_event_handler=no])],
+              [enable_rabbitmq_event_handler=maybe])
+
 PKG_CHECK_MODULES([JANUS],
                   [
                     glib-2.0 >= $glib_version
                     nice
-                    jansson
+                    jansson >= $jansson_version
                     libssl >= $ssl_version
                     libcrypto
                   ])
@@ -212,10 +231,9 @@ AS_IF([test "x$enable_dtls_settimeout" = "xyes"],
       ])
 AM_CONDITIONAL([ENABLE_DTLS_SETTIMEOUT], [test "x$enable_dtls_settimeout" = "xyes"])
 
-AC_CHECK_LIB([crypto],
-             [RAND_egd],
-             [AM_CONDITIONAL([LIBRESSL_DETECTED], false)],
-             [AM_CONDITIONAL([LIBRESSL_DETECTED], true)]
+AC_SEARCH_LIBS([tls_config_set_ca_mem],[tls],
+             [AM_CONDITIONAL([LIBRESSL_DETECTED], true)],
+             [AM_CONDITIONAL([LIBRESSL_DETECTED], false)]
              )
 
 AC_CHECK_LIB([nice],
@@ -246,6 +264,10 @@ AS_IF([test "x$enable_libsrtp2" != "xno"],
                                         JANUS_MANUAL_LIBS+=" -lsrtp2"
                                         enable_libsrtp2=yes
                                         AM_CONDITIONAL([ENABLE_LIBSRTP_2], true)
+                                        AC_CHECK_LIB([srtp2],
+                                                     [srtp_crypto_policy_set_aes_gcm_256_16_auth],
+                                                     [AC_DEFINE(HAVE_SRTP_AESGCM)],
+                                                     [AC_MSG_NOTICE([libsrtp2 does not have support for AES-GCM profiles])])
                                       ],
                                       [
                                         AS_IF([test "x$enable_libsrtp2" = "xyes"],
@@ -270,7 +292,10 @@ AM_COND_IF([ENABLE_LIBSRTP_2],
                                                                [
                                                                  libsrtp >= 1.5.0
                                                                ])
-
+                                             AC_CHECK_LIB([srtp],
+                                                          [crypto_policy_set_aes_gcm_256_16_auth],
+                                                          [AC_DEFINE(HAVE_SRTP_AESGCM)],
+                                                          [AC_MSG_NOTICE([libsrtp does not have support for AES-GCM profiles])])
                                            ],
                                            [AC_MSG_ERROR([libsrtp and libsrtp2 headers not found. See README.md for installation instructions])])
                          ],
@@ -331,6 +356,14 @@ AS_IF([test -z "$DOXYGEN" -o -z "$DOT"],
               [AC_MSG_ERROR([doxygen or dot not found. See README.md for installation instructions or remove --enable-docs])])
       ])
 AM_CONDITIONAL([ENABLE_DOCS], [test "x$enable_docs" = "xyes"])
+if test "x$enable_docs" = "xyes"; then
+	doxygen_version=$($DOXYGEN --version)
+	AS_VERSION_COMPARE([$doxygen_version], [1.8.11],
+					   [],
+					   [],
+					   [AC_MSG_ERROR([Doxygen $doxygen_version too new: versions higher than 1.8.11 are known to render poorly.])]
+					  )
+fi
 
 AC_CHECK_PROG([GENGETOPT_CHECK],
               [gengetopt],
@@ -347,7 +380,7 @@ fi
 PKG_CHECK_MODULES([TRANSPORTS],
                   [
                     glib-2.0 >= $glib_version
-                    jansson
+                    jansson >= $jansson_version
                   ])
 
 PKG_CHECK_MODULES([MHD],
@@ -393,10 +426,18 @@ AC_CHECK_LIB([rabbitmq],
                   AC_DEFINE(HAVE_RABBITMQ)
                   enable_rabbitmq=yes
                ])
+               AS_IF([test "x$enable_rabbitmq_event_handler" != "xno"],
+               [
+                 AC_DEFINE(HAVE_RABBITMQEVH)
+                 enable_rabbitmq_event_handler=yes
+               ])
+
              ],
              [
                AS_IF([test "x$enable_rabbitmq" = "xyes"],
                      [AC_MSG_ERROR([rabbitmq-c not found. See README.md for installation instructions or use --disable-rabbitmq])])
+               AS_IF([test "x$enable_rabbitmq_event_handler" = "xyes"],
+                     [AC_MSG_ERROR([rabbitmq-c not found. See README.md for installation instructions or use --disable-rabbitmq-event-handler])])
              ])
 AC_CHECK_LIB([paho-mqtt3a],
              [MQTTAsync_create],
@@ -412,6 +453,7 @@ AC_CHECK_LIB([paho-mqtt3a],
                      [AC_MSG_ERROR([paho c client not found. See README.md for installation instructions or use --disable-mqtt])])
              ])
 AM_CONDITIONAL([ENABLE_RABBITMQ], [test "x$enable_rabbitmq" = "xyes"])
+AM_CONDITIONAL([ENABLE_RABBITMQEVH], [test "x$enable_rabbitmq_event_handler" = "xyes"])
 AM_CONDITIONAL([ENABLE_MQTT], [test "x$enable_mqtt" = "xyes"])
 
 AC_TRY_COMPILE([
@@ -445,7 +487,7 @@ AM_CONDITIONAL([ENABLE_PFUNIX], [test "x$enable_unix_sockets" = "xyes"])
 PKG_CHECK_MODULES([PLUGINS],
                   [
                     glib-2.0 >= $glib_version
-                    jansson
+                    jansson >= $jansson_version
                   ])
 
 AC_ARG_ENABLE([plugin-audiobridge],
@@ -475,6 +517,20 @@ AC_ARG_ENABLE([plugin-sip],
               [AS_IF([test "x$enable_plugin_sip" != "xyes"],
                      [enable_plugin_sip=no])],
               [enable_plugin_sip=maybe])
+
+AC_ARG_ENABLE([plugin-sipre],
+              [AS_HELP_STRING([--disable-plugin-sipre],
+                              [Disable sipre plugin])],
+              [AS_IF([test "x$enable_plugin_sipre" != "xyes"],
+                     [enable_plugin_sipre=no])],
+              [enable_plugin_sipre=maybe])
+
+AC_ARG_ENABLE([plugin-nosip],
+              [AS_HELP_STRING([--disable-plugin-nosip],
+                              [Disable nosip plugin])],
+              [AS_IF([test "x$enable_plugin_nosip" != "xyes"],
+                     [enable_plugin_nosip=no])],
+              [enable_plugin_nosip=yes])
 
 AC_ARG_ENABLE([plugin-streaming],
               [AS_HELP_STRING([--disable-plugin-streaming],
@@ -524,6 +580,41 @@ PKG_CHECK_MODULES([SOFIA],
 AC_SUBST([SOFIA_CFLAGS])
 AC_SUBST([SOFIA_LIBS])
 
+PKG_CHECK_MODULES([LIBRE],
+                  [libre >= 0.5.7],
+                  [
+                    AS_IF([test "x$enable_plugin_sipre" = "xmaybe"],
+                          [
+                           enable_plugin_sipre=yes
+                           AC_DEFINE(HAVE_LIBRE_SIPREGNEWAPI)
+                           AC_CHECK_LIB([re],
+                                        [sip_set_trace],
+                                        [AC_DEFINE(HAVE_LIBRE_SIPTRACE)],
+                                        [AC_MSG_NOTICE([libre version does not have sip_set_trace])]
+                                       )
+                          ])
+                  ],
+                  [PKG_CHECK_MODULES([LIBRE],
+                                     [libre],
+                                     [
+                                      AS_IF([test "x$enable_plugin_sipre" = "xmaybe"],
+                                            [
+                                             enable_plugin_sipre=yes
+                                             AC_CHECK_LIB([re],
+                                                          [sip_set_trace],
+                                                          [AC_DEFINE(HAVE_LIBRE_SIPTRACE)],
+                                                          [AC_MSG_NOTICE([libre version does not have sip_set_trace])]
+                                                         )
+                                            ])
+                                     ],
+                                     [
+                                      AS_IF([test "x$enable_plugin_sipre" = "xyes"],
+                                            [AC_MSG_ERROR([libre not found. See README.md for installation instructions or use --disable-plugin-sip])])
+                                     ])
+                  ])
+AC_SUBST([SOFIA_CFLAGS])
+AC_SUBST([SOFIA_LIBS])
+
 PKG_CHECK_MODULES([OPUS],
                   [opus],
                   [
@@ -567,6 +658,8 @@ AM_CONDITIONAL([ENABLE_PLUGIN_AUDIOBRIDGE], [test "x$enable_plugin_audiobridge" 
 AM_CONDITIONAL([ENABLE_PLUGIN_ECHOTEST], [test "x$enable_plugin_echotest" = "xyes"])
 AM_CONDITIONAL([ENABLE_PLUGIN_RECORDPLAY], [test "x$enable_plugin_recordplay" = "xyes"])
 AM_CONDITIONAL([ENABLE_PLUGIN_SIP], [test "x$enable_plugin_sip" = "xyes"])
+AM_CONDITIONAL([ENABLE_PLUGIN_SIPRE], [test "x$enable_plugin_sipre" = "xyes"])
+AM_CONDITIONAL([ENABLE_PLUGIN_NOSIP], [test "x$enable_plugin_nosip" = "xyes"])
 AM_CONDITIONAL([ENABLE_PLUGIN_STREAMING], [test "x$enable_plugin_streaming" = "xyes"])
 AM_CONDITIONAL([ENABLE_PLUGIN_VIDEOCALL], [test "x$enable_plugin_videocall" = "xyes"])
 AM_CONDITIONAL([ENABLE_PLUGIN_VIDEOROOM], [test "x$enable_plugin_videoroom" = "xyes"])
@@ -581,7 +674,7 @@ AM_CONDITIONAL([ENABLE_PLUGIN_TEXTROOM], [test "x$enable_plugin_textroom" = "xye
 PKG_CHECK_MODULES([EVENTS],
                   [
                     glib-2.0 >= $glib_version
-                    jansson
+                    jansson >= $jansson_version
                   ])
 
 
@@ -651,11 +744,11 @@ AC_ARG_ENABLE([post-processing],
 AS_IF([test "x$enable_post_processing" = "xyes"],
       [PKG_CHECK_MODULES([POST_PROCESSING],
                          [
-                           glib-2.0,
-                           jansson,
-                           libavutil,
-                           libavcodec,
-                           libavformat,
+                           glib-2.0 >= $glib_version
+                           jansson >= $jansson_version
+                           libavutil
+                           libavcodec
+                           libavformat
                            ogg
                          ])
       ])
@@ -679,7 +772,7 @@ AC_OUTPUT
 echo
 
 AM_COND_IF([ENABLE_LIBSRTP_2],
-	[echo "libsrtp version:           2.0.x"],
+	[echo "libsrtp version:           2.x"],
 	[echo "libsrtp version:           1.5.x"])
 AM_COND_IF([ENABLE_BORINGSSL],
 	[echo "SSL/crypto library:        BoringSSL"
@@ -730,8 +823,14 @@ AM_COND_IF([ENABLE_PLUGIN_VIDEOCALL],
 	[echo "    Video Call:            yes"],
 	[echo "    Video Call:            no"])
 AM_COND_IF([ENABLE_PLUGIN_SIP],
-	[echo "    SIP Gateway:           yes"],
-	[echo "    SIP Gateway:           no"])
+	[echo "    SIP Gateway (Sofia):   yes"],
+	[echo "    SIP Gateway (Sofia):   no"])
+AM_COND_IF([ENABLE_PLUGIN_SIPRE],
+	[echo "    SIP Gateway (libre):   yes"],
+	[echo "    SIP Gateway (libre):   no"])
+AM_COND_IF([ENABLE_PLUGIN_NOSIP],
+	[echo "    NoSIP (RTP Bridge):    yes"],
+	[echo "    NoSIP (RTP Bridge):    no"])
 AM_COND_IF([ENABLE_PLUGIN_AUDIOBRIDGE],
 	[echo "    Audio Bridge:          yes"],
 	[echo "    Audio Bridge:          no"])
@@ -751,6 +850,9 @@ echo "Event handlers:"
 AM_COND_IF([ENABLE_SAMPLEEVH],
 	[echo "    Sample event handler:  yes"],
 	[echo "    Sample event handler:  no"])
+AM_COND_IF([ENABLE_RABBITMQEVH],
+	[echo "    RabbitMQ event handler:yes"],
+	[echo "    RabbitMQ event handler:no"])
 AM_COND_IF([ENABLE_JAVASCRIPT_MODULES], [
 	echo "JavaScript modules:        yes"
 	echo "    Using npm:             $NPM"

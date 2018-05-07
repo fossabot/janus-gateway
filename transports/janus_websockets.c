@@ -308,6 +308,10 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 		return -1;
 	}
 
+#ifndef LWS_WITH_IPV6
+	JANUS_LOG(LOG_WARN, "libwebsockets has been built without IPv6 support, will bind to IPv4 only\n");
+#endif
+
 	/* This is the callback we'll need to invoke to contact the gateway */
 	gateway = callback;
 
@@ -438,6 +442,8 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 			wscinfo.timeout_secs = pingpong_timeout;
 		}
 #endif
+		/* Force single-thread server */
+		wscinfo.count_threads = 1;
 
 		/* Create the base context */
 		wsc = lws_create_context(&wscinfo);
@@ -479,13 +485,14 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 			info.extensions = NULL;
 			info.ssl_cert_filepath = NULL;
 			info.ssl_private_key_filepath = NULL;
+			info.ssl_private_key_password = NULL;
 			info.gid = -1;
 			info.uid = -1;
 			info.options = 0;
 			/* Create the WebSocket context */
 			wss = lws_create_vhost(wsc, &info);
 			if(wss == NULL) {
-				JANUS_LOG(LOG_FATAL, "Error initializing libwebsockets...\n");
+				JANUS_LOG(LOG_FATAL, "Error creating vhost for WebSockets server...\n");
 			} else {
 				JANUS_LOG(LOG_INFO, "WebSockets server started (port %d)...\n", wsport);
 			}
@@ -519,9 +526,13 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 			} else {
 				char *server_pem = (char *)item->value;
 				char *server_key = (char *)item->value;
+				char *password = NULL;
 				item = janus_config_get_item_drilldown(config, "certificates", "cert_key");
 				if(item && item->value)
 					server_key = (char *)item->value;
+				item = janus_config_get_item_drilldown(config, "certificates", "cert_pwd");
+				if(item && item->value)
+					password = (char *)item->value;
 				JANUS_LOG(LOG_VERB, "Using certificates:\n\t%s\n\t%s\n", server_pem, server_key);
 				/* Prepare secure context */
 				struct lws_context_creation_info info;
@@ -532,6 +543,7 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 				info.extensions = NULL;
 				info.ssl_cert_filepath = server_pem;
 				info.ssl_private_key_filepath = server_key;
+				info.ssl_private_key_password = password;
 				info.gid = -1;
 				info.uid = -1;
 #if LWS_LIBRARY_VERSION_MAJOR >= 2
@@ -542,7 +554,7 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 				/* Create the secure WebSocket context */
 				swss = lws_create_vhost(wsc, &info);
 				if(swss == NULL) {
-					JANUS_LOG(LOG_FATAL, "Error initializing libwebsockets...\n");
+					JANUS_LOG(LOG_FATAL, "Error creating vhost for Secure WebSockets server...\n");
 				} else {
 					JANUS_LOG(LOG_INFO, "Secure WebSockets server started (port %d)...\n", wsport);
 				}
@@ -581,13 +593,14 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 			info.extensions = NULL;
 			info.ssl_cert_filepath = NULL;
 			info.ssl_private_key_filepath = NULL;
+			info.ssl_private_key_password = NULL;
 			info.gid = -1;
 			info.uid = -1;
 			info.options = 0;
 			/* Create the WebSocket context */
 			admin_wss = lws_create_vhost(wsc, &info);
 			if(admin_wss == NULL) {
-				JANUS_LOG(LOG_FATAL, "Error initializing libwebsockets...\n");
+				JANUS_LOG(LOG_FATAL, "Error creating vhost for Admin WebSockets server...\n");
 			} else {
 				JANUS_LOG(LOG_INFO, "Admin WebSockets server started (port %d)...\n", wsport);
 			}
@@ -621,9 +634,13 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 			} else {
 				char *server_pem = (char *)item->value;
 				char *server_key = (char *)item->value;
+				char *password = NULL;
 				item = janus_config_get_item_drilldown(config, "certificates", "cert_key");
 				if(item && item->value)
 					server_key = (char *)item->value;
+				item = janus_config_get_item_drilldown(config, "certificates", "cert_pwd");
+				if(item && item->value)
+					password = (char *)item->value;
 				JANUS_LOG(LOG_VERB, "Using certificates:\n\t%s\n\t%s\n", server_pem, server_key);
 				/* Prepare secure context */
 				struct lws_context_creation_info info;
@@ -634,6 +651,7 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 				info.extensions = NULL;
 				info.ssl_cert_filepath = server_pem;
 				info.ssl_private_key_filepath = server_key;
+				info.ssl_private_key_password = password;
 				info.gid = -1;
 				info.uid = -1;
 #if LWS_LIBRARY_VERSION_MAJOR >= 2
@@ -644,7 +662,7 @@ int janus_websockets_init(janus_transport_callbacks *callback, const char *confi
 				/* Create the secure WebSocket context */
 				admin_swss = lws_create_vhost(wsc, &info);
 				if(admin_swss == NULL) {
-					JANUS_LOG(LOG_FATAL, "Error initializing libwebsockets...\n");
+					JANUS_LOG(LOG_FATAL, "Error creating vhost for Secure Admin WebSockets server...\n");
 				} else {
 					JANUS_LOG(LOG_INFO, "Secure Admin WebSockets server started (port %d)...\n", wsport);
 				}
@@ -872,6 +890,8 @@ static int janus_websockets_callback_http(
 				return -1;
 			}
 			break;
+		case LWS_CALLBACK_GET_THREAD_ID:
+			return (uint64_t)pthread_self();
 		default:
 			break;
 	}
@@ -956,7 +976,7 @@ static int janus_websockets_common_callback(
 			const size_t remaining = lws_remaining_packet_payload(wsi);
 			if(ws_client->incoming == NULL) {
 				JANUS_LOG(LOG_HUGE, "[%s-%p] First fragment: %zu bytes, %zu remaining\n", log_prefix, wsi, len, remaining);
-				ws_client->incoming = g_malloc0(len+1);
+				ws_client->incoming = g_malloc(len+1);
 				memcpy(ws_client->incoming, in, len);
 				ws_client->incoming[len] = '\0';
 				JANUS_LOG(LOG_HUGE, "%s\n", ws_client->incoming);
@@ -1016,12 +1036,7 @@ static int janus_websockets_common_callback(
 				if(response && !ws_client->destroy && !g_atomic_int_get(&stopping)) {
 					/* Gotcha! */
 					int buflen = LWS_SEND_BUFFER_PRE_PADDING + strlen(response) + LWS_SEND_BUFFER_POST_PADDING;
-					if(ws_client->buffer == NULL) {
-						/* Let's allocate a shared buffer */
-						JANUS_LOG(LOG_HUGE, "[%s-%p] Allocating %d bytes (response is %zu bytes)\n", log_prefix, wsi, buflen, strlen(response));
-						ws_client->buflen = buflen;
-						ws_client->buffer = g_malloc0(buflen);
-					} else if(buflen > ws_client->buflen) {
+					if (buflen > ws_client->buflen) {
 						/* We need a larger shared buffer */
 						JANUS_LOG(LOG_HUGE, "[%s-%p] Re-allocating to %d bytes (was %d, response is %zu bytes)\n", log_prefix, wsi, buflen, ws_client->buflen, strlen(response));
 						ws_client->buflen = buflen;
