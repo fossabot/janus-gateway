@@ -162,8 +162,8 @@ man1_MANS = janus.1
 
 BUILT_SOURCES = cmdline.c cmdline.h version.c
 
-cmdline.c: janus.ggo
-	gengetopt --set-package="janus" --set-version="$(VERSION)" < $^
+cmdline.c: janus.c
+	gengetopt --set-package="janus" --set-version="$(VERSION)" < janus.ggo
 
 directory = .git
 dir_target = $(directory)-$(wildcard $(directory))
@@ -178,6 +178,8 @@ endif
 
 version.c: FORCE | $(dir_target)
 	echo "$(build_date)" | awk 'BEGIN {} {print "const char *janus_build_git_time = \""$$0"\";"} END {} ' >> version.c
+	echo "$(JANUS_VERSION)" | awk 'BEGIN {} {print "int janus_version = "$$0";"} END {} ' >> version.c
+	echo "$(JANUS_VERSION_STRING)" | awk 'BEGIN {} {print "const char *janus_version_string = \""$$0"\";"} END {} ' >> version.c
 
 $(dir_present):
 	`which git` rev-parse HEAD | awk 'BEGIN {print "#include \"version.h\""} {print "const char *janus_build_git_sha = \"" $$0"\";"} END {}' > version.c
@@ -240,7 +242,7 @@ if ENABLE_MQTT
 transport_LTLIBRARIES += transports/libjanus_mqtt.la
 transports_libjanus_mqtt_la_SOURCES = transports/janus_mqtt.c
 transports_libjanus_mqtt_la_CFLAGS = $(transports_cflags)
-transports_libjanus_mqtt_la_LDFLAGS = $(transports_ldflags) -lpaho-mqtt3a
+transports_libjanus_mqtt_la_LDFLAGS = $(transports_ldflags) -lpaho-mqtt3as
 transports_libjanus_mqtt_la_LIBADD = $(transports_libadd)
 conf_DATA += conf/janus.transport.mqtt.cfg.sample
 EXTRA_DIST += conf/janus.transport.mqtt.cfg.sample
@@ -277,6 +279,16 @@ events_libjanus_sampleevh_la_LDFLAGS = $(events_ldflags) -lcurl
 events_libjanus_sampleevh_la_LIBADD = $(events_libadd)
 conf_DATA += conf/janus.eventhandler.sampleevh.cfg.sample
 EXTRA_DIST += conf/janus.eventhandler.sampleevh.cfg.sample
+endif
+
+if ENABLE_RABBITMQEVH
+event_LTLIBRARIES += events/libjanus_rabbitmqevh.la
+events_libjanus_rabbitmqevh_la_SOURCES = events/janus_rabbitmqevh.c
+events_libjanus_rabbitmqevh_la_CFLAGS = $(events_cflags)
+events_libjanus_rabbitmqevh_la_LDFLAGS = $(events_ldflags) -lrabbitmq
+events_libjanus_rabbitmqevh_la_LIBADD = $(events_libadd)
+conf_DATA += conf/janus.eventhandler.rabbitmqevh.cfg.sample
+EXTRA_DIST += conf/janus.eventhandler.rabbitmqevh.cfg.sample
 endif
 
 ##
@@ -339,6 +351,26 @@ conf_DATA += conf/janus.plugin.sip.cfg.sample
 EXTRA_DIST += conf/janus.plugin.sip.cfg.sample
 endif
 
+if ENABLE_PLUGIN_SIPRE
+plugin_LTLIBRARIES += plugins/libjanus_sipre.la
+plugins_libjanus_sipre_la_SOURCES = plugins/janus_sipre.c
+plugins_libjanus_sipre_la_CFLAGS = $(plugins_cflags) $(LIBRE_CFLAGS)
+plugins_libjanus_sipre_la_LDFLAGS = $(plugins_ldflags) $(LIBRE_LDFLAGS) $(LIBRE_LIBS)
+plugins_libjanus_sipre_la_LIBADD = $(plugins_libadd) $(LIBRE_LIBADD)
+conf_DATA += conf/janus.plugin.sipre.cfg.sample
+EXTRA_DIST += conf/janus.plugin.sipre.cfg.sample
+endif
+
+if ENABLE_PLUGIN_NOSIP
+plugin_LTLIBRARIES += plugins/libjanus_nosip.la
+plugins_libjanus_nosip_la_SOURCES = plugins/janus_nosip.c
+plugins_libjanus_nosip_la_CFLAGS = $(plugins_cflags)
+plugins_libjanus_nosip_la_LDFLAGS = $(plugins_ldflags)
+plugins_libjanus_nosip_la_LIBADD = $(plugins_libadd)
+conf_DATA += conf/janus.plugin.nosip.cfg.sample
+EXTRA_DIST += conf/janus.plugin.nosip.cfg.sample
+endif
+
 if ENABLE_PLUGIN_STREAMING
 plugin_LTLIBRARIES += plugins/libjanus_streaming.la
 plugins_libjanus_streaming_la_SOURCES = plugins/janus_streaming.c
@@ -385,6 +417,7 @@ plugins_libjanus_voicemail_la_LDFLAGS = $(plugins_ldflags) -logg
 plugins_libjanus_voicemail_la_LIBADD = $(plugins_libadd)
 conf_DATA += conf/janus.plugin.voicemail.cfg.sample
 EXTRA_DIST += conf/janus.plugin.voicemail.cfg.sample.in
+CLEANFILES += conf/janus.plugin.voicemail.cfg.sample
 endif
 
 if ENABLE_PLUGIN_TEXTROOM
@@ -422,6 +455,7 @@ janus_pp_rec_SOURCES = \
 	postprocessing/pp-webm.h \
 	postprocessing/janus-pp-rec.c \
 	log.c \
+	version.c \
 	$(NULL)
 
 janus_pp_rec_CFLAGS = \
