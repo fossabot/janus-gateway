@@ -1469,41 +1469,46 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 		if(session->participant_type == janus_videoroom_p_type_publisher) {
 			/* Get rid of publisher */
 			janus_videoroom_participant *participant = (janus_videoroom_participant *)session->participant;
-			participant->audio = FALSE;
-			participant->video = FALSE;
-			participant->data = FALSE;
-			participant->acodec = JANUS_VIDEOROOM_NOAUDIO;
-			participant->vcodec = JANUS_VIDEOROOM_NOVIDEO;
-			participant->audio_pt = -1;
-			participant->video_pt = -1;
-			participant->audio_active = FALSE;
-			participant->video_active = FALSE;
-			participant->data_active = FALSE;
-			participant->recording_active = FALSE;
+			if (participant) {
+				participant->audio = FALSE;
+				participant->video = FALSE;
+				participant->data = FALSE;
+				participant->acodec = JANUS_VIDEOROOM_NOAUDIO;
+				participant->vcodec = JANUS_VIDEOROOM_NOVIDEO;
+				participant->audio_pt = -1;
+				participant->video_pt = -1;
+				participant->audio_active = FALSE;
+				participant->video_active = FALSE;
+				participant->data_active = FALSE;
+				participant->recording_active = FALSE;
 
-			if(!strcasecmp(participant->display, JANUS_RECEP_NAME)) {
-				participant->room->is_recep_present = FALSE;
-			}
-			if(strstr(participant->display, JANUS_SCREENSHARE_SUFFIX)) {
-				participant->room->is_screenshared = FALSE;
-			}
+				if(!strcasecmp(participant->display, JANUS_RECEP_NAME) && participant->room) {
+					participant->room->is_recep_present = FALSE;
+				}
+				if(strstr(participant->display, JANUS_SCREENSHARE_SUFFIX) && participant->room) {
+					participant->room->is_screenshared = FALSE;
+				}
 
-			if(participant->recording_base)
-				g_free(participant->recording_base);
-			participant->recording_base = NULL;
-			janus_videoroom_leave_or_unpublish(participant, TRUE, FALSE);
+				if(participant->recording_base)
+					g_free(participant->recording_base);
+				participant->recording_base = NULL;
+				janus_videoroom_leave_or_unpublish(participant, TRUE, FALSE);
+			}
 		} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
 			/* Detaching this listener from its publisher is already done by hangup_media */
 		}
 		/* Send event to event handler */
-		if(notify_events && gateway->events_is_enabled() && session->participant) {
-			janus_videoroom *videoroom = ((janus_videoroom_participant *)session->participant)->room;
-			if(videoroom->is_recep_present == g_hash_table_size(videoroom->participants) && (!videoroom->last_left)) {
-				json_t *info = json_object();
-				json_object_set_new(info, "event", json_string("last-left"));
-				json_object_set_new(info, "room", json_integer(videoroom->room_id));
-				gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
-				videoroom->last_left = TRUE;
+		if(notify_events && gateway && gateway->events_is_enabled() && session->participant) {
+			janus_videoroom_participant *participant = (janus_videoroom_participant *)session->participant;
+			if(participant && participant->room) {
+			    janus_videoroom *videoroom = participant->room;
+				if(videoroom->is_recep_present == g_hash_table_size(videoroom->participants) && (!videoroom->last_left)) {
+					json_t *info = json_object();
+					json_object_set_new(info, "event", json_string("last-left"));
+					json_object_set_new(info, "room", json_integer(videoroom->room_id));
+					gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
+					videoroom->last_left = TRUE;
+				}
 			}
 		}			
 		g_hash_table_remove(sessions, handle);
@@ -3911,7 +3916,6 @@ static void *janus_videoroom_handler(void *data) {
 				json_t *list = json_array();
 				GHashTableIter iter;
 				gpointer value;
-
 				g_hash_table_insert(videoroom->participants, janus_uint64_dup(publisher->user_id), publisher);
 				g_hash_table_iter_init(&iter, videoroom->participants);
 				while (!videoroom->destroyed && g_hash_table_iter_next(&iter, NULL, &value)) {
@@ -3921,9 +3925,8 @@ static void *janus_videoroom_handler(void *data) {
 					}
 					json_t *pl = json_object();
 					json_object_set_new(pl, "id", json_integer(p->user_id));
-					if(p->display) {
+					if(p->display)
 						json_object_set_new(pl, "display", json_string(p->display));
-					}
 					if(p->audio)
 						json_object_set_new(pl, "audio_codec", json_string(janus_videoroom_audiocodec_name(p->acodec)));
 					if(p->video)
@@ -3968,6 +3971,7 @@ static void *janus_videoroom_handler(void *data) {
 					gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
 				}
 			} else if(!strcasecmp(ptype_text, "listener")) {
+				JANUS_LOG(LOG_VERB, "Configuring new listener\n");
 				/* This is a new listener */
 				JANUS_VALIDATE_JSON_OBJECT(root, listener_parameters,
 					error_code, error_cause, TRUE,
