@@ -146,6 +146,7 @@ notify_joining = true|false (optional, whether to notify all participants when a
 #include "../record.h"
 #include "../sdp-utils.h"
 #include "../utils.h"
+#include "janus_lastn.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -568,10 +569,12 @@ typedef struct janus_videoroom {
 	gboolean notify_joining;	/* Whether an event is sent to notify all participants if a new participant joins the room */
 
 	// Added for tracking meeting start and endtime
-	gboolean first_joined;
-	gboolean last_left;
-	gboolean is_recep_present;
-	gboolean is_screenshared;
+     gboolean first_joined;
+     gboolean last_left;
+     gboolean is_recep_present;
+     gboolean is_screenshared;
+     lastn_queue last_n_speakers;
+     gboolean active_speaker_available;
 } janus_videoroom;
 
 static GHashTable *rooms;
@@ -999,9 +1002,18 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 		janus_config_item *events = janus_config_get_item_drilldown(config, "general", "events");
 		if(events != NULL && events->value != NULL)
 			notify_events = janus_is_true(events->value);
-		if(!notify_events && callback->events_is_enabled()) {
-			JANUS_LOG(LOG_WARN, "Notification of events to handlers disabled for %s\n", JANUS_VIDEOROOM_NAME);
-		}
+      if(!notify_events && callback->events_is_enabled()) {
+          JANUS_LOG(LOG_WARN, "Notification of events to handlers disabled for %s\n", JANUS_VIDEOROOM_NAME);
+      }
+
+		/* ETHER
+		 * Retrieve configured value for last n speaker count
+		 */
+		int lastn_speakers_count = DEFAULT_LASTN_SPEAKER_COUNT;
+		janus_config_item *lastn_count = janus_config_get_item_drilldown(config, "general", "lastn_speakers_count");
+		if(lastn_count != NULL && lastn_count->value != NULL)
+			lastn_speakers_count = atol(lastn_count->value);
+
 		/* Iterate on all rooms */
 		GList *cl = janus_config_get_categories(config);
 		while(cl != NULL) {
@@ -1118,6 +1130,8 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 					JANUS_LOG(LOG_WARN, "SVC is only supported, in an experimental way, for VP9 only rooms: disabling it...\n");
 				}
 			}
+			janus_lastn_init(&(videoroom->last_n_speakers));
+			janus_lastn_alloc(lastn_speakers_count, &(videoroom->last_n_speakers));
 			videoroom->audiolevel_ext = TRUE;
 			if(audiolevel_ext != NULL && audiolevel_ext->value != NULL)
 				videoroom->audiolevel_ext = janus_is_true(audiolevel_ext->value);
@@ -1125,6 +1139,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			if(audiolevel_event != NULL && audiolevel_event->value != NULL)
 				videoroom->audiolevel_event = janus_is_true(audiolevel_event->value);
 			if(videoroom->audiolevel_event) {
+				/* ETHER test with 50 */
 				videoroom->audio_active_packets = 100;
 				if(audio_active_packets != NULL && audio_active_packets->value != NULL){
 					if(atoi(audio_active_packets->value) > 0) {
@@ -1167,6 +1182,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			videoroom->is_screenshared = FALSE;
 			videoroom->first_joined = FALSE;
 			videoroom->last_left = FALSE;
+			videoroom->active_speaker_available = FALSE;
 			janus_mutex_init(&videoroom->mutex);
 			videoroom->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
 			videoroom->private_ids = g_hash_table_new(NULL, NULL);
@@ -1382,6 +1398,24 @@ static void janus_videoroom_notify_participants(janus_videoroom_participant *par
 		}
 	}
 }
+/*
+ * ETHER
+ * Notify all the participants including current participant
+ */
+static void janus_videoroom_notify_all_participants(janus_videoroom *room, json_t *msg) {
+	/* participant->room->mutex has to be locked. */
+	if(room == NULL)
+		return;
+	GHashTableIter iter;
+	gpointer value;
+	g_hash_table_iter_init(&iter, room->participants);
+	while(!room->destroyed && g_hash_table_iter_next(&iter, NULL, &value)) {
+		janus_videoroom_participant *p = value;
+		if(p && p->session) {
+			gateway->push_event(p->session->handle, &janus_videoroom_plugin, NULL, msg, NULL);
+		}
+	}
+}
 
 static void janus_videoroom_participant_joining(janus_videoroom_participant *p) {
 	/* we need to check if the room still exists, may have been destroyed already */
@@ -1424,20 +1458,28 @@ static void janus_videoroom_leave_or_unpublish(janus_videoroom_participant *part
 	}
 	janus_mutex_unlock(&rooms_mutex);
 	if(!participant->room->destroyed) {
+		/* ETHER
+		 * Delete the element from lastN queue if the participant is leaving the conference
+		 */
+		janus_lastn_del_elem(&(participant->room->last_n_speakers), participant->user_id);
+		json_t *list = json_array();
+		janus_lastn_get_json_list(&(participant->room->last_n_speakers), participant->user_id, &list, FALSE, FALSE);
 		json_t *event = json_object();
 		json_object_set_new(event, "videoroom", json_string("event"));
 		json_object_set_new(event, "room", json_integer(participant->room_id));
 		json_object_set_new(event, is_leaving ? (kicked ? "kicked" : "leaving") : "unpublished",
-			json_integer(participant->user_id));
+		json_integer(participant->user_id));
+		json_object_set_new(event, "recent_active_speakers", list);
 		janus_mutex_lock(&participant->room->mutex);
 		janus_videoroom_notify_participants(participant, event);
 		if(is_leaving) {
 			g_hash_table_remove(participant->room->participants, &participant->user_id);
 			g_hash_table_remove(participant->room->private_ids, GUINT_TO_POINTER(participant->pvt_id));
 		}
+
 		janus_mutex_unlock(&participant->room->mutex);
 		json_decref(event);
-	}
+    }
 }
 
 void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
@@ -1743,6 +1785,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		json_t *publishers = json_object_get(root, "publishers");
 		json_t *allowed = json_object_get(root, "allowed");
 		json_t *audiocodec = json_object_get(root, "audiocodec");
+		json_t *lastn_speakers_count = json_object_get(root, "lastn_speakers_count");
 		if(audiocodec) {
 			const char *audiocodec_value = json_string_value(audiocodec);
 			gchar **list = g_strsplit(audiocodec_value, ",", 4);
@@ -1979,11 +2022,21 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 			videoroom->rec_dir = g_strdup(json_string_value(rec_dir));
 		}
 
+		janus_lastn_init(&(videoroom->last_n_speakers));
+		/* ETHER
+		 * By default set the recent speakers count to 4
+		 */
+		int lastn_count = DEFAULT_LASTN_SPEAKER_COUNT;
+		if(lastn_speakers_count) {
+			lastn_count = json_integer_value(lastn_speakers_count);
+		}
+		janus_lastn_alloc(lastn_count, &(videoroom->last_n_speakers));
 		videoroom->destroyed = 0;
 		videoroom->is_recep_present = FALSE;
 		videoroom->is_screenshared = FALSE;
 		videoroom->first_joined = FALSE;
 		videoroom->last_left = FALSE;
+		videoroom->active_speaker_available = FALSE;
 		janus_mutex_init(&videoroom->mutex);
 		videoroom->participants = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
 		videoroom->private_ids = g_hash_table_new(NULL, NULL);
@@ -3076,6 +3129,25 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 				JANUS_LOG(LOG_VERB, "  >> %d (%s)\n", ret, janus_get_api_error(ret));
 			}
 			json_decref(pub);
+			if(participant->audio && (!videoroom->active_speaker_available || !janus_lastn_empty(&(videoroom->last_n_speakers)))) {
+				/* If nobody has started talking in the room, keep inserting new publishers
+				 * Clients can display recent joined video
+				 * */
+				janus_lastn_insert(participant->user_id, &(videoroom->last_n_speakers));
+				json_t *list = json_array();
+				janus_lastn_get_json_list(&(videoroom->last_n_speakers), participant->user_id, &list, TRUE, participant->talking);
+				json_t *event = json_object();
+				json_object_set_new(event, "videoroom", json_string("recent_active_speakers"));
+				json_object_set_new(event, "room", json_integer(videoroom->room_id));
+				json_object_set_new(event, "id", json_integer(participant->user_id));
+				json_object_set_new(event, "lastN", list);
+				/* ETHER
+				 * Notify all the participants including current publisher
+				 * This will help in VAD since other options are not robust
+				 */
+				janus_videoroom_notify_all_participants(participant->room, event);
+				json_decref(event);
+			}
 			janus_mutex_unlock(&videoroom->mutex);
 			/* Also notify event handlers */
 			if(notify_events && gateway->events_is_enabled()) {
@@ -3139,6 +3211,29 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 					if(!participant->talking)
 						notify_talk_event = TRUE;
 					participant->talking = TRUE;
+					if(!videoroom->active_speaker_available) 
+						videoroom->active_speaker_available = TRUE;
+					/* ETHER TODO
+					 * Need to check performance impact of carrying out below operations 
+					 * for last n speakers here in RTP media path.
+					 * Better idea would be to have a thread to handle any change in active speaker
+					 * and invoke any notification.
+					 */
+					guint32 elem_position = 0;
+					gboolean is_exists = janus_lastn_elem_position(&(videoroom->last_n_speakers), participant->user_id, &elem_position);
+                         /* ETHER 
+                          * If elem is in head postion, no need to change since its already in top
+                          * else create a new queue with rearranged speakers giving the most 
+                          * recent speaker priority
+                          */
+					if(is_exists && (elem_position != (videoroom->last_n_speakers).head - 1)) {
+					     janus_lastn_del_elem(&(videoroom->last_n_speakers), participant->user_id);
+						janus_lastn_insert(participant->user_id, &(videoroom->last_n_speakers));
+					}
+					else {
+						/*Element does not exist in the queue, plain insert */
+						janus_lastn_insert(participant->user_id, &(videoroom->last_n_speakers));
+					}
 				} else {
 					/* Participant not talking anymore, should we notify all participants? */
 					if(participant->talking)
@@ -3150,14 +3245,33 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 				/* Only notify in case of state changes */
 				if(notify_talk_event) {
 					janus_mutex_lock(&videoroom->mutex);
+					json_t *list = json_array();
+					janus_lastn_get_json_list(&(videoroom->last_n_speakers), participant->user_id, &list, TRUE, participant->talking);
 					json_t *event = json_object();
-					json_object_set_new(event, "videoroom", json_string(participant->talking ? "talking" : "stopped-talking"));
+					json_object_set_new(event, "videoroom", json_string("recent_active_speakers"));
 					json_object_set_new(event, "room", json_integer(videoroom->room_id));
 					json_object_set_new(event, "id", json_integer(participant->user_id));
-					janus_videoroom_notify_participants(participant, event);
+					json_object_set_new(event, "lastN", list);
+					/* ETHER
+					 * Notify all the participants including current publisher
+					 * This will help in VAD since other options are not robust
+					 */
+					janus_videoroom_notify_all_participants(participant->room, event);
 					json_decref(event);
+
+					/* ETHER 
+					 * To maintain backward compatibility keep sending talking/stopped-talking event as well
+					 */
+					json_t *event_talking = json_object();
+					json_object_set_new(event_talking, "videoroom", json_string(participant->talking ? "talking" : "stopped-talking"));
+					json_object_set_new(event_talking, "room", json_integer(videoroom->room_id));
+					json_object_set_new(event_talking, "id", json_integer(participant->user_id));
+					janus_videoroom_notify_participants(participant, event_talking);
+					json_decref(event_talking);
 					janus_mutex_unlock(&videoroom->mutex);
+
 					/* Also notify event handlers */
+					/*ETHER TODO , check if event has to be changed to "recent_active_speakers"*/
 					if(notify_events && gateway->events_is_enabled()) {
 						json_t *info = json_object();
 						json_object_set_new(info, "videoroom", json_string(participant->talking ? "talking" : "stopped-talking"));
@@ -3169,7 +3283,6 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 			}
 		}
 	}
-
 	if((!video && participant->audio_active) || (video && participant->video_active)) {
 		janus_rtp_header *rtp = (janus_rtp_header *)buf;
 		uint32_t ssrc = ntohl(rtp->ssrc);
@@ -3914,6 +4027,7 @@ static void *janus_videoroom_handler(void *data) {
 				session->participant = publisher;
 				/* Return a list of all available publishers (those with an SDP available, that is) */
 				json_t *list = json_array();
+				json_t *last_n_list = json_array();
 				GHashTableIter iter;
 				gpointer value;
 				g_hash_table_insert(videoroom->participants, janus_uint64_dup(publisher->user_id), publisher);
@@ -3935,6 +4049,9 @@ static void *janus_videoroom_handler(void *data) {
 						json_object_set_new(pl, "talking", p->talking ? json_true() : json_false());
 					json_array_append_new(list, pl);
 				}
+				if(!videoroom->destroyed) {
+					janus_lastn_get_json_list(&(videoroom->last_n_speakers), 0, &last_n_list, FALSE, FALSE);
+				}
 				janus_mutex_unlock(&videoroom->mutex);
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("joined"));
@@ -3943,6 +4060,7 @@ static void *janus_videoroom_handler(void *data) {
 				json_object_set_new(event, "id", json_integer(user_id));
 				json_object_set_new(event, "private_id", json_integer(publisher->pvt_id));
 				json_object_set_new(event, "publishers", list);
+				json_object_set_new(event, "recent_active_speakers", last_n_list);
 				
 				/* check if it is recorder */
 				if(!strcasecmp(publisher->display, JANUS_RECEP_NAME)){
@@ -5547,6 +5665,7 @@ static void janus_videoroom_free(janus_videoroom *room) {
 		g_hash_table_unref(room->participants);
 		g_hash_table_unref(room->private_ids);
 		g_hash_table_destroy(room->allowed);
+		janus_lastn_destroy(&(room->last_n_speakers));
 		janus_mutex_unlock(&room->mutex);
 		janus_mutex_destroy(&room->mutex);
 		g_free(room);

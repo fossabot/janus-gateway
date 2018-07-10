@@ -401,7 +401,10 @@ endif
 
 if ENABLE_PLUGIN_VIDEOROOM
 plugin_LTLIBRARIES += plugins/libjanus_videoroom.la
-plugins_libjanus_videoroom_la_SOURCES = plugins/janus_videoroom.c
+plugins_libjanus_videoroom_la_SOURCES = \
+    plugins/janus_lastn.c \
+    plugins/janus_videoroom.c \
+	$(NULL)
 plugins_libjanus_videoroom_la_CFLAGS = $(plugins_cflags) $(OPUS_CFLAGS)
 plugins_libjanus_videoroom_la_LDFLAGS = $(plugins_ldflags) $(OPUS_LDFLAGS) $(OPUS_LIBS)
 plugins_libjanus_videoroom_la_LIBADD = $(plugins_libadd) $(OPUS_LIBADD)
