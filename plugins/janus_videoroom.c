@@ -3226,9 +3226,11 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
                           * else create a new queue with rearranged speakers giving the most 
                           * recent speaker priority
                           */
-					if(is_exists && (elem_position != (videoroom->last_n_speakers).head - 1)) {
-					     janus_lastn_del_elem(&(videoroom->last_n_speakers), participant->user_id);
-						janus_lastn_insert(participant->user_id, &(videoroom->last_n_speakers));
+					if(is_exists) {
+                        if (elem_position != (videoroom->last_n_speakers).head - 1) {
+					        janus_lastn_del_elem(&(videoroom->last_n_speakers), participant->user_id);
+						    janus_lastn_insert(participant->user_id, &(videoroom->last_n_speakers));
+                        }
 					}
 					else {
 						/*Element does not exist in the queue, plain insert */
