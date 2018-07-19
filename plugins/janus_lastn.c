@@ -196,9 +196,9 @@ int janus_lastn_peek_front(lastn_queue *q, guint64 *data)
 
 gboolean janus_lastn_elem_position(lastn_queue *q, guint64 data, guint32 *pos)
 {
+    janus_mutex_lock(&q->lastn_queue_mutex);
     *pos = 0;
     gboolean exists = FALSE ; 
-    janus_mutex_lock(&q->lastn_queue_mutex);
     guint32 i, t = q->tail;
 
     if (q) {

@@ -3118,17 +3118,6 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 			gpointer value;
 			janus_videoroom *videoroom = participant->room;
 			janus_mutex_lock(&videoroom->mutex);
-			g_hash_table_iter_init(&iter, videoroom->participants);
-			while (!videoroom->destroyed && g_hash_table_iter_next(&iter, NULL, &value)) {
-				janus_videoroom_participant *p = value;
-				if(p == participant) {
-					continue;	/* Skip the new publisher itself */
-				}
-				JANUS_LOG(LOG_VERB, "Notifying participant %"SCNu64" (%s)\n", p->user_id, p->display ? p->display : "??");
-				int ret = gateway->push_event(p->session->handle, &janus_videoroom_plugin, NULL, pub, NULL);
-				JANUS_LOG(LOG_VERB, "  >> %d (%s)\n", ret, janus_get_api_error(ret));
-			}
-			json_decref(pub);
 			if(participant->audio && (!videoroom->active_speaker_available || !janus_lastn_empty(&(videoroom->last_n_speakers)))) {
 				/* If nobody has started talking in the room, keep inserting new publishers
 				 * Clients can display recent joined video
@@ -3148,6 +3137,20 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 				janus_videoroom_notify_all_participants(participant->room, event);
 				json_decref(event);
 			}
+            json_t *active_speakers = json_array();
+            janus_lastn_get_json_list(&(videoroom->last_n_speakers), 0, &active_speakers, FALSE , FALSE);
+			json_object_set_new(pub, "recent_active_speakers", active_speakers);
+            g_hash_table_iter_init(&iter, videoroom->participants);
+			while (!videoroom->destroyed && g_hash_table_iter_next(&iter, NULL, &value)) {
+				janus_videoroom_participant *p = value;
+				if(p == participant) {
+					continue;	/* Skip the new publisher itself */
+				}
+				JANUS_LOG(LOG_VERB, "Notifying participant %"SCNu64" (%s)\n", p->user_id, p->display ? p->display : "??");
+				int ret = gateway->push_event(p->session->handle, &janus_videoroom_plugin, NULL, pub, NULL);
+				JANUS_LOG(LOG_VERB, "  >> %d (%s)\n", ret, janus_get_api_error(ret));
+			}
+			json_decref(pub);
 			janus_mutex_unlock(&videoroom->mutex);
 			/* Also notify event handlers */
 			if(notify_events && gateway->events_is_enabled()) {
@@ -3220,7 +3223,8 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 					 * and invoke any notification.
 					 */
 					guint32 elem_position = 0;
-					gboolean is_exists = janus_lastn_elem_position(&(videoroom->last_n_speakers), participant->user_id, &elem_position);
+                    gboolean is_exists = FALSE;
+					is_exists = janus_lastn_elem_position(&(videoroom->last_n_speakers), participant->user_id, &elem_position);
                          /* ETHER 
                           * If elem is in head postion, no need to change since its already in top
                           * else create a new queue with rearranged speakers giving the most 
