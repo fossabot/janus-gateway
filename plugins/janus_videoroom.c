@@ -1139,7 +1139,6 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			if(audiolevel_event != NULL && audiolevel_event->value != NULL)
 				videoroom->audiolevel_event = janus_is_true(audiolevel_event->value);
 			if(videoroom->audiolevel_event) {
-				/* ETHER test with 50 */
 				videoroom->audio_active_packets = 100;
 				if(audio_active_packets != NULL && audio_active_packets->value != NULL){
 					if(atoi(audio_active_packets->value) > 0) {
@@ -3118,7 +3117,7 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 			gpointer value;
 			janus_videoroom *videoroom = participant->room;
 			janus_mutex_lock(&videoroom->mutex);
-			if(participant->audio && (!videoroom->active_speaker_available || !janus_lastn_empty(&(videoroom->last_n_speakers)))) {
+			if(participant->audio && (!videoroom->active_speaker_available || janus_lastn_empty(&(videoroom->last_n_speakers)))) {
 				/* If nobody has started talking in the room, keep inserting new publishers
 				 * Clients can display recent joined video
 				 * */
@@ -3209,6 +3208,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 			participant->audio_dBov_level = level;
 			if(participant->audio_active_packets > 0 && participant->audio_active_packets == videoroom->audio_active_packets) {
 				gboolean notify_talk_event = FALSE;
+                gboolean notify_lastN_change = FALSE;
 				if((float)participant->audio_dBov_sum/(float)participant->audio_active_packets < videoroom->audio_level_average) {
 					/* Participant talking, should we notify all participants? */
 					if(!participant->talking)
@@ -3234,11 +3234,13 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
                         if (elem_position != (videoroom->last_n_speakers).head - 1) {
 					        janus_lastn_del_elem(&(videoroom->last_n_speakers), participant->user_id);
 						    janus_lastn_insert(participant->user_id, &(videoroom->last_n_speakers));
+                            notify_lastN_change = TRUE;
                         }
 					}
 					else {
 						/*Element does not exist in the queue, plain insert */
 						janus_lastn_insert(participant->user_id, &(videoroom->last_n_speakers));
+                        notify_lastN_change = TRUE;
 					}
 				} else {
 					/* Participant not talking anymore, should we notify all participants? */
@@ -3249,7 +3251,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 				participant->audio_active_packets = 0;
 				participant->audio_dBov_sum = 0;
 				/* Only notify in case of state changes */
-				if(notify_talk_event) {
+                if(notify_lastN_change) {
 					janus_mutex_lock(&videoroom->mutex);
 					json_t *list = json_array();
 					janus_lastn_get_json_list(&(videoroom->last_n_speakers), participant->user_id, &list, TRUE, participant->talking);
@@ -3264,7 +3266,10 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 					 */
 					janus_videoroom_notify_all_participants(participant->room, event);
 					json_decref(event);
-
+					janus_mutex_unlock(&videoroom->mutex);
+                }
+				if(notify_talk_event) {
+					janus_mutex_lock(&videoroom->mutex);
 					/* ETHER 
 					 * To maintain backward compatibility keep sending talking/stopped-talking event as well
 					 */
