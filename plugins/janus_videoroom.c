@@ -4552,6 +4552,11 @@ static void *janus_videoroom_handler(void *data) {
 				goto error;
 			} else if(!strcasecmp(request_text, "start")) {
 				/* Start/restart receiving the publisher streams */
+				if(listener->paused && msg->jsep == NULL) {
+					/* This is just resuming a paused stream, reset the RTP sequence numbers */
+					listener->context.a_seq_reset = TRUE;
+					listener->context.v_seq_reset = TRUE;
+				}
 				listener->paused = FALSE;
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
@@ -4592,11 +4597,27 @@ static void *janus_videoroom_handler(void *data) {
 				}
 				/* Update the audio/video/data flags, if set */
 				janus_videoroom_participant *publisher = listener->feed;
+				// ETHER PATCH for video frozen while reconfiguring
 				if(publisher) {
-					if(audio && publisher->audio && listener->audio_offered)
-						listener->audio = json_is_true(audio);
+					if(audio && publisher->audio && listener->audio_offered) {
+						gboolean oldaudio = listener->audio;
+						gboolean newaudio = json_is_true(audio);
+						if(!oldaudio && newaudio) {
+							/* Audio just resumed, reset the RTP sequence numbers */
+							listener->context.a_seq_reset = TRUE;
+						}
+						listener->audio = newaudio;
+					}
 					if(video && publisher->video && listener->video_offered) {
 						listener->video = json_is_true(video);
+						gboolean oldvideo = listener->video;
+						gboolean newvideo = json_is_true(video);
+						if(!oldvideo && newvideo) {
+							/* Video just resumed, reset the RTP sequence numbers */
+							listener->context.v_seq_reset = TRUE;
+						}
+						listener->video = newvideo;
+
 						if(listener->video) {
 							/* Send a FIR */
 							char buf[20];
@@ -4723,7 +4744,7 @@ static void *janus_videoroom_handler(void *data) {
 				gboolean do_update = update ? json_is_true(update) : FALSE;
 				if(sdp_update || do_restart || do_update) {
 					/* Negotiate by sending the selected publisher SDP back, and/or force an ICE restart */
-					if(publisher->sdp != NULL) {
+					if(publisher != NULL && publisher->sdp != NULL) {
 						char temp_error[512];
 						JANUS_LOG(LOG_VERB, "Munging SDP offer (update) to adapt it to the listener's requirements\n");
 						janus_sdp *offer = janus_sdp_parse(publisher->sdp, temp_error, sizeof(temp_error));
