@@ -74,7 +74,7 @@
 ; automatically downloads a couple of files (radio.alaw, music.mulaw)
 ; to the plugins/streams folder. 
 
-***REMOVED***
+[general]
 ;admin_key = supersecret		; If set, mountpoints can be created via API
 								; only if this key is provided in the request
 ;events = no					; Whether events should be sent to event

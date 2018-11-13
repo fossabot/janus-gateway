@@ -161,6 +161,7 @@ notify_joining = true|false (optional, whether to notify all participants when a
 #define JANUS_RECEP_NAME				"etherrecorderep"
 #define JANUS_SCREENSHARE_SUFFIX		"'s Screen"
 
+
 /* Plugin methods */
 janus_plugin *create(void);
 int janus_videoroom_init(janus_callbacks *callback, const char *config_path);
@@ -1006,7 +1007,7 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
           JANUS_LOG(LOG_WARN, "Notification of events to handlers disabled for %s\n", JANUS_VIDEOROOM_NAME);
       }
 
-		/* ETHER
+		/* 
 		 * Retrieve configured value for last n speaker count
 		 */
 		int lastn_speakers_count = DEFAULT_LASTN_SPEAKER_COUNT;
@@ -1398,7 +1399,7 @@ static void janus_videoroom_notify_participants(janus_videoroom_participant *par
 	}
 }
 /*
- * ETHER
+ * 
  * Notify all the participants including current participant
  */
 static void janus_videoroom_notify_all_participants(janus_videoroom *room, json_t *msg) {
@@ -1457,7 +1458,7 @@ static void janus_videoroom_leave_or_unpublish(janus_videoroom_participant *part
 	}
 	janus_mutex_unlock(&rooms_mutex);
 	if(!participant->room->destroyed) {
-		/* ETHER
+		/* 
 		 * Delete the element from lastN queue if the participant is leaving the conference
 		 */
 		janus_lastn_del_elem(&(participant->room->last_n_speakers), participant->user_id);
@@ -1533,6 +1534,7 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 				if(participant->recording_base)
 					g_free(participant->recording_base);
 				participant->recording_base = NULL;
+
 				janus_videoroom_leave_or_unpublish(participant, TRUE, FALSE);
 			}
 		} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
@@ -2022,7 +2024,7 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		}
 
 		janus_lastn_init(&(videoroom->last_n_speakers));
-		/* ETHER
+		/* 
 		 * By default set the recent speakers count to 4
 		 */
 		int lastn_count = DEFAULT_LASTN_SPEAKER_COUNT;
@@ -3129,7 +3131,7 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 				json_object_set_new(event, "room", json_integer(videoroom->room_id));
 				json_object_set_new(event, "id", json_integer(participant->user_id));
 				json_object_set_new(event, "lastN", list);
-				/* ETHER
+				/* 
 				 * Notify all the participants including current publisher
 				 * This will help in VAD since other options are not robust
 				 */
@@ -3216,7 +3218,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 					participant->talking = TRUE;
 					if(!videoroom->active_speaker_available) 
 						videoroom->active_speaker_available = TRUE;
-					/* ETHER TODO
+					/*  TODO
 					 * Need to check performance impact of carrying out below operations 
 					 * for last n speakers here in RTP media path.
 					 * Better idea would be to have a thread to handle any change in active speaker
@@ -3225,7 +3227,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 					guint32 elem_position = 0;
                     gboolean is_exists = FALSE;
 					is_exists = janus_lastn_elem_position(&(videoroom->last_n_speakers), participant->user_id, &elem_position);
-                         /* ETHER 
+                         /*  
                           * If elem is in head postion, no need to change since its already in top
                           * else create a new queue with rearranged speakers giving the most 
                           * recent speaker priority
@@ -3260,7 +3262,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
 					json_object_set_new(event, "room", json_integer(videoroom->room_id));
 					json_object_set_new(event, "id", json_integer(participant->user_id));
 					json_object_set_new(event, "lastN", list);
-					/* ETHER
+					/* 
 					 * Notify all the participants including current publisher
 					 * This will help in VAD since other options are not robust
 					 */
@@ -3270,7 +3272,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, int video, char 
                 }
 				if(notify_talk_event) {
 					janus_mutex_lock(&videoroom->mutex);
-					/* ETHER 
+					/*  
 					 * To maintain backward compatibility keep sending talking/stopped-talking event as well
 					 */
 					json_t *event_talking = json_object();
@@ -4507,7 +4509,7 @@ static void *janus_videoroom_handler(void *data) {
 				session->started = FALSE;
 				//~ session->destroy = TRUE;
 			} else if(!strcasecmp(request_text, "ether_event")) {
-				/* Relay ether events to all other participants */
+				/* Relay events to all other participants */
 				const char *event_type = json_string_value(json_object_get(root, "etype"));
 				if (!strcasecmp(event_type, "audio_muted")) {
 					participant->audio_muted = TRUE;
@@ -4523,6 +4525,7 @@ static void *janus_videoroom_handler(void *data) {
 				json_object_set_new(event, "room", json_integer(participant->room->room_id));
 				json_object_set_new(event, "etype",json_string(json_string_value(json_object_get(root, "etype"))));
 				json_object_set_new(event, "id", json_integer(participant->user_id));
+
 				janus_videoroom_notify_participants(participant, event);
 			} else {
 				JANUS_LOG(LOG_ERR, "Unknown request '%s'\n", request_text);
@@ -4597,7 +4600,7 @@ static void *janus_videoroom_handler(void *data) {
 				}
 				/* Update the audio/video/data flags, if set */
 				janus_videoroom_participant *publisher = listener->feed;
-				// ETHER PATCH for video frozen while reconfiguring
+				//  PATCH for video frozen while reconfiguring
 				if(publisher) {
 					if(audio && publisher->audio && listener->audio_offered) {
 						gboolean oldaudio = listener->audio;

@@ -15,7 +15,7 @@
 #include "janus_lastn.h"
 #include "debug.h"
 
-/* ETHER
+/* 
  * DS for maintaining lastN speaker queue
  * This is circular queue of unsigned long long type
  * Overwrite the least recent element when queue full
@@ -218,7 +218,7 @@ gboolean janus_lastn_elem_position(lastn_queue *q, guint64 data, guint32 *pos)
 
 }
 
-/* ETHER 
+/*  
  * Create JSON list for last n speakers 
  * with most recent one on the top
  * Hence start iterating from head

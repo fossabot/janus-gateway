@@ -5,7 +5,7 @@
 ; pin = <optional password needed for joining the room>
 ; post = <optional backend to contact via HTTP post for all incoming messages>
 
-***REMOVED***
+[general]
 ;admin_key = supersecret		; If set, rooms can be created via API only
 								; if this key is provided in the request
 json = indented					; Whether the data channel JSON messages should be indented (default),

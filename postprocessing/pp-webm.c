@@ -341,7 +341,7 @@ int janus_pp_webm_preprocess(FILE *file, janus_pp_frame_packet *list, int vp8) {
 	int mean_ts = min_ts_diff;	/* FIXME: was an actual mean, (max_ts_diff+min_ts_diff)/2; */
 	fps = (90000/(mean_ts > 0 ? mean_ts : 30));
 
-	/* ether: in one of the video frame rate was detected as 1000 fps, which cause ffmpeg to go into ~infinite loop */
+	/* in one of the video frame rate was detected as 1000 fps, which cause ffmpeg to go into ~infinite loop */
 	if (fps >= 32) {
 		fps = 31;
 	}

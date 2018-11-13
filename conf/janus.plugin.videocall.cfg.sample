@@ -1,4 +1,4 @@
 ; events = yes|no, whether events should be sent to event handlers
 
-***REMOVED***
+[general]
 ;events = no

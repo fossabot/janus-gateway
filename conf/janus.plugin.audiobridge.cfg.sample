@@ -25,7 +25,7 @@
 ; rtp_forward_srtp_crypto = key to use as crypto (base64 encoded key as in SDES)
 ; rtp_forward_always_on = true|false, whether silence should be forwarded when the room is empty (optional: false used if missing)
 
-***REMOVED***
+[general]
 ;admin_key = supersecret		; If set, rooms can be created via API only
 								; if this key is provided in the request
 ;events = no					; Whether events should be sent to event

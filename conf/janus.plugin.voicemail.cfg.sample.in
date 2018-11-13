@@ -4,7 +4,7 @@
 ;	to make sure the file in the path you chose is reachable via HTTP)
 ; events = yes|no, whether events should be sent to event handlers
 
-***REMOVED***
+[general]
 path = @demosdir@/voicemail/
 base = /voicemail/
 events = yes

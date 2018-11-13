@@ -1,4 +1,4 @@
-***REMOVED***
+[general]
 ; Specify which local IP address to use. If not set it will be automatically
 ; guessed from the system
 ;local_ip = 1.2.3.4

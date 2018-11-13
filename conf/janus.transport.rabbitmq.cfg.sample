@@ -14,7 +14,7 @@
 ; from-janus-2/to-janus-2), or otherwise both the instances will make
 ; use of the same queues and messages will get lost. The integration
 ; is disabled by default, so set enable=yes if you want to use it.
-***REMOVED***
+[general]
 enable = no					; Whether the support must be enabled
 json = indented				; Whether the JSON messages should be indented (default),
 							; plain (no indentation) or compact (no indentation and no spaces)

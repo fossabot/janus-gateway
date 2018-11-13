@@ -471,9 +471,9 @@ int janus_rtcp_nacks(char *packet, int len, GSList *nacks);
  * @param[in] packet The buffer data (MUST be at least 16 chars)
  * @param[in] len The message data length in bytes
  * @param[ssrc] ssrc SSRC of the origin stream
- * @param***REMOVED*** madia SSRC of the destination stream
- * @param***REMOVED*** feedback_packet_count Feedback paccket count
- * @param***REMOVED*** transport_wide_cc_stats List of rtp packet reception stats
+ * @param[media] madia SSRC of the destination stream
+ * @param[media] feedback_packet_count Feedback paccket count
+ * @param[media] transport_wide_cc_stats List of rtp packet reception stats
  * @returns The message data length in bytes, if successful, -1 on errors */
 int janus_rtcp_transport_wide_cc_feedback(char *packet, size_t len, guint32 ssrc, guint32 media, guint8 feedback_packet_count, GQueue *transport_wide_cc_stats);
 
