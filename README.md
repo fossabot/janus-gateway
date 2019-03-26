@@ -16,6 +16,8 @@ on [github](https://github.com/meetecho/janus-gateway/issues) instead.
 
 
 ## Dependencies
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fetherlabsio%2Fjanus-gateway.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fetherlabsio%2Fjanus-gateway?ref=badge_shield)
+
 To install it, you'll need to satisfy the following dependencies:
 
 * [Jansson](http://www.digip.org/jansson/)
@@ -414,3 +416,7 @@ changed any transport-related configuration from its defaults.
 Any thought, feedback or (hopefully not!) insult is welcome!
 
 Developed by [@meetecho](https://github.com/meetecho)
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fetherlabsio%2Fjanus-gateway.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fetherlabsio%2Fjanus-gateway?ref=badge_large)
